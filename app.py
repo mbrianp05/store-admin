@@ -110,9 +110,17 @@ def api_bad_request(error):
 
 @app.errorhandler(404)
 def api_not_found(error):
-    if not es_ruta_api():
-        return error
-    return jsonify({'error': 'Recurso no encontrado.'}), 404
+    if es_ruta_api():
+        return jsonify({'error': 'Recurso no encontrado.'}), 404
+    # Rutas del cliente (por ejemplo /facturas): devolvemos el index de la SPA.
+    index_path = os.path.join(FRONTEND_DIST, 'index.html')
+    if (
+        request.method == 'GET'
+        and request.accept_mimetypes.accept_html
+        and os.path.exists(index_path)
+    ):
+        return send_from_directory(FRONTEND_DIST, 'index.html')
+    return error
 
 @app.errorhandler(405)
 def api_method_not_allowed(error):
