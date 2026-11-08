@@ -125,7 +125,7 @@ function ProductCard({
           )}
         </div>
 
-        <div className="mt-auto flex items-center justify-between gap-2">
+        <div className="mt-auto">
           {confirming ? (
             <div className="flex w-full items-center justify-between gap-2">
               <span className="text-[11px] text-muted-foreground">
@@ -154,7 +154,7 @@ function ProductCard({
               </div>
             </div>
           ) : (
-            <>
+            <div className="flex flex-col gap-2">
               <span className="flex min-w-0 items-baseline gap-1.5">
                 <span className="truncate text-lg font-semibold tabular-nums tracking-tight text-foreground">
                   {formatCurrency(product.precio)}
@@ -169,11 +169,12 @@ function ProductCard({
                 size="sm"
                 onClick={() => onAdd(product)}
                 aria-label={`Agregar ${product.nombre} al carrito`}
+                className="h-7 w-full text-xs"
               >
                 <Plus className="size-3.5" />
                 Agregar
               </Button>
-            </>
+            </div>
           )}
         </div>
       </CardContent>
