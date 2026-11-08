@@ -1,4 +1,6 @@
+import { ShoppingCart } from 'lucide-react'
 import BrandMark from './BrandMark'
+import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
 
@@ -39,6 +41,8 @@ export default function Masthead({
   onViewChange,
   productCount,
   invoiceCount,
+  cartCount = 0,
+  onOpenCart,
 }) {
   const counts = { products: productCount, invoices: invoiceCount }
 
@@ -61,7 +65,28 @@ export default function Masthead({
           <SectionTabs view={view} onViewChange={onViewChange} counts={counts} />
         </div>
 
-        <p className="hidden text-xs text-muted-foreground lg:block">{today}</p>
+        <div className="flex items-center gap-2.5">
+          <p className="hidden text-xs text-muted-foreground lg:block">{today}</p>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={onOpenCart}
+            aria-label={
+              cartCount > 0
+                ? `Abrir carrito (${cartCount} ${cartCount === 1 ? 'artículo' : 'artículos'})`
+                : 'Abrir carrito'
+            }
+            className="relative text-muted-foreground hover:bg-secondary hover:text-foreground"
+          >
+            <ShoppingCart className="size-[18px]" />
+            {cartCount > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-none text-primary-foreground ring-2 ring-background">
+                {cartCount > 99 ? '99+' : cartCount}
+              </span>
+            )}
+          </Button>
+        </div>
       </div>
 
       <div className="border-t border-border/70 px-2 py-1.5 sm:hidden">

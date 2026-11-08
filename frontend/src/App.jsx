@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { AlertTriangle, ShoppingBag } from 'lucide-react'
+import { AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   createInvoice,
@@ -15,47 +15,8 @@ import Masthead from './components/Masthead'
 import ProductsView from './components/ProductsView'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { Toaster } from '@/components/ui/sonner'
-import { formatCurrency } from './lib/format'
-
-function MobileCartBar({ count, total, onOpen }) {
-  return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 fixed inset-x-3 bottom-3 z-30 duration-300 xl:hidden">
-      <Card className="gap-0 border-border bg-card py-0 shadow-lg">
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={onOpen}
-          className="h-auto w-full justify-between gap-4 rounded-xl px-3 py-2.5 text-left"
-        >
-          <span className="flex min-w-0 items-center gap-3">
-            <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-secondary text-primary">
-              <ShoppingBag className="size-4" />
-            </span>
-            <span className="min-w-0">
-              <span className="block text-sm font-medium leading-tight text-foreground">
-                Carrito
-              </span>
-              <span className="mt-0.5 block text-[11px] leading-none text-muted-foreground">
-                {count} {count === 1 ? 'artículo' : 'artículos'}
-              </span>
-            </span>
-          </span>
-          <span className="flex shrink-0 items-center gap-3">
-            <span className="text-lg font-semibold tabular-nums tracking-tight text-foreground">
-              {formatCurrency(total)}
-            </span>
-            <span className="rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground">
-              Abrir
-            </span>
-          </span>
-        </Button>
-      </Card>
-    </div>
-  )
-}
 
 export default function App() {
   const [view, setView] = useState('products')
@@ -255,10 +216,6 @@ export default function App() {
   )
 
   const cartCount = cart.reduce((total, item) => total + item.cantidad, 0)
-  const cartTotal = cart.reduce(
-    (total, item) => total + item.producto.precio * item.cantidad,
-    0,
-  )
 
   const cartPanelProps = {
     cart,
@@ -276,6 +233,8 @@ export default function App() {
         onViewChange={setView}
         productCount={products.length}
         invoiceCount={invoices.length}
+        cartCount={cartCount}
+        onOpenCart={() => setCartOpen(true)}
       />
 
       <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
@@ -299,60 +258,44 @@ export default function App() {
           </Alert>
         )}
 
-        <div className="grid pb-28 xl:min-h-[calc(100vh-4rem)] xl:grid-cols-[minmax(0,1fr)_22.5rem] xl:gap-8 xl:pb-0">
-          <main className="min-w-0 py-6 sm:py-8">
-            {view === 'products' ? (
-              <ProductsView
-                products={products}
-                loading={loading}
-                search={search}
-                onSearchChange={setSearch}
-                cart={cart}
-                onAddToCart={addToCart}
-                onDelete={handleDeleteProduct}
-                onCreate={handleCreateProduct}
-                onUpdate={handleUpdateProduct}
-              />
-            ) : (
-              <InvoicesView
-                invoices={invoices}
-                loading={loading}
-                selectedInvoice={selectedInvoice}
-                onSelect={setSelectedInvoice}
-                onClearSelection={() => setSelectedInvoice(null)}
-              />
-            )}
-          </main>
-
-          <aside className="hidden xl:block" aria-label="Carrito">
-            <div className="sticky top-16 h-[calc(100vh-4rem)] py-8">
-              <CartPanel {...cartPanelProps} className="h-full" />
-            </div>
-          </aside>
-        </div>
+        <main className="min-w-0 py-6 sm:py-8">
+          {view === 'products' ? (
+            <ProductsView
+              products={products}
+              loading={loading}
+              search={search}
+              onSearchChange={setSearch}
+              cart={cart}
+              onAddToCart={addToCart}
+              onDelete={handleDeleteProduct}
+              onCreate={handleCreateProduct}
+              onUpdate={handleUpdateProduct}
+            />
+          ) : (
+            <InvoicesView
+              invoices={invoices}
+              loading={loading}
+              selectedInvoice={selectedInvoice}
+              onSelect={setSelectedInvoice}
+              onClearSelection={() => setSelectedInvoice(null)}
+            />
+          )}
+        </main>
       </div>
 
       <Sheet open={cartOpen} onOpenChange={setCartOpen}>
         <SheetContent
           side="right"
           showCloseButton={false}
-          className="w-full rounded-l-xl border-border bg-card p-0 sm:max-w-[24rem]"
+          className="w-[88%] max-w-[19rem] border-0 bg-transparent p-0 shadow-none sm:max-w-[19rem]"
         >
           <CartPanel
             {...cartPanelProps}
             onClose={() => setCartOpen(false)}
-            className="h-full rounded-none border-0"
+            className="h-full"
           />
         </SheetContent>
       </Sheet>
-
-      {cartCount > 0 && (
-        <MobileCartBar
-          count={cartCount}
-          total={cartTotal}
-          onOpen={() => setCartOpen(true)}
-        />
-      )}
 
       <Toaster position="bottom-right" />
     </div>
