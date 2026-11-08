@@ -85,29 +85,31 @@ function ProductCard({
   onConfirmDelete,
 }) {
   return (
-    <Card className="h-full gap-0 overflow-hidden py-0">
+    <Card className="group h-full gap-0 overflow-hidden py-0">
       <div className="relative">
         <ProductCover product={product} inCart={inCart} />
-        <Button
-          type="button"
-          variant="secondary"
-          size="icon-sm"
-          onClick={() => onEdit(product)}
-          aria-label={`Editar ${product.nombre}`}
-          className="absolute left-2 top-2 backdrop-blur-sm"
-        >
-          <Pencil className="size-3.5" />
-        </Button>
-        <Button
-          type="button"
-          variant="secondary"
-          size="icon-sm"
-          onClick={() => onRequestDelete(product.nombre)}
-          aria-label={`Eliminar ${product.nombre}`}
-          className="absolute right-2 top-2 backdrop-blur-sm hover:bg-destructive hover:text-destructive-foreground"
-        >
-          <Trash2 className="size-3.5" />
-        </Button>
+        <div className="pointer-fine:pointer-events-none pointer-fine:translate-y-1 pointer-fine:opacity-0 absolute right-2 top-2 flex items-center gap-0.5 rounded-lg border border-border/80 bg-background/75 p-0.5 shadow-sm backdrop-blur-md transition-all duration-200 group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:translate-y-0 group-focus-within:opacity-100 pointer-fine:group-hover:pointer-events-auto pointer-fine:group-hover:translate-y-0 pointer-fine:group-hover:opacity-100 pointer-fine:group-focus-within:pointer-events-auto pointer-fine:group-focus-within:translate-y-0 pointer-fine:group-focus-within:opacity-100">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => onEdit(product)}
+            aria-label={`Editar ${product.nombre}`}
+            className="size-7 rounded-md text-foreground/80 hover:bg-background hover:text-foreground"
+          >
+            <Pencil className="size-3.5" />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => onRequestDelete(product.nombre)}
+            aria-label={`Eliminar ${product.nombre}`}
+            className="size-7 rounded-md text-foreground/80 hover:bg-destructive/15 hover:text-destructive"
+          >
+            <Trash2 className="size-3.5" />
+          </Button>
+        </div>
       </div>
 
       <CardContent className="flex flex-1 flex-col gap-3 p-4">
