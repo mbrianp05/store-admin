@@ -15,6 +15,5 @@ class Factura:
         print(f"\nFactura N° {self.numero} - Fecha: {self.fecha}")
         for producto, cantidad in self.items:
             subtotal = producto.precio * cantidad
-            unidad = "metros" if producto.unidad_medida == "metro" else "unidades"
-            print(f"{producto.nombre} x {cantidad} {unidad} = {subtotal}")
+            print(f"{producto.nombre} x {cantidad} {producto.unidad_medida} = {subtotal}")
         print(f"TOTAL: {self.total}")

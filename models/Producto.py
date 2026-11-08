@@ -1,23 +1,35 @@
 class Producto:
-    def __init__(self, nombre, precio, unidad_medida="unidad", descripcion="", foto=None):
+    def __init__(self, nombre, precio, unidad_medida="unidad", descripcion="", foto=None, fotos=None, stock=0):
         self.nombre = nombre
         self.precio = precio
-        self.unidad_medida = unidad_medida  # "unidad" o "metro"
+        self.unidad_medida = unidad_medida  # texto libre: "unidad", "metro", "par"...
         self.descripcion = descripcion
-        self.foto = foto
+        if fotos is None:
+            fotos = [foto] if foto else []
+        self.fotos = list(fotos)  # la primera es la portada
+        try:
+            self.stock = max(0, int(stock))
+        except (TypeError, ValueError):
+            self.stock = 0
 
     def mostrar_detalle(self):
-        unidad = "metros" if self.unidad_medida == "metro" else "unidades"
+        unidad = self.unidad_medida or "unidad"
         print(f"{self.nombre} - Precio: {self.precio} por {unidad}")
+        print(f"Stock disponible: {self.stock}")
         if self.descripcion:
             print(f"Descripción: {self.descripcion}")
-        if self.foto:
-            print(f"Foto: {self.foto}")
+        if self.fotos:
+            print("Fotos: " + ", ".join(self.fotos))
 
-    def actualizar_info(self, precio=None, descripcion=None, foto=None):
+    def actualizar_info(self, precio=None, descripcion=None, fotos=None, stock=None):
         if precio is not None:
             self.precio = precio
         if descripcion is not None:
             self.descripcion = descripcion
-        if foto is not None:
-            self.foto = foto
+        if fotos is not None:
+            self.fotos = list(fotos)
+        if stock is not None:
+            try:
+                self.stock = max(0, int(stock))
+            except (TypeError, ValueError):
+                pass

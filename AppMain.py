@@ -1,9 +1,12 @@
-from Producto import Producto
-from Inventario import Inventario
-from Carrito import Carrito
-from Factura import Factura
-from GestorFacturas import GestorFacturas
 import json
+import os
+
+from models import Carrito, Factura, GestorFacturas, Inventario, Producto
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(BASE_DIR, 'data')
+INVENTARIO_PATH = os.path.join(DATA_DIR, 'inventario.json')
+FACTURAS_PATH = os.path.join(DATA_DIR, 'facturas.json')
 
 class AppMain:
     def __init__(self):
@@ -16,12 +19,13 @@ class AppMain:
         self.cargar_facturas()
 
     def guardar_inventario(self):
-        with open("inventario.json", "w") as f:
-            json.dump([p.__dict__ for p in self.inventario.productos], f)
+        os.makedirs(DATA_DIR, exist_ok=True)
+        with open(INVENTARIO_PATH, "w", encoding="utf-8") as f:
+            json.dump([p.__dict__ for p in self.inventario.productos], f, ensure_ascii=False)
 
     def cargar_inventario(self):
         try:
-            with open("inventario.json", "r") as f:
+            with open(INVENTARIO_PATH, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 for p in data:
                     self.inventario.addProducto(Producto(**p))
@@ -38,12 +42,13 @@ class AppMain:
                 "items": [(p.__dict__, c) for p, c in f.items],
                 "total": f.total
             })
-        with open("facturas.json", "w") as f:
-            json.dump(data, f)
+        os.makedirs(DATA_DIR, exist_ok=True)
+        with open(FACTURAS_PATH, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False)
 
     def cargar_facturas(self):
         try:
-            with open("facturas.json", "r") as f:
+            with open(FACTURAS_PATH, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 for fd in data:
                     items = [(Producto(**p), c) for p, c in fd["items"]]

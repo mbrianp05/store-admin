@@ -1,4 +1,4 @@
-from Producto import Producto
+from .Producto import Producto
 
 class Inventario:
     def __init__(self):
@@ -21,6 +21,5 @@ class Inventario:
         if not self.productos:
             print("Inventario vacío.")
         for i, producto in enumerate(self.productos, start=1):
-            unidad = "metros" if producto.unidad_medida == "metro" else "unidades"
-            print(f"{i}. {producto.nombre} - Precio: {producto.precio} ({unidad})")
+            print(f"{i}. {producto.nombre} - Precio: {producto.precio} ({producto.unidad_medida}) - Stock: {producto.stock}")
 
