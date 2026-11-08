@@ -1,7 +1,7 @@
 import { ShoppingCart } from 'lucide-react'
+import { Link, useRouterState } from '@tanstack/react-router'
 import BrandMark from './BrandMark'
 import { Button } from '@/components/ui/button'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
 
 const todayFormatter = new Intl.DateTimeFormat('es-AR', {
@@ -12,38 +12,63 @@ const todayFormatter = new Intl.DateTimeFormat('es-AR', {
 
 const today = todayFormatter.format(new Date())
 
-function SectionTabs({ view, onViewChange, counts, stretch = false }) {
+const TRIGGER_CLASS =
+  'inline-flex h-full flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background'
+
+function SectionTabs({ pathname, counts, stretch = false }) {
+  const isInvoices = pathname.startsWith('/facturas')
+
   return (
-    <Tabs value={view} onValueChange={onViewChange}>
-      <TabsList
-        aria-label="Secciones"
-        className={cn(stretch ? 'h-10 w-full' : 'h-9')}
+    <nav
+      aria-label="Secciones"
+      className={cn(
+        'inline-flex w-fit items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground',
+        stretch ? 'h-10 w-full' : 'h-9',
+      )}
+    >
+      <Link
+        to="/"
+        aria-current={!isInvoices ? 'page' : undefined}
+        className={cn(
+          TRIGGER_CLASS,
+          stretch && 'h-8',
+          isInvoices
+            ? 'hover:text-foreground'
+            : 'bg-background text-foreground shadow-xs',
+        )}
       >
-        <TabsTrigger value="products" className={stretch ? 'h-8' : undefined}>
-          Productos
-          <span className="text-[11px] tabular-nums text-muted-foreground">
-            {counts.products}
-          </span>
-        </TabsTrigger>
-        <TabsTrigger value="invoices" className={stretch ? 'h-8' : undefined}>
-          Facturas
-          <span className="text-[11px] tabular-nums text-muted-foreground">
-            {counts.invoices}
-          </span>
-        </TabsTrigger>
-      </TabsList>
-    </Tabs>
+        Productos
+        <span className="text-[11px] tabular-nums text-muted-foreground">
+          {counts.products}
+        </span>
+      </Link>
+      <Link
+        to="/facturas"
+        aria-current={isInvoices ? 'page' : undefined}
+        className={cn(
+          TRIGGER_CLASS,
+          stretch && 'h-8',
+          isInvoices
+            ? 'bg-background text-foreground shadow-xs'
+            : 'hover:text-foreground',
+        )}
+      >
+        Facturas
+        <span className="text-[11px] tabular-nums text-muted-foreground">
+          {counts.invoices}
+        </span>
+      </Link>
+    </nav>
   )
 }
 
 export default function Masthead({
-  view,
-  onViewChange,
   productCount,
   invoiceCount,
   cartCount = 0,
   onOpenCart,
 }) {
+  const pathname = useRouterState({ select: (state) => state.location.pathname })
   const counts = { products: productCount, invoices: invoiceCount }
 
   return (
@@ -62,7 +87,7 @@ export default function Masthead({
         </div>
 
         <div className="hidden sm:block">
-          <SectionTabs view={view} onViewChange={onViewChange} counts={counts} />
+          <SectionTabs pathname={pathname} counts={counts} />
         </div>
 
         <div className="flex items-center gap-2.5">
@@ -90,12 +115,7 @@ export default function Masthead({
       </div>
 
       <div className="border-t border-border/70 px-2 py-1.5 sm:hidden">
-        <SectionTabs
-          view={view}
-          onViewChange={onViewChange}
-          counts={counts}
-          stretch
-        />
+        <SectionTabs pathname={pathname} counts={counts} stretch />
       </div>
     </header>
   )

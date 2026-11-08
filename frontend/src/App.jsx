@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { AlertTriangle } from 'lucide-react'
+import { Outlet, useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
+import { AppStateContext } from './app-context'
 import {
   createInvoice,
   createProduct,
@@ -10,16 +12,14 @@ import {
   updateProduct,
 } from './api'
 import CartPanel from './components/CartPanel'
-import InvoicesView from './components/InvoicesView'
 import Masthead from './components/Masthead'
-import ProductsView from './components/ProductsView'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { Toaster } from '@/components/ui/sonner'
 
 export default function App() {
-  const [view, setView] = useState('products')
+  const navigate = useNavigate()
   const [products, setProducts] = useState([])
   const [invoices, setInvoices] = useState([])
   const [cart, setCart] = useState([])
@@ -152,15 +152,15 @@ export default function App() {
       setInvoices((current) => [...current, invoice])
       setSelectedInvoice(invoice)
       setCart([])
-      setView('invoices')
       setCartOpen(false)
       notify(`Factura #${invoice.numero} emitida.`)
+      navigate({ to: '/facturas' })
     } catch (checkoutError) {
       notify(checkoutError.message, 'error')
     } finally {
       setCheckingOut(false)
     }
-  }, [cart, notify])
+  }, [cart, navigate, notify])
 
   const handleCreateProduct = useCallback(
     async (product) => {
@@ -226,11 +226,25 @@ export default function App() {
     checkingOut,
   }
 
+  const appState = {
+    products,
+    invoices,
+    cart,
+    search,
+    loading,
+    selectedInvoice,
+    onSearchChange: setSearch,
+    onAddToCart: addToCart,
+    onDeleteProduct: handleDeleteProduct,
+    onCreateProduct: handleCreateProduct,
+    onUpdateProduct: handleUpdateProduct,
+    onSelectInvoice: setSelectedInvoice,
+    onClearInvoiceSelection: () => setSelectedInvoice(null),
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Masthead
-        view={view}
-        onViewChange={setView}
         productCount={products.length}
         invoiceCount={invoices.length}
         cartCount={cartCount}
@@ -259,27 +273,9 @@ export default function App() {
         )}
 
         <main className="min-w-0 py-6 sm:py-8">
-          {view === 'products' ? (
-            <ProductsView
-              products={products}
-              loading={loading}
-              search={search}
-              onSearchChange={setSearch}
-              cart={cart}
-              onAddToCart={addToCart}
-              onDelete={handleDeleteProduct}
-              onCreate={handleCreateProduct}
-              onUpdate={handleUpdateProduct}
-            />
-          ) : (
-            <InvoicesView
-              invoices={invoices}
-              loading={loading}
-              selectedInvoice={selectedInvoice}
-              onSelect={setSelectedInvoice}
-              onClearSelection={() => setSelectedInvoice(null)}
-            />
-          )}
+          <AppStateContext.Provider value={appState}>
+            <Outlet />
+          </AppStateContext.Provider>
         </main>
       </div>
 
