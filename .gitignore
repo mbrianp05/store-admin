@@ -1,10 +1,19 @@
 # Entorno virtual
 venv/
+
+# Python
 __pycache__/
+*.py[cod]
+
+# Frontend
+node_modules/
+frontend/dist/
+*.local
 
 # Datos locales
-*.json
+data/*.json
 !ejemplo_*.json
+data/uploads/
 
 # IDEs
 .vscode/
