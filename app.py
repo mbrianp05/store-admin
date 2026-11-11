@@ -16,6 +16,7 @@ from autenticacion import (
     validar_registro,
     verificar_password,
 )
+from limitador import LimitadorIntentos
 from models import Carrito, Factura, GestorFacturas, Inventario, Producto
 from ubicaciones import MUNICIPIOS
 
@@ -66,6 +67,56 @@ inventario = Inventario()
 gestor_facturas = GestorFacturas()
 usuarios = cargar_usuarios()
 next_invoice_number = 1
+
+
+def entero_entorno(nombre, defecto):
+    try:
+        return max(1, int(os.environ.get(nombre, defecto)))
+    except (TypeError, ValueError):
+        return defecto
+
+
+LIMITE_LOGIN_USUARIO = LimitadorIntentos(
+    max_intentos=entero_entorno('LOGIN_MAX_INTENTOS', 5),
+    ventana=entero_entorno('LOGIN_VENTANA_SEGUNDOS', 900),
+    bloqueo=entero_entorno('LOGIN_BLOQUEO_SEGUNDOS', 900),
+)
+LIMITE_LOGIN_IP = LimitadorIntentos(
+    max_intentos=entero_entorno('LOGIN_MAX_INTENTOS_IP', 10),
+    ventana=entero_entorno('LOGIN_VENTANA_SEGUNDOS', 900),
+    bloqueo=entero_entorno('LOGIN_BLOQUEO_SEGUNDOS', 900),
+)
+
+
+def ip_cliente():
+    # No se usa X-Forwarded-For: sin un proxy de confianza sería falsificable.
+    return request.remote_addr or 'desconocida'
+
+
+def clave_login_usuario(ip, nombre_usuario):
+    return f'{ip}:{nombre_usuario.casefold()[:100]}'
+
+
+def espera_login(ip, nombre_usuario):
+    espera_ip = LIMITE_LOGIN_IP.espera(ip)
+    espera_usuario = (
+        LIMITE_LOGIN_USUARIO.espera(clave_login_usuario(ip, nombre_usuario))
+        if nombre_usuario
+        else 0
+    )
+    return max(espera_ip, espera_usuario)
+
+
+def registrar_fallo_login(ip, nombre_usuario):
+    LIMITE_LOGIN_IP.registrar_fallo(ip)
+    if nombre_usuario:
+        LIMITE_LOGIN_USUARIO.registrar_fallo(clave_login_usuario(ip, nombre_usuario))
+
+
+def limpiar_intentos_login(ip, nombre_usuario):
+    LIMITE_LOGIN_IP.limpiar(ip)
+    if nombre_usuario:
+        LIMITE_LOGIN_USUARIO.limpiar(clave_login_usuario(ip, nombre_usuario))
 
 def cargar_datos():
     global next_invoice_number
@@ -233,11 +284,25 @@ def auth_login():
     datos = request.get_json(silent=True) or {}
     nombre_usuario = str(datos.get('usuario') or '').strip()
     password = datos.get('password')
+    ip = ip_cliente()
+
+    espera = espera_login(ip, nombre_usuario)
+    if espera:
+        respuesta = jsonify({
+            'error': (
+                'Demasiados intentos fallidos. '
+                f'Esperá {espera} segundos antes de volver a intentar.'
+            ),
+        })
+        respuesta.headers['Retry-After'] = str(espera)
+        return respuesta, 429
 
     cuenta = buscar_usuario(usuarios, nombre_usuario)
     if not cuenta or not verificar_password(cuenta, password):
+        registrar_fallo_login(ip, nombre_usuario)
         return jsonify({'error': 'Usuario o contraseña incorrectos.'}), 401
 
+    limpiar_intentos_login(ip, nombre_usuario)
     session.clear()
     session.permanent = True
     session['usuario'] = cuenta['usuario']

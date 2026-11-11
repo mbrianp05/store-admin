@@ -15,6 +15,7 @@ Inventory, cart, and invoicing app: Flask JSON API + React/Tailwind frontend. UI
 - `app.py` — Flask API and static server for `frontend/dist`; the only backend entrypoint.
 - `autenticacion.py` — registro, validación de contraseñas (zxcvbn) y persistencia de usuarios en `data/usuarios.json`.
 - `ubicaciones.py` — municipios de Cuba usados por el autocompletado de residencia y la validación del backend.
+- `limitador.py` — rate limit en memoria para el login (fallos por IP y por IP+usuario).
 - `models/` — domain classes (`Producto`, `Inventario`, `Carrito`, `Factura`, `GestorFacturas`) re-exported from `models/__init__.py`. Use relative imports inside the package.
 - `frontend/` — Vite + React 19 + Tailwind CSS v4. Entrypoint `src/main.jsx`; `src/App.jsx` owns view/cart/invoice state.
 - `frontend/src/components/` — UI pieces; `ProductsView`, `CartPanel`, `InvoicesView`, `ProductForm`, `Sidebar`, `Toast`, `Icons`; auth pieces are `AuthShell`, `LocationAutocomplete`, `PasswordStrength`, `AppLoader`.
@@ -37,6 +38,7 @@ Inventory, cart, and invoicing app: Flask JSON API + React/Tailwind frontend. UI
 - `SECRET_KEY` and `SESSION_COOKIE_SECURE` are read from the environment; without `SECRET_KEY`, a stable key is generated at `data/secret_key`. Set `SESSION_COOKIE_SECURE=1` behind HTTPS.
 - Session state is a signed Flask cookie (`session['usuario']`), not a database. Logout only clears that cookie.
 - Residence validation accepts `Municipio, Provincia` or a unique municipality name; duplicate names such as San Luis require the province.
+- Login rate limit lives in `limitador.py` and is per-process: 5 failures per IP+usuario and 10 per IP in 15 minutes, blocked for 15 minutes, then a successful login clears both counters. Configure with `LOGIN_MAX_INTENTOS`, `LOGIN_MAX_INTENTOS_IP`, `LOGIN_VENTANA_SEGUNDOS`, `LOGIN_BLOQUEO_SEGUNDOS`. It returns `429` with `Retry-After`.
 - `data/facturas.json` stores items as `[product_dict, cantidad]` pairs, not objects; both loaders assume that shape.
 - Invoice numbers: the server owns `next_invoice_number` (module global, restored from existing invoices). The client sends `numero` on POST but the server ignores it — do not rely on the client value.
 - Frontend cart state is `{ producto, cantidad }` and JSON field names are Spanish (`nombre`, `precio`, `unidad_medida`, `cantidad`). Keep the React components and `app.py` in sync.
