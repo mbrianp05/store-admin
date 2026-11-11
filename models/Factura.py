@@ -10,10 +10,3 @@ class Factura:
 
     def calcular_total(self):
         return sum(p.precio * c for (p, c) in self.items)
-    
-    def mostrar_factura(self):
-        print(f"\nFactura N° {self.numero} - Fecha: {self.fecha}")
-        for producto, cantidad in self.items:
-            subtotal = producto.precio * cantidad
-            print(f"{producto.nombre} x {cantidad} {producto.unidad_medida} = {subtotal}")
-        print(f"TOTAL: {self.total}")

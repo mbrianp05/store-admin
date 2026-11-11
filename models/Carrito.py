@@ -19,8 +19,3 @@ class Carrito:
 
     def vaciar_carrito(self):
         self.items = []
-
-    def mostrar_carrito(self):
-        for producto, cantidad in self.items:
-            print(f"{producto.nombre} x {cantidad} = {producto.precio * cantidad}")
-        print(f"Total: {self.calcTotal()}")

@@ -13,8 +13,7 @@ Inventory, cart, and invoicing app: Flask JSON API + React/Tailwind frontend. UI
 ## Layout
 
 - `app.py` — Flask API and static server for `frontend/dist`; the only backend entrypoint.
-- `models/` — domain classes (`Producto`, `Inventario`, `Carrito`, `Factura`, `GestorFacturas`) re-exported from `models/__init__.py`; shared with the CLI. Use relative imports inside the package.
-- `AppMain.py` — separate CLI version with its own JSON load/save logic; still uses `models/`.
+- `models/` — domain classes (`Producto`, `Inventario`, `Carrito`, `Factura`, `GestorFacturas`) re-exported from `models/__init__.py`. Use relative imports inside the package.
 - `frontend/` — Vite + React 19 + Tailwind CSS v4. Entrypoint `src/main.jsx`; `src/App.jsx` owns view/cart/invoice state.
 - `frontend/src/components/` — UI pieces; `ProductsView`, `CartPanel`, `InvoicesView`, `ProductForm`, `Sidebar`, `Toast`, `Icons`.
 - `frontend/src/api.js` — all API calls (`/api` relative). `frontend/src/lib/format.js` — currency/date/unit formatting.

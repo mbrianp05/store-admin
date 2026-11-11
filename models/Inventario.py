@@ -16,10 +16,3 @@ class Inventario:
                 return producto
         return None
 
-    def listProductos(self):
-        print("\n--- INVENTARIO ---")
-        if not self.productos:
-            print("Inventario vacío.")
-        for i, producto in enumerate(self.productos, start=1):
-            print(f"{i}. {producto.nombre} - Precio: {producto.precio} ({producto.unidad_medida}) - Stock: {producto.stock}")
-

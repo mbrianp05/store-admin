@@ -12,15 +12,6 @@ class Producto:
         except (TypeError, ValueError):
             self.stock = 0
 
-    def mostrar_detalle(self):
-        unidad = self.unidad_medida or "unidad"
-        print(f"{self.nombre} - Precio: {self.precio} por {unidad}")
-        print(f"Stock disponible: {self.stock}")
-        if self.descripcion:
-            print(f"Descripción: {self.descripcion}")
-        if self.fotos:
-            print("Fotos: " + ", ".join(self.fotos))
-
     def actualizar_info(self, precio=None, descripcion=None, fotos=None, stock=None):
         if precio is not None:
             self.precio = precio
