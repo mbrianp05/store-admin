@@ -1,11 +1,14 @@
 import { Minus, Plus, ShoppingBag, X } from 'lucide-react'
 import { formatCurrency } from '../lib/format'
+import { descuentoVigente, precioVigente } from '../lib/pricing'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 function CartLine({ item, onIncrement, onDecrement, onRemove }) {
-  const subtotal = item.producto.precio * item.cantidad
+  const precioUnitario = precioVigente(item.producto)
+  const descuento = descuentoVigente(item.producto)
+  const subtotal = precioUnitario * item.cantidad
 
   return (
     <li className="cart-line group/line animate-in fade-in slide-in-from-right-2 grid h-[72px] grid-rows-2 duration-200">
@@ -33,8 +36,11 @@ function CartLine({ item, onIncrement, onDecrement, onRemove }) {
       </div>
 
       <div className="flex items-center justify-between gap-3">
-        <p className="text-xs text-ink-soft">
-          {formatCurrency(item.producto.precio)} c/u
+        <p className="flex items-baseline gap-1 text-xs text-ink-soft">
+          {formatCurrency(precioUnitario)} c/u
+          {descuento && (
+            <span className="font-medium text-highlight">−{descuento.porcentaje}%</span>
+          )}
         </p>
         <div className="inline-flex items-center overflow-hidden rounded-[5px] border border-ink/20 bg-white/[0.04]">
           <Button
@@ -77,7 +83,10 @@ export default function CartPanel({
   className,
 }) {
   const count = cart.reduce((total, item) => total + item.cantidad, 0)
-  const total = cart.reduce((sum, item) => sum + item.producto.precio * item.cantidad, 0)
+  const total = cart.reduce(
+    (sum, item) => sum + precioVigente(item.producto) * item.cantidad,
+    0,
+  )
 
   return (
     <div className={cn('paper-stack h-full', className)}>

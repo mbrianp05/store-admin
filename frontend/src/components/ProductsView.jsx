@@ -1,12 +1,15 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Image, Pencil, Plus, Search, Trash2, X } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { Link } from '@tanstack/react-router'
+import { ArrowUpRight, Filter, Image, PackageOpen, Plus, Search, Tag, X } from 'lucide-react'
 import { formatCurrency } from '../lib/format'
+import { descuentoVigente, precioVigente } from '../lib/pricing'
 import ProductForm from './ProductForm'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
+import { cn } from '@/lib/utils'
 
 const CARD_GRID = 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4'
 
@@ -39,6 +42,7 @@ function ProductCover({ product, inCart }) {
   const cover = fotos[0]
   const [failedSrc, setFailedSrc] = useState(null)
   const showPhoto = cover && failedSrc !== cover
+  const descuento = descuentoVigente(product)
 
   return (
     <div className="relative aspect-[4/3] overflow-hidden border-b border-border bg-muted/30">
@@ -49,13 +53,19 @@ function ProductCover({ product, inCart }) {
           loading="lazy"
           decoding="async"
           onError={() => setFailedSrc(cover)}
-          className="h-full w-full object-cover"
+          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
         />
       ) : (
         <div className="flex h-full flex-col items-center justify-center gap-2 text-muted-foreground">
           <Image className="size-7" />
           <span className="text-[11px]">Sin foto</span>
         </div>
+      )}
+
+      {descuento && (
+        <Badge className="absolute left-2 top-2 border-transparent bg-highlight/15 text-highlight backdrop-blur-sm">
+          −{descuento.porcentaje}% de descuento
+        </Badge>
       )}
 
       {inCart > 0 && (
@@ -73,47 +83,37 @@ function ProductCover({ product, inCart }) {
   )
 }
 
-function ProductCard({
-  product,
-  inCart,
-  confirming,
-  deleting,
-  onAdd,
-  onEdit,
-  onRequestDelete,
-  onCancelDelete,
-  onConfirmDelete,
-}) {
+function ProductCard({ product, inCart, onAdd }) {
+  const descuento = descuentoVigente(product)
+  const precio = precioVigente(product)
+  const sinStock = (Number(product.stock) || 0) <= 0
+
   return (
-    <Card className="group h-full gap-0 overflow-hidden py-0">
-      <div className="relative">
-        <ProductCover product={product} inCart={inCart} />
-        <div className="pointer-fine:pointer-events-none pointer-fine:translate-y-1 pointer-fine:opacity-0 absolute right-2 top-2 flex items-center gap-0.5 rounded-lg border border-border/80 bg-background/75 p-0.5 shadow-sm backdrop-blur-md transition-all duration-200 group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:translate-y-0 group-focus-within:opacity-100 pointer-fine:group-hover:pointer-events-auto pointer-fine:group-hover:translate-y-0 pointer-fine:group-hover:opacity-100 pointer-fine:group-focus-within:pointer-events-auto pointer-fine:group-focus-within:translate-y-0 pointer-fine:group-focus-within:opacity-100">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            onClick={() => onEdit(product)}
-            aria-label={`Editar ${product.nombre}`}
-            className="size-7 rounded-md text-foreground/80 hover:bg-background hover:text-foreground"
-          >
-            <Pencil className="size-3.5" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            onClick={() => onRequestDelete(product.nombre)}
-            aria-label={`Eliminar ${product.nombre}`}
-            className="size-7 rounded-md text-foreground/80 hover:bg-destructive/15 hover:text-destructive"
-          >
-            <Trash2 className="size-3.5" />
-          </Button>
-        </div>
-      </div>
+    <Card className="group relative h-full gap-0 overflow-hidden py-0 transition-colors hover:border-foreground/20">
+      <Link
+        to="/productos/$nombre"
+        params={{ nombre: product.nombre }}
+        aria-label={`Ver la ficha de ${product.nombre}`}
+        className="absolute inset-0 z-10 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+      />
+
+      <span className="pointer-events-none absolute right-2 top-2 z-20 grid size-7 place-items-center rounded-md border border-border/80 bg-background/75 text-muted-foreground opacity-0 shadow-sm backdrop-blur-md transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100">
+        <ArrowUpRight className="size-3.5" />
+      </span>
+
+      <ProductCover product={product} inCart={inCart} />
 
       <CardContent className="flex flex-1 flex-col gap-3 p-4">
         <div className="min-w-0">
+          {product.categoria && (
+            <Badge
+              variant="outline"
+              className="mb-1.5 border-border/80 bg-muted/30 text-[10px] font-medium text-muted-foreground"
+            >
+              <Tag className="size-2.5" />
+              {product.categoria}
+            </Badge>
+          )}
           <h3
             className="truncate font-medium leading-snug text-foreground"
             title={product.nombre}
@@ -127,60 +127,69 @@ function ProductCard({
           )}
         </div>
 
-        <div className="mt-auto">
-          {confirming ? (
-            <div className="flex w-full items-center justify-between gap-2">
-              <span className="text-[11px] text-muted-foreground">
-                ¿Eliminar producto?
+        <div className="mt-auto flex flex-col gap-2">
+          <span className="flex min-w-0 flex-wrap items-baseline gap-x-1.5">
+            <span
+              className={cn(
+                'truncate text-lg font-semibold tabular-nums tracking-tight',
+                descuento ? 'text-highlight' : 'text-foreground',
+              )}
+            >
+              {formatCurrency(precio)}
+            </span>
+            {descuento && (
+              <span className="text-xs tabular-nums text-muted-foreground line-through">
+                {formatCurrency(product.precio)}
               </span>
-              <div className="flex shrink-0 items-center gap-1">
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="sm"
-                  disabled={deleting}
-                  onClick={() => onConfirmDelete(product.nombre)}
-                  className="h-7 px-2.5 text-[11px]"
-                >
-                  Sí
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={onCancelDelete}
-                  className="h-7 px-2.5 text-[11px]"
-                >
-                  No
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-2">
-              <span className="flex min-w-0 items-baseline gap-1.5">
-                <span className="truncate text-lg font-semibold tabular-nums tracking-tight text-foreground">
-                  {formatCurrency(product.precio)}
-                </span>
-                <span className="shrink-0 text-xs text-muted-foreground">
-                  / {product.unidad_medida || 'unidad'}
-                </span>
-              </span>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => onAdd(product)}
-                aria-label={`Agregar ${product.nombre} al carrito`}
-                className="h-7 w-full text-xs"
-              >
+            )}
+            <span className="shrink-0 text-xs text-muted-foreground">
+              / {product.unidad_medida || 'unidad'}
+            </span>
+          </span>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => onAdd(product)}
+            disabled={sinStock}
+            aria-label={`Agregar ${product.nombre} al carrito`}
+            className="relative z-20 h-7 w-full text-xs"
+          >
+            {sinStock ? (
+              'Sin stock'
+            ) : (
+              <>
                 <Plus className="size-3.5" />
                 Agregar
-              </Button>
-            </div>
-          )}
+              </>
+            )}
+          </Button>
         </div>
       </CardContent>
     </Card>
+  )
+}
+
+function FilterChip({ active, onClick, children, count }) {
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      onClick={onClick}
+      aria-pressed={active}
+      className={cn(
+        'h-7 gap-1.5 rounded-full border px-3 text-xs font-medium',
+        active
+          ? 'border-border bg-secondary text-foreground'
+          : 'border-transparent text-muted-foreground hover:bg-secondary/60 hover:text-foreground',
+      )}
+    >
+      {children}
+      {count != null && (
+        <span className="text-[10px] tabular-nums text-muted-foreground">{count}</span>
+      )}
+    </Button>
   )
 }
 
@@ -191,47 +200,32 @@ export default function ProductsView({
   onSearchChange,
   cart,
   onAddToCart,
-  onDelete,
   onCreate,
-  onUpdate,
 }) {
   const [showForm, setShowForm] = useState(false)
-  const [editing, setEditing] = useState(null)
-  const [confirming, setConfirming] = useState(null)
-  const [deleting, setDeleting] = useState(false)
+  const [categoria, setCategoria] = useState('')
 
-  const isFormOpen = showForm || Boolean(editing)
-
-  useEffect(() => {
-    if (!editing) return
-    document
-      .getElementById('producto-form')
-      ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-  }, [editing])
-
-  function openCreate() {
-    setEditing(null)
-    setShowForm(true)
-  }
-
-  function openEdit(product) {
-    setShowForm(false)
-    setEditing(product)
-  }
-
-  function closeForm() {
-    setShowForm(false)
-    setEditing(null)
-  }
+  const categorias = useMemo(() => {
+    const conteo = new Map()
+    for (const product of products) {
+      const nombre = (product.categoria || '').trim()
+      if (!nombre) continue
+      conteo.set(nombre, (conteo.get(nombre) || 0) + 1)
+    }
+    return [...conteo.entries()]
+      .map(([nombre, cantidad]) => ({ nombre, cantidad }))
+      .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
+  }, [products])
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase()
-    if (!term) return products
     return products.filter((product) => {
-      const haystack = `${product.nombre} ${product.descripcion || ''}`.toLowerCase()
+      if (categoria && product.categoria !== categoria) return false
+      if (!term) return true
+      const haystack = `${product.nombre} ${product.descripcion || ''} ${product.categoria || ''}`.toLowerCase()
       return haystack.includes(term)
     })
-  }, [products, search])
+  }, [products, search, categoria])
 
   function quantityInCart(nombre) {
     return cart
@@ -239,15 +233,13 @@ export default function ProductsView({
       .reduce((total, item) => total + item.cantidad, 0)
   }
 
-  async function handleDelete(nombre) {
-    setDeleting(true)
-    await onDelete(nombre)
-    setDeleting(false)
-    setConfirming(null)
-    if (editing?.nombre === nombre) closeForm()
-  }
-
   const hasSearch = search.trim().length > 0
+  const hasFilters = hasSearch || Boolean(categoria)
+
+  function limpiarFiltros() {
+    onSearchChange('')
+    setCategoria('')
+  }
 
   return (
     <div className="space-y-6">
@@ -264,58 +256,95 @@ export default function ProductsView({
         </div>
         <Button
           type="button"
-          onClick={() => (isFormOpen ? closeForm() : openCreate())}
-          aria-expanded={isFormOpen}
+          onClick={() => setShowForm((actual) => !actual)}
+          aria-expanded={showForm}
           aria-controls="producto-form"
           className="sm:self-end"
         >
           <Plus className="size-4" />
-          {isFormOpen ? 'Cerrar formulario' : 'Agregar producto'}
+          {showForm ? 'Cerrar formulario' : 'Agregar producto'}
         </Button>
       </header>
 
-      {isFormOpen && (
+      {showForm && (
         <div id="producto-form">
           <ProductForm
-            key={editing ? `editar-${editing.nombre}` : 'nuevo'}
-            product={editing}
-            onSave={
-              editing
-                ? (payload) => onUpdate(editing.nombre, payload)
-                : onCreate
-            }
-            onClose={closeForm}
+            key="nuevo"
+            product={null}
+            categorias={categorias.map((item) => item.nombre)}
+            onSave={onCreate}
+            onClose={() => setShowForm(false)}
           />
         </div>
       )}
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <label className="relative block w-full sm:max-w-sm">
-          <span className="sr-only">Buscar productos</span>
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(event) => onSearchChange(event.target.value)}
-            placeholder="Buscar en el inventario"
-            className="pl-9 pr-9"
-          />
-          {hasSearch && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              onClick={() => onSearchChange('')}
-              aria-label="Limpiar búsqueda"
-              className="absolute right-2 top-1/2 size-7 -translate-y-1/2 text-muted-foreground"
-            >
-              <X className="size-3.5" />
-            </Button>
+      <div className="space-y-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <label className="relative block w-full sm:max-w-sm">
+            <span className="sr-only">Buscar productos</span>
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(event) => onSearchChange(event.target.value)}
+              placeholder="Buscar en el inventario"
+              className="pl-9 pr-9"
+            />
+            {hasSearch && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => onSearchChange('')}
+                aria-label="Limpiar búsqueda"
+                className="absolute right-2 top-1/2 size-7 -translate-y-1/2 text-muted-foreground"
+              >
+                <X className="size-3.5" />
+              </Button>
+            )}
+          </label>
+          {hasFilters && (
+            <p className="text-xs text-muted-foreground" aria-live="polite">
+              {filtered.length} {filtered.length === 1 ? 'resultado' : 'resultados'}
+            </p>
           )}
-        </label>
-        {hasSearch && (
-          <p className="text-xs text-muted-foreground" aria-live="polite">
-            {filtered.length} {filtered.length === 1 ? 'resultado' : 'resultados'}
-          </p>
+        </div>
+
+        {categorias.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1">
+            <span className="mr-1 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+              <Filter className="size-3" />
+              Categorías
+            </span>
+            <FilterChip
+              active={!categoria}
+              onClick={() => setCategoria('')}
+              count={products.length}
+            >
+              Todas
+            </FilterChip>
+            {categorias.map((item) => (
+              <FilterChip
+                key={item.nombre}
+                active={categoria === item.nombre}
+                onClick={() => setCategoria(item.nombre)}
+                count={item.cantidad}
+              >
+                {item.nombre}
+              </FilterChip>
+            ))}
+            {categoria && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setCategoria('')}
+                className="h-7 gap-1 px-2 text-[11px] text-muted-foreground"
+              >
+                <X className="size-3" />
+                Quitar filtro
+              </Button>
+            )}
+          </div>
         )}
       </div>
 
@@ -330,11 +359,7 @@ export default function ProductsView({
           <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
             Agregá el primer producto para empezar a armar el carrito y emitir facturas.
           </p>
-          <Button
-            type="button"
-            onClick={openCreate}
-            className="mt-5"
-          >
+          <Button type="button" onClick={() => setShowForm(true)} className="mt-5">
             <Plus className="size-4" />
             Agregar producto
           </Button>
@@ -342,20 +367,23 @@ export default function ProductsView({
       ) : filtered.length === 0 ? (
         <Card className="gap-0 px-6 py-16 text-center">
           <span className="mx-auto grid size-12 place-items-center rounded-xl border border-border bg-muted/40 text-muted-foreground">
-            <Search className="size-5" />
+            <PackageOpen className="size-5" />
           </span>
           <h2 className="mt-5 text-lg font-semibold">Sin coincidencias</h2>
           <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-            No encontramos productos para “{search.trim()}”. Probá con otro nombre o
-            descripción.
+            {categoria
+              ? `No hay productos en la categoría «${categoria}»${
+                  hasSearch ? ` para “${search.trim()}”` : ''
+                }.`
+              : `No encontramos productos para “${search.trim()}”. Probá con otro nombre o descripción.`}
           </p>
           <Button
             type="button"
             variant="outline"
-            onClick={() => onSearchChange('')}
+            onClick={limpiarFiltros}
             className="mt-5"
           >
-            Limpiar búsqueda
+            Limpiar filtros
           </Button>
         </Card>
       ) : (
@@ -365,13 +393,7 @@ export default function ProductsView({
               key={product.nombre}
               product={product}
               inCart={quantityInCart(product.nombre)}
-              confirming={confirming === product.nombre}
-              deleting={deleting}
               onAdd={onAddToCart}
-              onEdit={openEdit}
-              onRequestDelete={setConfirming}
-              onCancelDelete={() => setConfirming(null)}
-              onConfirmDelete={handleDelete}
             />
           ))}
         </div>

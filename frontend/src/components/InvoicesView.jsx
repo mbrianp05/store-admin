@@ -1,5 +1,6 @@
 import { ArrowLeft, ChevronRight, ReceiptText } from 'lucide-react'
 import { formatCurrency, formatDate } from '../lib/format'
+import { precioVigente } from '../lib/pricing'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -81,22 +82,25 @@ function InvoiceDetail({ invoice, onBack }) {
             </tr>
           </thead>
           <tbody>
-            {invoice.items.map((item, index) => (
-              <tr key={`${item.producto.nombre}-${index}`} className="border-t border-border/70">
-                <td className="py-3 pr-3 text-sm leading-snug text-foreground">
-                  {item.producto.nombre}
-                </td>
-                <td className="whitespace-nowrap py-3 text-right text-sm tabular-nums text-muted-foreground">
-                  {item.cantidad}
-                </td>
-                <td className="hidden whitespace-nowrap py-3 text-right text-sm tabular-nums text-muted-foreground sm:table-cell">
-                  {formatCurrency(item.producto.precio)}
-                </td>
-                <td className="whitespace-nowrap py-3 text-right text-sm font-medium tabular-nums">
-                  {formatCurrency(item.producto.precio * item.cantidad)}
-                </td>
-              </tr>
-            ))}
+            {invoice.items.map((item, index) => {
+              const precioUnitario = precioVigente(item.producto, invoice.fecha)
+              return (
+                <tr key={`${item.producto.nombre}-${index}`} className="border-t border-border/70">
+                  <td className="py-3 pr-3 text-sm leading-snug text-foreground">
+                    {item.producto.nombre}
+                  </td>
+                  <td className="whitespace-nowrap py-3 text-right text-sm tabular-nums text-muted-foreground">
+                    {item.cantidad}
+                  </td>
+                  <td className="hidden whitespace-nowrap py-3 text-right text-sm tabular-nums text-muted-foreground sm:table-cell">
+                    {formatCurrency(precioUnitario)}
+                  </td>
+                  <td className="whitespace-nowrap py-3 text-right text-sm font-medium tabular-nums">
+                    {formatCurrency(precioUnitario * item.cantidad)}
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>

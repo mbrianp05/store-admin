@@ -9,9 +9,7 @@ export default function ProductsPage() {
     loading,
     onSearchChange,
     onAddToCart,
-    onDeleteProduct,
     onCreateProduct,
-    onUpdateProduct,
   } = useAppState()
 
   return (
@@ -22,9 +20,7 @@ export default function ProductsPage() {
       onSearchChange={onSearchChange}
       cart={cart}
       onAddToCart={onAddToCart}
-      onDelete={onDeleteProduct}
       onCreate={onCreateProduct}
-      onUpdate={onUpdateProduct}
     />
   )
 }

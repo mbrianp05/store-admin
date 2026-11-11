@@ -204,7 +204,7 @@ export default function App() {
           ),
         );
         notify(`"${updated.nombre}" se actualizó.`);
-        return true;
+        return updated;
       } catch (updateError) {
         notify(updateError.message, "error");
         return false;
@@ -224,8 +224,10 @@ export default function App() {
           current.filter((item) => item.producto.nombre !== nombre),
         );
         notify(`"${nombre}" se eliminó del inventario.`);
+        return true;
       } catch (deleteError) {
         notify(deleteError.message, "error");
+        return false;
       }
     },
     [notify],
@@ -288,7 +290,7 @@ export default function App() {
           </Alert>
         )}
 
-        <main className="min-w-0 py-6 sm:py-8">
+        <main className="min-w-0 pb-24 pt-6 sm:py-8">
           <AppStateContext.Provider value={appState}>
             <Outlet />
           </AppStateContext.Provider>

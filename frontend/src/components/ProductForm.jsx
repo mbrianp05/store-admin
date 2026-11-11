@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { Image, Loader2, Plus, Save, X } from 'lucide-react'
 import { uploadProductPhoto } from '../api'
+import CategoryAutocomplete from './CategoryAutocomplete'
+import DiscountEditor from './DiscountEditor'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -22,7 +24,7 @@ function fotosIniciales(product) {
   return existentes.map((url) => ({ url, preview: url }))
 }
 
-export default function ProductForm({ product, onSave, onClose }) {
+export default function ProductForm({ product, onSave, onClose, categorias = [] }) {
   const isEditing = Boolean(product)
   const [values, setValues] = useState(() => ({
     nombre: product?.nombre ?? '',
@@ -30,7 +32,17 @@ export default function ProductForm({ product, onSave, onClose }) {
     descripcion: product?.descripcion ?? '',
     unidad_medida: product?.unidad_medida ?? 'unidad',
     stock: product?.stock != null ? String(product.stock) : '0',
+    categoria: product?.categoria ?? '',
   }))
+  const [descuento, setDescuento] = useState(() =>
+    product?.descuento
+      ? {
+          porcentaje: String(product.descuento.porcentaje ?? ''),
+          desde: product.descuento.desde ?? '',
+          hasta: product.descuento.hasta ?? '',
+        }
+      : null,
+  )
   const [photos, setPhotos] = useState(() => fotosIniciales(product))
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
@@ -112,6 +124,28 @@ export default function ProductForm({ product, onSave, onClose }) {
       return
     }
 
+    let descuentoPayload = null
+    if (descuento) {
+      const porcentaje = Number.parseFloat(descuento.porcentaje)
+      if (!Number.isFinite(porcentaje) || porcentaje <= 0 || porcentaje >= 100) {
+        setError('El descuento tiene que ser un porcentaje entre 0 y 100.')
+        return
+      }
+      if (!descuento.desde || !descuento.hasta) {
+        setError('Elegí las fechas de inicio y fin del descuento.')
+        return
+      }
+      if (descuento.desde > descuento.hasta) {
+        setError('La fecha de fin del descuento no puede ser anterior al inicio.')
+        return
+      }
+      descuentoPayload = {
+        porcentaje,
+        desde: descuento.desde,
+        hasta: descuento.hasta,
+      }
+    }
+
     setError('')
     setSaving(true)
     let saved = false
@@ -131,6 +165,8 @@ export default function ProductForm({ product, onSave, onClose }) {
         unidad_medida: values.unidad_medida.trim() || 'unidad',
         descripcion: values.descripcion.trim(),
         stock,
+        categoria: values.categoria.trim(),
+        descuento: descuentoPayload,
         fotos: urls.filter(Boolean),
       })
     } catch (uploadError) {
@@ -238,6 +274,18 @@ export default function ProductForm({ product, onSave, onClose }) {
           </div>
 
           <div>
+            <Label htmlFor="producto-categoria" className="mb-1.5 font-medium">
+              Categoría (opcional)
+            </Label>
+            <CategoryAutocomplete
+              id="producto-categoria"
+              value={values.categoria}
+              onChange={(valor) => update('categoria', valor)}
+              categorias={categorias}
+            />
+          </div>
+
+          <div className="sm:col-span-2">
             <Label htmlFor="producto-descripcion" className="mb-1.5 font-medium">
               Descripción (opcional)
             </Label>
@@ -247,6 +295,14 @@ export default function ProductForm({ product, onSave, onClose }) {
               onChange={(event) => update('descripcion', event.target.value)}
               placeholder="Material, color o detalle útil"
               className={fieldClass}
+            />
+          </div>
+
+          <div className="sm:col-span-2">
+            <DiscountEditor
+              value={descuento}
+              onChange={setDescuento}
+              precio={values.precio}
             />
           </div>
 
