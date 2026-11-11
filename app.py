@@ -1,7 +1,7 @@
 import json
 import os
 import secrets
-from datetime import timedelta
+from datetime import date, timedelta
 from uuid import uuid4
 
 from flask import Flask, jsonify, request, send_from_directory, session
@@ -117,6 +117,40 @@ def limpiar_intentos_login(ip, nombre_usuario):
     LIMITE_LOGIN_IP.limpiar(ip)
     if nombre_usuario:
         LIMITE_LOGIN_USUARIO.limpiar(clave_login_usuario(ip, nombre_usuario))
+
+def normalizar_categoria(valor):
+    return str(valor or '').strip()[:60]
+
+
+def parsear_descuento(valor):
+    """Valida el descuento recibido y devuelve (descuento, error)."""
+    if valor in (None, '', {}):
+        return None, None
+    if not isinstance(valor, dict):
+        return None, 'El descuento debe incluir un porcentaje y un periodo.'
+
+    try:
+        porcentaje = float(valor.get('porcentaje'))
+    except (TypeError, ValueError):
+        return None, 'El porcentaje de descuento debe ser un número.'
+    if not 0 < porcentaje < 100:
+        return None, 'El porcentaje de descuento debe estar entre 0 y 100.'
+
+    fechas = []
+    for campo, etiqueta in (('desde', 'inicio'), ('hasta', 'fin')):
+        try:
+            fechas.append(date.fromisoformat(str(valor.get(campo))[:10]))
+        except (TypeError, ValueError):
+            return None, f'La fecha de {etiqueta} del descuento no es válida.'
+    if fechas[0] > fechas[1]:
+        return None, 'La fecha de fin debe ser igual o posterior al inicio.'
+
+    return {
+        'porcentaje': round(porcentaje, 2),
+        'desde': fechas[0].isoformat(),
+        'hasta': fechas[1].isoformat(),
+    }, None
+
 
 def cargar_datos():
     global next_invoice_number
@@ -375,6 +409,11 @@ def add_product():
     fotos = data.get('fotos')
     if not isinstance(fotos, list):
         fotos = [data['foto']] if data.get('foto') else []
+
+    descuento, error_descuento = parsear_descuento(data.get('descuento'))
+    if error_descuento:
+        return jsonify({'error': error_descuento}), 400
+
     producto = Producto(
         nombre=nombre,
         precio=precio,
@@ -382,6 +421,8 @@ def add_product():
         descripcion=str(data.get('descripcion') or '').strip(),
         fotos=[url for url in fotos if isinstance(url, str) and url],
         stock=stock,
+        categoria=normalizar_categoria(data.get('categoria')),
+        descuento=descuento,
     )
     inventario.addProducto(producto)
     guardar_inventario()
@@ -424,6 +465,14 @@ def update_product(nombre):
         producto.unidad_medida = str(data.get('unidad_medida') or '').strip() or 'unidad'
     if 'descripcion' in data:
         producto.descripcion = str(data.get('descripcion') or '').strip()
+    if 'categoria' in data:
+        producto.categoria = normalizar_categoria(data.get('categoria'))
+
+    if 'descuento' in data:
+        descuento, error_descuento = parsear_descuento(data.get('descuento'))
+        if error_descuento:
+            return jsonify({'error': error_descuento}), 400
+        producto.descuento = descuento
 
     fotos = data.get('fotos')
     if isinstance(fotos, list):

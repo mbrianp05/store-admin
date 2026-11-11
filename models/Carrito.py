@@ -15,7 +15,14 @@ class Carrito:
         self.items = [(p, c) for (p, c) in self.items if p != producto]
 
     def calcTotal(self):
-        return sum(p.precio * c for (p, c) in self.items)
+        total = 0
+        for producto, cantidad in self.items:
+            if hasattr(producto, 'precio_vigente'):
+                precio = producto.precio_vigente()
+            else:
+                precio = producto.precio
+            total += precio * cantidad
+        return round(total, 2)
 
     def vaciar_carrito(self):
         self.items = []

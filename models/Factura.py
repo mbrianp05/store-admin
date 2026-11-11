@@ -1,5 +1,6 @@
 from datetime import date
 
+
 class Factura:
 
     def __init__(self, numero, carrito):
@@ -9,4 +10,11 @@ class Factura:
         self.total = self.calcular_total()
 
     def calcular_total(self):
-        return sum(p.precio * c for (p, c) in self.items)
+        total = 0
+        for producto, cantidad in self.items:
+            if hasattr(producto, 'precio_vigente'):
+                precio = producto.precio_vigente(self.fecha)
+            else:
+                precio = producto.precio
+            total += precio * cantidad
+        return round(total, 2)
