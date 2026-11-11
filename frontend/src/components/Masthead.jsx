@@ -1,4 +1,4 @@
-import { ShoppingCart } from 'lucide-react'
+import { LogOut, ShoppingCart } from 'lucide-react'
 import { Link, useRouterState } from '@tanstack/react-router'
 import BrandMark from './BrandMark'
 import { Button } from '@/components/ui/button'
@@ -67,6 +67,8 @@ export default function Masthead({
   invoiceCount,
   cartCount = 0,
   onOpenCart,
+  user,
+  onLogout,
 }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname })
   const counts = { products: productCount, invoices: invoiceCount }
@@ -92,6 +94,11 @@ export default function Masthead({
 
         <div className="flex items-center gap-2.5">
           <p className="hidden text-xs text-muted-foreground lg:block">{today}</p>
+          {user && (
+            <p className="hidden max-w-[14rem] truncate text-xs text-muted-foreground md:block">
+              {user.nombres} {user.apellidos}
+            </p>
+          )}
           <Button
             type="button"
             variant="ghost"
@@ -111,6 +118,19 @@ export default function Masthead({
               </span>
             )}
           </Button>
+          {onLogout && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={onLogout}
+              aria-label="Cerrar sesión"
+              title="Cerrar sesión"
+              className="text-muted-foreground hover:bg-secondary hover:text-foreground"
+            >
+              <LogOut className="size-[18px]" />
+            </Button>
+          )}
         </div>
       </div>
 

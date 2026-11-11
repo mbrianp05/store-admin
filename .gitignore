@@ -13,6 +13,7 @@ frontend/dist/
 # Datos locales
 data/*.json
 !ejemplo_*.json
+data/secret_key
 data/uploads/
 
 # IDEs

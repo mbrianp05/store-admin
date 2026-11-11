@@ -1,11 +1,23 @@
 import json
 import os
+import secrets
+from datetime import timedelta
 from uuid import uuid4
 
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, request, send_from_directory, session
 from flask_cors import CORS
 
+from autenticacion import (
+    buscar_usuario,
+    cargar_usuarios,
+    crear_usuario,
+    guardar_usuarios,
+    usuario_publico,
+    validar_registro,
+    verificar_password,
+)
 from models import Carrito, Factura, GestorFacturas, Inventario, Producto
+from ubicaciones import MUNICIPIOS
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, 'data')
@@ -15,15 +27,44 @@ FACTURAS_PATH = os.path.join(DATA_DIR, 'facturas.json')
 FRONTEND_DIST = os.path.join(BASE_DIR, 'frontend', 'dist')
 EXTENSIONES_FOTO = {'.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif'}
 
+
+def cargar_secret_key():
+    """Usa SECRET_KEY si está definida; si no, guarda una clave local estable."""
+    clave = os.environ.get('SECRET_KEY')
+    if clave:
+        return clave
+
+    ruta = os.path.join(DATA_DIR, 'secret_key')
+    try:
+        with open(ruta, 'r', encoding='utf-8') as archivo:
+            clave = archivo.read().strip()
+        if clave:
+            return clave
+    except FileNotFoundError:
+        pass
+
+    os.makedirs(DATA_DIR, exist_ok=True)
+    clave = secrets.token_hex(32)
+    with open(ruta, 'w', encoding='utf-8') as archivo:
+        archivo.write(clave)
+    return clave
+
+
 app = Flask(__name__, static_folder=FRONTEND_DIST, static_url_path='')
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10 MB por foto
 app.config['PROPAGATE_EXCEPTIONS'] = False
+app.config['SECRET_KEY'] = cargar_secret_key()
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_SECURE'] = os.environ.get('SESSION_COOKIE_SECURE') == '1'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
 app.json.ensure_ascii = False
 CORS(app)
 
 # Inicializar datos
 inventario = Inventario()
 gestor_facturas = GestorFacturas()
+usuarios = cargar_usuarios()
 next_invoice_number = 1
 
 def cargar_datos():
@@ -98,6 +139,27 @@ def uploaded_file(filename):
 def es_ruta_api():
     return request.path == '/api' or request.path.startswith('/api/')
 
+RUTAS_PUBLICAS = {
+    '/api/auth/login',
+    '/api/auth/register',
+    '/api/auth/logout',
+    '/api/auth/me',
+    '/api/auth/ubicaciones',
+}
+
+@app.before_request
+def exigir_sesion():
+    if request.method == 'OPTIONS':
+        return None
+    ruta = request.path
+    if not (es_ruta_api() or ruta.startswith('/uploads/')):
+        return None
+    if ruta in RUTAS_PUBLICAS:
+        return None
+    if not session.get('usuario'):
+        return jsonify({'error': 'Necesitás iniciar sesión.'}), 401
+    return None
+
 @app.errorhandler(413)
 def foto_demasiado_grande(_error):
     return jsonify({'error': 'La foto supera el límite de 10 MB.'}), 413
@@ -133,6 +195,71 @@ def api_internal_error(error):
     if not es_ruta_api():
         return error
     return jsonify({'error': 'Error interno del servidor.'}), 500
+
+# ===== AUTENTICACIÓN =====
+@app.route('/api/auth/ubicaciones', methods=['GET'])
+def auth_ubicaciones():
+    return jsonify(MUNICIPIOS)
+
+@app.route('/api/auth/register', methods=['POST'])
+def auth_register():
+    global usuarios
+    datos = request.get_json(silent=True) or {}
+    valores, errores = validar_registro(datos, usuarios)
+    if errores:
+        return jsonify({
+            'error': 'Revisá los datos ingresados.',
+            'campos': errores,
+        }), 400
+
+    usuario = crear_usuario(
+        nombres=valores['nombres'],
+        apellidos=valores['apellidos'],
+        usuario=valores['usuario'],
+        residencia=valores['residencia'],
+        email=valores['email'],
+        password=valores['password'],
+    )
+    usuarios.append(usuario)
+    guardar_usuarios(usuarios)
+
+    session.clear()
+    session.permanent = True
+    session['usuario'] = usuario['usuario']
+    return jsonify(usuario_publico(usuario)), 201
+
+@app.route('/api/auth/login', methods=['POST'])
+def auth_login():
+    datos = request.get_json(silent=True) or {}
+    nombre_usuario = str(datos.get('usuario') or '').strip()
+    password = datos.get('password')
+
+    cuenta = buscar_usuario(usuarios, nombre_usuario)
+    if not cuenta or not verificar_password(cuenta, password):
+        return jsonify({'error': 'Usuario o contraseña incorrectos.'}), 401
+
+    session.clear()
+    session.permanent = True
+    session['usuario'] = cuenta['usuario']
+    return jsonify(usuario_publico(cuenta))
+
+@app.route('/api/auth/logout', methods=['POST'])
+def auth_logout():
+    session.clear()
+    return jsonify({'success': True})
+
+@app.route('/api/auth/me', methods=['GET'])
+def auth_me():
+    nombre_usuario = session.get('usuario')
+    if not nombre_usuario:
+        return jsonify({'error': 'No hay una sesión activa.'}), 401
+
+    cuenta = buscar_usuario(usuarios, nombre_usuario)
+    if not cuenta:
+        session.clear()
+        return jsonify({'error': 'No hay una sesión activa.'}), 401
+
+    return jsonify(usuario_publico(cuenta))
 
 # ===== ENDPOINTS API =====
 @app.route('/api/uploads', methods=['POST'])

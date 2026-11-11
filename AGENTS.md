@@ -7,26 +7,36 @@ Inventory, cart, and invoicing app: Flask JSON API + React/Tailwind frontend. UI
 - Backend: `py app.py` → http://localhost:5000. On this Windows setup `python` is a Store stub; use `py` (Python 3.14).
 - Frontend dev: `cd frontend && npm install && npm run dev` → http://localhost:5173. Vite proxies `/api` to the Flask server on port 5000.
 - Production-ish: `cd frontend && npm run build`, then `py app.py`. Flask serves `frontend/dist` at `/` and the API at `/api/*`.
-- Install Python deps manually: `py -m pip install flask flask-cors`. There is no `requirements.txt`.
+- Install Python deps manually: `py -m pip install flask flask-cors zxcvbn`. There is no `requirements.txt`.
 - Lint the frontend with `cd frontend && npm run lint` (oxlint). There is no backend linter, test suite, or CI.
 
 ## Layout
 
 - `app.py` — Flask API and static server for `frontend/dist`; the only backend entrypoint.
+- `autenticacion.py` — registro, validación de contraseñas (zxcvbn) y persistencia de usuarios en `data/usuarios.json`.
+- `ubicaciones.py` — municipios de Cuba usados por el autocompletado de residencia y la validación del backend.
 - `models/` — domain classes (`Producto`, `Inventario`, `Carrito`, `Factura`, `GestorFacturas`) re-exported from `models/__init__.py`. Use relative imports inside the package.
 - `frontend/` — Vite + React 19 + Tailwind CSS v4. Entrypoint `src/main.jsx`; `src/App.jsx` owns view/cart/invoice state.
-- `frontend/src/components/` — UI pieces; `ProductsView`, `CartPanel`, `InvoicesView`, `ProductForm`, `Sidebar`, `Toast`, `Icons`.
+- `frontend/src/components/` — UI pieces; `ProductsView`, `CartPanel`, `InvoicesView`, `ProductForm`, `Sidebar`, `Toast`, `Icons`; auth pieces are `AuthShell`, `LocationAutocomplete`, `PasswordStrength`, `AppLoader`.
+- `frontend/src/pages/` — `LoginPage`, `RegisterPage`, `ProductsPage`, `InvoicesPage`.
+- `frontend/src/routes/` — file-based TanStack Router routes; `_app.jsx` is the authenticated layout, `login.jsx` and `registro.jsx` are public.
+- `frontend/src/auth-context.jsx` — session state (`user`, `loading`, `login`, `register`, `logout`).
 - `frontend/src/api.js` — all API calls (`/api` relative). `frontend/src/lib/format.js` — currency/date/unit formatting.
 - `frontend/src/index.css` — Tailwind import, `@theme` design tokens, and base styles.
 - `data/` — runtime JSON state (`inventario.json`, `facturas.json`), gitignored; created on demand.
 
 ## API
 
-`GET/POST /api/products`, `DELETE /api/products/<nombre>`, `GET/POST /api/invoices`.
+`GET/POST /api/products`, `DELETE /api/products/<nombre>`, `GET/POST /api/invoices`, `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`, `GET /api/auth/ubicaciones`.
 
 ## Gotchas
 
 - `data/*.json` is local state (only `ejemplo_*.json` is tracked). If `data/inventario.json` is missing, `cargar_datos()` seeds four sample products.
+- Auth: users live in `data/usuarios.json` with `scrypt` password hashes (never plaintext). Registration is open and asks for nombres, apellidos, usuario, residencia (Cuban municipality), optional email, and a zxcvbn-strong password.
+- Every `/api/*` and `/uploads/*` request except the `/api/auth` routes requires the session cookie; the SPA redirects to `/login` when `GET /api/auth/me` returns 401.
+- `SECRET_KEY` and `SESSION_COOKIE_SECURE` are read from the environment; without `SECRET_KEY`, a stable key is generated at `data/secret_key`. Set `SESSION_COOKIE_SECURE=1` behind HTTPS.
+- Session state is a signed Flask cookie (`session['usuario']`), not a database. Logout only clears that cookie.
+- Residence validation accepts `Municipio, Provincia` or a unique municipality name; duplicate names such as San Luis require the province.
 - `data/facturas.json` stores items as `[product_dict, cantidad]` pairs, not objects; both loaders assume that shape.
 - Invoice numbers: the server owns `next_invoice_number` (module global, restored from existing invoices). The client sends `numero` on POST but the server ignores it — do not rely on the client value.
 - Frontend cart state is `{ producto, cantidad }` and JSON field names are Spanish (`nombre`, `precio`, `unidad_medida`, `cantidad`). Keep the React components and `app.py` in sync.
