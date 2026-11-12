@@ -10,8 +10,11 @@ class GestorFacturas:
         self.facturas.append(factura)
         return factura
 
-    def searchFactura(self, numero):
+    def searchFactura(self, numero, usuario=None):
+        buscado = usuario.casefold() if usuario is not None else None
         for factura in self.facturas:
-            if factura.numero == numero:
+            if factura.numero != numero:
+                continue
+            if buscado is None or factura.usuario.casefold() == buscado:
                 return factura
         return None

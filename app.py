@@ -78,7 +78,6 @@ inventario = Inventario()
 gestor_facturas = GestorFacturas()
 usuarios = cargar_usuarios()
 configuracion = {'costo_envio': 0.0}
-next_invoice_number = 1
 
 # Serializa la verificación de stock con la emisión de facturas para evitar
 # que dos accesos concurrentes vendan las mismas unidades.
@@ -212,7 +211,7 @@ def guardar_config(config):
 
 
 def cargar_datos():
-    global configuracion, next_invoice_number
+    global configuracion
     os.makedirs(DATA_DIR, exist_ok=True)
     configuracion = cargar_config()
 
@@ -252,15 +251,35 @@ def cargar_datos():
                 factura.total = fd["total"]
                 gestor_facturas.facturas.append(factura)
 
-                if gestor_facturas.facturas:
-                    max_num = max(f.numero for f in gestor_facturas.facturas)
-                    next_invoice_number = max_num + 1
+            renumerar_facturas_por_usuario()
 
             # Persiste los campos nuevos (estado, código QR) de facturas viejas.
             if data:
                 guardar_facturas()
     except FileNotFoundError:
         pass
+
+
+def renumerar_facturas_por_usuario():
+    """Cada usuario tiene su propia secuencia de facturas: 1, 2, 3…"""
+    por_usuario = {}
+    for factura in gestor_facturas.facturas:
+        clave = factura.usuario.casefold()
+        por_usuario.setdefault(clave, []).append(factura)
+
+    for facturas_usuario in por_usuario.values():
+        facturas_usuario.sort(key=lambda f: (str(f.fecha), f.numero))
+        for indice, factura in enumerate(facturas_usuario, start=1):
+            factura.numero = indice
+
+
+def siguiente_numero_factura(usuario):
+    numeros = [
+        f.numero
+        for f in gestor_facturas.facturas
+        if f.usuario.casefold() == usuario.casefold()
+    ]
+    return max(numeros, default=0) + 1
 
 def guardar_inventario():
     os.makedirs(DATA_DIR, exist_ok=True)
@@ -601,11 +620,15 @@ def delete_product(nombre):
 
 @app.route('/api/invoices', methods=['GET'])
 def get_invoices():
-    return jsonify([f.to_dict() for f in gestor_facturas.facturas])
+    usuario = str(session.get('usuario') or '')
+    return jsonify([
+        f.to_dict()
+        for f in gestor_facturas.facturas
+        if f.usuario.casefold() == usuario.casefold()
+    ])
 
 @app.route('/api/invoices', methods=['POST'])
 def create_invoice():
-    global next_invoice_number
     data = request.get_json(silent=True) or {}
     items = data.get('items')
     if not isinstance(items, list) or not items:
@@ -614,6 +637,8 @@ def create_invoice():
     envio, error_envio = parsear_envio(data.get('envio'))
     if error_envio:
         return jsonify({'error': error_envio}), 400
+
+    usuario = str(session.get('usuario') or '')
 
     with STOCK_LOCK:
         pedidos = {}
@@ -651,15 +676,14 @@ def create_invoice():
             carrito_temp.addChart(producto, cantidad)
 
         factura = Factura(
-            next_invoice_number,
+            siguiente_numero_factura(usuario),
             carrito_temp,
             estado=estado_inicial(envio),
             envio=envio,
-            usuario=session.get('usuario', ''),
+            usuario=usuario,
             costo_envio=configuracion.get('costo_envio', 0),
         )
         gestor_facturas.facturas.append(factura)
-        next_invoice_number += 1
 
         for producto, cantidad in carrito_temp.items:
             producto.stock -= cantidad
@@ -684,8 +708,9 @@ def update_invoice(numero):
             'error': 'Escribí el motivo de la cancelación.'
         }), 400
 
+    usuario = str(session.get('usuario') or '')
     with STOCK_LOCK:
-        factura = gestor_facturas.searchFactura(numero)
+        factura = gestor_facturas.searchFactura(numero, usuario)
         if not factura:
             return jsonify({'error': 'Factura no encontrada.'}), 404
         factura.cambiar_estado(estado, motivo)
