@@ -1,6 +1,7 @@
 import json
 import os
 import secrets
+import threading
 from datetime import date, timedelta
 from uuid import uuid4
 
@@ -17,7 +18,16 @@ from autenticacion import (
     verificar_password,
 )
 from limitador import LimitadorIntentos
-from models import Carrito, Factura, GestorFacturas, Inventario, Producto
+from models import (
+    ESTADOS_FACTURA,
+    Carrito,
+    Factura,
+    GestorFacturas,
+    Inventario,
+    Producto,
+    estado_inicial,
+    normalizar_envio,
+)
 from ubicaciones import MUNICIPIOS
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -25,6 +35,7 @@ DATA_DIR = os.path.join(BASE_DIR, 'data')
 UPLOAD_DIR = os.path.join(DATA_DIR, 'uploads')
 INVENTARIO_PATH = os.path.join(DATA_DIR, 'inventario.json')
 FACTURAS_PATH = os.path.join(DATA_DIR, 'facturas.json')
+CONFIG_PATH = os.path.join(DATA_DIR, 'config.json')
 FRONTEND_DIST = os.path.join(BASE_DIR, 'frontend', 'dist')
 EXTENSIONES_FOTO = {'.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif'}
 
@@ -66,7 +77,12 @@ CORS(app)
 inventario = Inventario()
 gestor_facturas = GestorFacturas()
 usuarios = cargar_usuarios()
+configuracion = {'costo_envio': 0.0}
 next_invoice_number = 1
+
+# Serializa la verificación de stock con la emisión de facturas para evitar
+# que dos accesos concurrentes vendan las mismas unidades.
+STOCK_LOCK = threading.RLock()
 
 
 def entero_entorno(nombre, defecto):
@@ -152,9 +168,53 @@ def parsear_descuento(valor):
     }, None
 
 
-def cargar_datos():
-    global next_invoice_number
+def parsear_envio(valor):
+    """Valida los datos de entrega y devuelve (envio, error)."""
+    if valor in (None, '', {}):
+        return normalizar_envio(None), None
+    if not isinstance(valor, dict):
+        return None, 'Los datos de envío no son válidos.'
+
+    if not valor.get('a_domicilio'):
+        return normalizar_envio({'a_domicilio': False}), None
+
+    direccion = str(valor.get('direccion') or '').strip()
+    if not direccion:
+        return None, 'Escribí la dirección de entrega.'
+
+    return {
+        'a_domicilio': True,
+        'ubicacion': '',
+        'direccion': direccion[:200],
+    }, None
+
+
+def cargar_config():
+    try:
+        with open(CONFIG_PATH, 'r', encoding='utf-8') as archivo:
+            datos = json.load(archivo)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {'costo_envio': 0.0}
+
+    try:
+        costo = float(datos.get('costo_envio', 0))
+    except (TypeError, ValueError):
+        costo = 0
+    return {'costo_envio': round(max(0.0, costo), 2)}
+
+
+def guardar_config(config):
     os.makedirs(DATA_DIR, exist_ok=True)
+    ruta_temporal = f'{CONFIG_PATH}.tmp'
+    with open(ruta_temporal, 'w', encoding='utf-8') as archivo:
+        json.dump(config, archivo, ensure_ascii=False, indent=2)
+    os.replace(ruta_temporal, CONFIG_PATH)
+
+
+def cargar_datos():
+    global configuracion, next_invoice_number
+    os.makedirs(DATA_DIR, exist_ok=True)
+    configuracion = cargar_config()
 
     # Cargar inventario
     try:
@@ -177,14 +237,28 @@ def cargar_datos():
             for fd in data:
                 items = [(Producto(**p), c) for p, c in fd["items"]]
                 carrito_temp = type("CarritoTemp", (), {"items": items})()
-                factura = Factura(fd["numero"], carrito_temp)
+                factura = Factura(
+                    fd["numero"],
+                    carrito_temp,
+                    estado=fd.get("estado"),
+                    envio=fd.get("envio"),
+                    usuario=fd.get("usuario", ""),
+                    codigo=fd.get("codigo"),
+                    costo_envio=fd.get("costo_envio", 0),
+                    motivo_cancelacion=fd.get("motivo_cancelacion", ""),
+                )
                 factura.fecha = fd["fecha"]
+                factura.subtotal = fd.get("subtotal", factura.subtotal)
                 factura.total = fd["total"]
                 gestor_facturas.facturas.append(factura)
 
                 if gestor_facturas.facturas:
                     max_num = max(f.numero for f in gestor_facturas.facturas)
                     next_invoice_number = max_num + 1
+
+            # Persiste los campos nuevos (estado, código QR) de facturas viejas.
+            if data:
+                guardar_facturas()
     except FileNotFoundError:
         pass
 
@@ -196,12 +270,10 @@ def guardar_inventario():
 def guardar_facturas():
     data = []
     for f in gestor_facturas.facturas:
-        data.append({
-            "numero": f.numero,
-            "fecha": str(f.fecha),
-            "items": [(p.__dict__, c) for p, c in f.items],
-            "total": f.total
-        })
+        items = [(p.__dict__, c) for p, c in f.items]
+        factura_data = f.to_dict()
+        factura_data["items"] = items
+        data.append(factura_data)
     os.makedirs(DATA_DIR, exist_ok=True)
     with open(FACTURAS_PATH, "w", encoding="utf-8") as f:
         json.dump(data, f, default=str, ensure_ascii=False)
@@ -361,6 +433,32 @@ def auth_me():
     return jsonify(usuario_publico(cuenta))
 
 # ===== ENDPOINTS API =====
+@app.route('/api/config', methods=['GET'])
+def get_config():
+    return jsonify(configuracion)
+
+
+@app.route('/api/config', methods=['PUT'])
+def update_config():
+    global configuracion
+    data = request.get_json(silent=True) or {}
+
+    try:
+        costo = float(data.get('costo_envio'))
+    except (TypeError, ValueError):
+        return jsonify({'error': 'El costo de envío debe ser un número.'}), 400
+    if costo < 0:
+        return jsonify({'error': 'El costo de envío no puede ser negativo.'}), 400
+    if costo > 1_000_000:
+        return jsonify({'error': 'El costo de envío es demasiado alto.'}), 400
+
+    with STOCK_LOCK:
+        configuracion = {'costo_envio': round(costo, 2)}
+        guardar_config(configuracion)
+
+    return jsonify(configuracion)
+
+
 @app.route('/api/uploads', methods=['POST'])
 def upload_foto():
     archivo = request.files.get('foto')
@@ -381,7 +479,8 @@ def upload_foto():
 
 @app.route('/api/products', methods=['GET'])
 def get_products():
-    return jsonify([p.__dict__ for p in inventario.productos])
+    with STOCK_LOCK:
+        return jsonify([p.__dict__ for p in inventario.productos])
 
 @app.route('/api/products', methods=['POST'])
 def add_product():
@@ -424,8 +523,9 @@ def add_product():
         categoria=normalizar_categoria(data.get('categoria')),
         descuento=descuento,
     )
-    inventario.addProducto(producto)
-    guardar_inventario()
+    with STOCK_LOCK:
+        inventario.addProducto(producto)
+        guardar_inventario()
     return jsonify(producto.__dict__)
 
 @app.route('/api/products/<nombre>', methods=['PUT'])
@@ -450,59 +550,58 @@ def update_product(nombre):
     if precio <= 0:
         return jsonify({'error': 'El precio debe ser mayor a cero.'}), 400
 
+    stock_nuevo = None
     if 'stock' in data:
         try:
-            stock = int(data.get('stock'))
+            stock_nuevo = int(data.get('stock'))
         except (TypeError, ValueError):
             return jsonify({'error': 'El stock debe ser un número entero.'}), 400
-        if stock < 0:
+        if stock_nuevo < 0:
             return jsonify({'error': 'El stock no puede ser negativo.'}), 400
-        producto.stock = stock
 
-    producto.nombre = nuevo_nombre
-    producto.precio = precio
-    if 'unidad_medida' in data:
-        producto.unidad_medida = str(data.get('unidad_medida') or '').strip() or 'unidad'
-    if 'descripcion' in data:
-        producto.descripcion = str(data.get('descripcion') or '').strip()
-    if 'categoria' in data:
-        producto.categoria = normalizar_categoria(data.get('categoria'))
-
+    descuento_nuevo = None
     if 'descuento' in data:
-        descuento, error_descuento = parsear_descuento(data.get('descuento'))
+        descuento_nuevo, error_descuento = parsear_descuento(data.get('descuento'))
         if error_descuento:
             return jsonify({'error': error_descuento}), 400
-        producto.descuento = descuento
 
     fotos = data.get('fotos')
-    if isinstance(fotos, list):
-        producto.fotos = [url for url in fotos if isinstance(url, str) and url]
-    elif data.get('foto'):
-        producto.fotos = [data['foto']]
 
-    guardar_inventario()
+    with STOCK_LOCK:
+        producto.nombre = nuevo_nombre
+        producto.precio = precio
+        if stock_nuevo is not None:
+            producto.stock = stock_nuevo
+        if 'unidad_medida' in data:
+            producto.unidad_medida = str(data.get('unidad_medida') or '').strip() or 'unidad'
+        if 'descripcion' in data:
+            producto.descripcion = str(data.get('descripcion') or '').strip()
+        if 'categoria' in data:
+            producto.categoria = normalizar_categoria(data.get('categoria'))
+        if 'descuento' in data:
+            producto.descuento = descuento_nuevo
+        if isinstance(fotos, list):
+            producto.fotos = [url for url in fotos if isinstance(url, str) and url]
+        elif data.get('foto'):
+            producto.fotos = [data['foto']]
+
+        guardar_inventario()
+
     return jsonify(producto.__dict__)
 
 @app.route('/api/products/<nombre>', methods=['DELETE'])
 def delete_product(nombre):
-    producto = inventario.searchProducto(nombre)
-    if producto:
+    with STOCK_LOCK:
+        producto = inventario.searchProducto(nombre)
+        if not producto:
+            return jsonify({'success': False, 'error': 'Product not found'}), 404
         inventario.removeProducto(producto)
         guardar_inventario()
-        return jsonify({'success': True})
-    return jsonify({'success': False, 'error': 'Product not found'}), 404
+    return jsonify({'success': True})
 
 @app.route('/api/invoices', methods=['GET'])
 def get_invoices():
-    data = []
-    for f in gestor_facturas.facturas:
-        data.append({
-            'numero': f.numero,
-            'fecha': str(f.fecha),
-            'items': [{'producto': p.__dict__, 'cantidad': c} for p, c in f.items],
-            'total': f.total
-        })
-    return jsonify(data)
+    return jsonify([f.to_dict() for f in gestor_facturas.facturas])
 
 @app.route('/api/invoices', methods=['POST'])
 def create_invoice():
@@ -512,54 +611,87 @@ def create_invoice():
     if not isinstance(items, list) or not items:
         return jsonify({'error': 'La factura no tiene artículos.'}), 400
 
-    pedidos = {}
-    for item in items:
-        if not isinstance(item, dict):
-            return jsonify({'error': 'Hay un artículo inválido en la factura.'}), 400
+    envio, error_envio = parsear_envio(data.get('envio'))
+    if error_envio:
+        return jsonify({'error': error_envio}), 400
 
-        producto_data = item.get('producto')
-        nombre = producto_data.get('nombre') if isinstance(producto_data, dict) else None
-        cantidad = item.get('cantidad')
+    with STOCK_LOCK:
+        pedidos = {}
+        for item in items:
+            if not isinstance(item, dict):
+                return jsonify({'error': 'Hay un artículo inválido en la factura.'}), 400
 
-        if not isinstance(nombre, str) or not nombre.strip():
-            return jsonify({'error': 'Hay un artículo inválido en la factura.'}), 400
-        if isinstance(cantidad, bool) or not isinstance(cantidad, int) or cantidad <= 0:
-            return jsonify({'error': 'Las cantidades deben ser números enteros positivos.'}), 400
+            producto_data = item.get('producto')
+            nombre = producto_data.get('nombre') if isinstance(producto_data, dict) else None
+            cantidad = item.get('cantidad')
 
-        producto = inventario.searchProducto(nombre)
-        if not producto:
-            return jsonify({'error': f'El producto "{nombre}" ya no está en el inventario.'}), 400
+            if not isinstance(nombre, str) or not nombre.strip():
+                return jsonify({'error': 'Hay un artículo inválido en la factura.'}), 400
+            if isinstance(cantidad, bool) or not isinstance(cantidad, int) or cantidad <= 0:
+                return jsonify({'error': 'Las cantidades deben ser números enteros positivos.'}), 400
 
-        pedidos[producto.nombre] = pedidos.get(producto.nombre, 0) + cantidad
+            producto = inventario.searchProducto(nombre)
+            if not producto:
+                return jsonify({'error': f'El producto "{nombre}" ya no está en el inventario.'}), 400
 
-    carrito_temp = Carrito()
-    for nombre, cantidad in pedidos.items():
-        producto = inventario.searchProducto(nombre)
-        if cantidad > producto.stock:
-            return jsonify({
-                'error': (
-                    f'No hay stock suficiente de "{producto.nombre}". '
-                    f'Disponible: {producto.stock}.'
-                )
-            }), 409
-        carrito_temp.addChart(producto, cantidad)
+            pedidos[producto.nombre] = pedidos.get(producto.nombre, 0) + cantidad
 
-    factura = Factura(next_invoice_number, carrito_temp)
-    gestor_facturas.facturas.append(factura)
-    next_invoice_number += 1
+        carrito_temp = Carrito()
+        for nombre, cantidad in pedidos.items():
+            producto = inventario.searchProducto(nombre)
+            # Se vuelve a comprobar dentro del bloqueo: otra venta pudo haber
+            # descontado el stock entre la validación previa y este momento.
+            if cantidad > producto.stock:
+                return jsonify({
+                    'error': (
+                        f'No hay stock suficiente de "{producto.nombre}". '
+                        f'Disponible: {producto.stock}.'
+                    )
+                }), 409
+            carrito_temp.addChart(producto, cantidad)
 
-    for producto, cantidad in carrito_temp.items:
-        producto.stock -= cantidad
+        factura = Factura(
+            next_invoice_number,
+            carrito_temp,
+            estado=estado_inicial(envio),
+            envio=envio,
+            usuario=session.get('usuario', ''),
+            costo_envio=configuracion.get('costo_envio', 0),
+        )
+        gestor_facturas.facturas.append(factura)
+        next_invoice_number += 1
 
-    guardar_inventario()
-    guardar_facturas()
+        for producto, cantidad in carrito_temp.items:
+            producto.stock -= cantidad
 
-    return jsonify({
-        'numero': factura.numero,
-        'fecha': str(factura.fecha),
-        'items': [{'producto': p.__dict__, 'cantidad': c} for p, c in factura.items],
-        'total': factura.total
-    })
+        guardar_inventario()
+        guardar_facturas()
+
+    return jsonify(factura.to_dict())
+
+@app.route('/api/invoices/<int:numero>', methods=['PATCH'])
+def update_invoice(numero):
+    data = request.get_json(silent=True) or {}
+    estado = str(data.get('estado') or '').strip()
+    if estado not in ESTADOS_FACTURA:
+        return jsonify({'error': 'El estado indicado no es válido.'}), 400
+
+    motivo = str(
+        data.get('motivo_cancelacion') or data.get('motivo') or ''
+    ).strip()
+    if estado == 'cancelada' and not motivo:
+        return jsonify({
+            'error': 'Escribí el motivo de la cancelación.'
+        }), 400
+
+    with STOCK_LOCK:
+        factura = gestor_facturas.searchFactura(numero)
+        if not factura:
+            return jsonify({'error': 'Factura no encontrada.'}), 404
+        factura.cambiar_estado(estado, motivo)
+        guardar_facturas()
+
+    return jsonify(factura.to_dict())
 
 if __name__ == '__main__':
     cargar_datos()
