@@ -87,14 +87,35 @@ export function deleteProduct(nombre) {
   })
 }
 
+export function getConfig() {
+  return request('/config')
+}
+
+export function updateConfig(config) {
+  return request('/config', {
+    method: 'PUT',
+    body: JSON.stringify(config),
+  })
+}
+
 export function getInvoices() {
   return request('/invoices')
 }
 
-export function createInvoice(items) {
+export function createInvoice(items, envio = null) {
   return request('/invoices', {
     method: 'POST',
-    body: JSON.stringify({ items }),
+    body: JSON.stringify({ items, envio }),
+  })
+}
+
+export function updateInvoiceState(numero, estado, motivoCancelacion = '') {
+  return request(`/invoices/${encodeURIComponent(numero)}`, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      estado,
+      motivo_cancelacion: motivoCancelacion,
+    }),
   })
 }
 

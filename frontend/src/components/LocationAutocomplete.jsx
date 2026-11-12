@@ -17,6 +17,7 @@ export default function LocationAutocomplete({
   ubicaciones = [],
   error,
   disabled = false,
+  dropUp = false,
 }) {
   const [abierto, setAbierto] = useState(false)
   const [activo, setActivo] = useState(-1)
@@ -115,7 +116,10 @@ export default function LocationAutocomplete({
           id={listboxId}
           role="listbox"
           aria-label="Municipios de Cuba"
-          className="absolute z-50 mt-1 max-h-64 w-full overflow-y-auto rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-lg"
+          className={cn(
+            'absolute z-50 max-h-64 w-full overflow-y-auto rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-lg',
+            dropUp ? 'bottom-full mb-1' : 'mt-1',
+          )}
         >
           {sugerencias.length === 0 ? (
             <p className="px-2 py-2 text-xs text-muted-foreground">

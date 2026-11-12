@@ -8,12 +8,16 @@ import {
   createInvoice,
   createProduct,
   deleteProduct,
+  getConfig,
   getInvoices,
   getProducts,
+  updateConfig,
+  updateInvoiceState,
   updateProduct,
 } from "./api";
 import CartPanel from "./components/CartPanel";
 import Masthead from "./components/Masthead";
+import SettingsDialog from "./components/SettingsDialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
@@ -23,6 +27,8 @@ export default function App() {
   const { user, logout } = useAuth();
   const [products, setProducts] = useState([]);
   const [invoices, setInvoices] = useState([]);
+  const [config, setConfig] = useState({ costo_envio: 0 });
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [cart, setCart] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -41,12 +47,14 @@ export default function App() {
 
   const fetchData = useCallback(async () => {
     try {
-      const [productsData, invoicesData] = await Promise.all([
+      const [productsData, invoicesData, configData] = await Promise.all([
         getProducts(),
         getInvoices(),
+        getConfig().catch(() => ({ costo_envio: 0 })),
       ]);
       setProducts(productsData);
       setInvoices(invoicesData);
+      setConfig(configData);
     } catch (loadError) {
       setError(loadError.message);
     } finally {
@@ -130,7 +138,7 @@ export default function App() {
     );
   }, []);
 
-  const handleCheckout = useCallback(async () => {
+  const handleCheckout = useCallback(async (envio = null) => {
     if (cart.length === 0) return;
 
     const sinStock = cart.find(
@@ -146,7 +154,7 @@ export default function App() {
 
     setCheckingOut(true);
     try {
-      const invoice = await createInvoice(cart);
+      const invoice = await createInvoice(cart, envio);
       setProducts((current) =>
         current.map((product) => {
           const item = cart.find(
@@ -171,6 +179,47 @@ export default function App() {
       setCheckingOut(false);
     }
   }, [cart, navigate, notify]);
+
+  const handleUpdateInvoiceState = useCallback(
+    async (numero, estado, motivoCancelacion = "") => {
+      try {
+        const updated = await updateInvoiceState(
+          numero,
+          estado,
+          motivoCancelacion,
+        );
+        setInvoices((current) =>
+          current.map((invoice) =>
+            invoice.numero === updated.numero ? updated : invoice,
+          ),
+        );
+        setSelectedInvoice((current) =>
+          current && current.numero === updated.numero ? updated : current,
+        );
+        notify(`Factura #${updated.numero}: estado actualizado.`);
+        return true;
+      } catch (stateError) {
+        notify(stateError.message, "error");
+        return false;
+      }
+    },
+    [notify],
+  );
+
+  const handleSaveConfig = useCallback(
+    async (costoEnvio) => {
+      try {
+        const updated = await updateConfig({ costo_envio: costoEnvio });
+        setConfig(updated);
+        notify("Tasa de envío actualizada.");
+        return true;
+      } catch (configError) {
+        notify(configError.message, "error");
+        return false;
+      }
+    },
+    [notify],
+  );
 
   const handleCreateProduct = useCallback(
     async (product) => {
@@ -237,6 +286,7 @@ export default function App() {
 
   const cartPanelProps = {
     cart,
+    costoEnvio: Number(config.costo_envio) || 0,
     onIncrement: (nombre) => changeQuantity(nombre, 1),
     onDecrement: (nombre) => changeQuantity(nombre, -1),
     onRemove: removeFromCart,
@@ -258,6 +308,7 @@ export default function App() {
     onUpdateProduct: handleUpdateProduct,
     onSelectInvoice: setSelectedInvoice,
     onClearInvoiceSelection: () => setSelectedInvoice(null),
+    onUpdateInvoiceState: handleUpdateInvoiceState,
   };
 
   return (
@@ -267,6 +318,7 @@ export default function App() {
         invoiceCount={invoices.length}
         cartCount={cartCount}
         onOpenCart={() => setCartOpen(true)}
+        onOpenSettings={() => setSettingsOpen(true)}
         user={user}
         onLogout={logout}
       />
@@ -296,6 +348,14 @@ export default function App() {
           </AppStateContext.Provider>
         </main>
       </div>
+
+      <SettingsDialog
+        key={`config-${config.costo_envio}`}
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+        costoEnvio={Number(config.costo_envio) || 0}
+        onSave={handleSaveConfig}
+      />
 
       <Sheet open={cartOpen} onOpenChange={setCartOpen}>
         <SheetContent

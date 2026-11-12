@@ -1,8 +1,11 @@
-import { Minus, Plus, ShoppingBag, X } from 'lucide-react'
+import { useState } from 'react'
+import { ChevronLeft, Home, Minus, Plus, ShoppingBag, Store, Truck, X } from 'lucide-react'
 import { formatCurrency } from '../lib/format'
 import { descuentoVigente, precioVigente } from '../lib/pricing'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 
 function CartLine({ item, onIncrement, onDecrement, onRemove }) {
@@ -72,8 +75,45 @@ function CartLine({ item, onIncrement, onDecrement, onRemove }) {
   )
 }
 
+function ModoEntrega({ aDomicilio, onChange }) {
+  const opciones = [
+    { valor: false, etiqueta: 'Retiro', icono: Store },
+    { valor: true, etiqueta: 'A domicilio', icono: Home },
+  ]
+
+  return (
+    <div
+      role="group"
+      aria-label="Forma de entrega"
+      className="grid grid-cols-2 gap-1 rounded-md border border-ink/20 bg-white/[0.03] p-1"
+    >
+      {opciones.map(({ valor, etiqueta, icono: Icono }) => {
+        const activo = aDomicilio === valor
+        return (
+          <button
+            key={etiqueta}
+            type="button"
+            aria-pressed={activo}
+            onClick={() => onChange(valor)}
+            className={cn(
+              'inline-flex items-center justify-center gap-1.5 rounded-[4px] px-2 py-1.5 text-xs font-medium transition-colors',
+              activo
+                ? 'bg-ink text-paper'
+                : 'text-ink-soft hover:bg-ink/10 hover:text-ink',
+            )}
+          >
+            <Icono className="size-3.5" />
+            {etiqueta}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
 export default function CartPanel({
   cart,
+  costoEnvio = 0,
   onIncrement,
   onDecrement,
   onRemove,
@@ -82,11 +122,40 @@ export default function CartPanel({
   onClose,
   className,
 }) {
+  const [paso, setPaso] = useState('carrito')
+  const [aDomicilio, setADomicilio] = useState(false)
+  const [direccion, setDireccion] = useState('')
+  const [errorDireccion, setErrorDireccion] = useState('')
+
   const count = cart.reduce((total, item) => total + item.cantidad, 0)
   const total = cart.reduce(
     (sum, item) => sum + precioVigente(item.producto) * item.cantidad,
     0,
   )
+  const envioActivo = paso === 'entrega' && aDomicilio
+  const totalFinal = total + (envioActivo ? costoEnvio : 0)
+
+  function cambiarModoEntrega(valor) {
+    setADomicilio(valor)
+    setErrorDireccion('')
+    if (!valor) setDireccion('')
+  }
+
+  function confirmarEntrega() {
+    if (aDomicilio && !direccion.trim()) {
+      setErrorDireccion('Escribí la dirección de entrega.')
+      return
+    }
+
+    onCheckout(
+      aDomicilio
+        ? {
+            a_domicilio: true,
+            direccion: direccion.trim(),
+          }
+        : { a_domicilio: false },
+    )
+  }
 
   return (
     <div className={cn('paper-stack h-full', className)}>
@@ -156,22 +225,100 @@ export default function CartPanel({
 
         <footer className="shrink-0 border-t border-dashed border-ink/20 px-5 pb-4 pt-3">
           <div className="flex items-baseline justify-between gap-3">
-            <span className="text-xs font-medium text-ink-soft">Total</span>
+            <span className="text-xs font-medium text-ink-soft">
+              {envioActivo ? 'Total con envío' : 'Total'}
+            </span>
             <span className="text-2xl font-semibold leading-none tracking-tight tabular-nums text-ink">
-              {formatCurrency(total)}
+              {formatCurrency(totalFinal)}
             </span>
           </div>
+          {envioActivo && (
+            <p className="mt-1 text-right text-[11px] text-ink-soft">
+              Productos {formatCurrency(total)} + envío {formatCurrency(costoEnvio)}
+            </p>
+          )}
+
+          {paso === 'entrega' && (
+            <div className="mt-3 space-y-3 rounded-md border border-ink/15 bg-white/[0.03] p-3">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs font-semibold text-ink">Forma de entrega</p>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => setPaso('carrito')}
+                  aria-label="Volver al carrito"
+                  className="size-6 text-ink-soft hover:bg-ink/10 hover:text-ink"
+                >
+                  <ChevronLeft className="size-4" />
+                </Button>
+              </div>
+
+              <ModoEntrega aDomicilio={aDomicilio} onChange={cambiarModoEntrega} />
+
+              {aDomicilio ? (
+                <div className="space-y-3">
+                  <div className="grid gap-1.5">
+                    <Label htmlFor="envio-direccion" className="text-[11px] text-ink-soft">
+                      Dirección de entrega
+                    </Label>
+                    <Input
+                      id="envio-direccion"
+                      value={direccion}
+                      onChange={(event) => {
+                        setDireccion(event.target.value)
+                        setErrorDireccion('')
+                      }}
+                      placeholder="Calle, número, referencia"
+                      maxLength={200}
+                      aria-invalid={Boolean(errorDireccion)}
+                    />
+                    {errorDireccion && (
+                      <p className="text-[11px] text-[#f0a48c]">{errorDireccion}</p>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between gap-2 rounded-[4px] border border-ink/15 bg-white/[0.04] px-2 py-1.5 text-[11px] text-ink-soft">
+                    <span>Costo de envío (tasa fija)</span>
+                    <span className="font-semibold tabular-nums text-ink">
+                      {formatCurrency(costoEnvio)}
+                    </span>
+                  </div>
+
+                  <p className="flex items-start gap-1.5 text-[11px] leading-snug text-ink-soft">
+                    <Truck className="mt-0.5 size-3.5 shrink-0" />
+                    La factura quedará <strong className="font-semibold text-ink">pendiente</strong>{' '}
+                    hasta que se entregue y pague.
+                  </p>
+                </div>
+              ) : (
+                <p className="text-[11px] leading-snug text-ink-soft">
+                  La factura quedará <strong className="font-semibold text-ink">pendiente</strong>{' '}
+                  para retirar en el mostrador.
+                </p>
+              )}
+            </div>
+          )}
+
           <Button
             type="button"
-            onClick={onCheckout}
+            onClick={paso === 'carrito' ? () => setPaso('entrega') : confirmarEntrega}
             disabled={cart.length === 0 || checkingOut}
             aria-busy={checkingOut}
             className="mt-3 h-10 w-full rounded-[5px] bg-ink text-sm font-semibold text-paper shadow-[0_2px_0_rgb(0_0_0/0.28)] hover:bg-[#faf9f5] active:translate-y-px active:shadow-none focus-visible:ring-ink focus-visible:ring-offset-paper"
           >
-            {checkingOut ? 'Emitiendo factura…' : 'Emitir factura'}
+            {checkingOut
+              ? 'Emitiendo factura…'
+              : paso === 'carrito'
+                ? 'Emitir factura'
+                : 'Confirmar emisión'}
           </Button>
           <p className="mt-2 text-center text-[11px] text-ink-soft">
-            Revisá las cantidades antes de emitir.
+            {paso === 'carrito'
+              ? 'Revisá las cantidades antes de emitir.'
+              : aDomicilio
+                ? 'El envío se coordina con el cliente.'
+                : 'Retiro en el mostrador.'}
           </p>
         </footer>
       </div>

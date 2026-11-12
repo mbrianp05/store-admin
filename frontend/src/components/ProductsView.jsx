@@ -63,7 +63,7 @@ function ProductCover({ product, inCart }) {
       )}
 
       {descuento && (
-        <Badge className="absolute left-2 top-2 border-transparent bg-highlight/15 text-highlight backdrop-blur-sm">
+        <Badge className="absolute left-2 top-2 border border-black/10 bg-highlight font-semibold text-[#231a05] shadow-sm">
           −{descuento.porcentaje}% de descuento
         </Badge>
       )}

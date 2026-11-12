@@ -1,4 +1,4 @@
-import { LogOut, Package, ReceiptText, ShoppingCart } from 'lucide-react'
+import { LogOut, Package, ReceiptText, Settings, ShoppingCart } from 'lucide-react'
 import { Link, useRouterState } from '@tanstack/react-router'
 import BrandMark from './BrandMark'
 import { Button } from '@/components/ui/button'
@@ -30,7 +30,7 @@ function SectionLink({ to, icon: Icon, label, count, active }) {
       <span>{label}</span>
       <span
         className={cn(
-          'rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none tabular-nums',
+          'inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold leading-normal tabular-nums',
           active
             ? 'bg-secondary text-foreground'
             : 'bg-muted/60 text-muted-foreground',
@@ -63,7 +63,7 @@ function MobileSectionLink({ to, icon: Icon, label, count, active }) {
       >
         <Icon className="size-[18px]" />
         {count > 0 && (
-          <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[9px] font-semibold leading-none text-primary-foreground ring-2 ring-background">
+          <span className="absolute -right-1.5 -top-1.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-normal tabular-nums text-primary-foreground ring-2 ring-background">
             {count > 99 ? '99+' : count}
           </span>
         )}
@@ -78,6 +78,7 @@ export default function Masthead({
   invoiceCount,
   cartCount = 0,
   onOpenCart,
+  onOpenSettings,
   user,
   onLogout,
 }) {
@@ -146,11 +147,24 @@ export default function Masthead({
             >
               <ShoppingCart className="size-[18px]" />
               {cartCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-none text-primary-foreground ring-2 ring-background">
+                <span className="absolute -right-1 -top-1 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-normal tabular-nums text-primary-foreground ring-2 ring-background">
                   {cartCount > 99 ? '99+' : cartCount}
                 </span>
               )}
             </Button>
+            {onOpenSettings && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={onOpenSettings}
+                aria-label="Configuración"
+                title="Configuración"
+                className="text-muted-foreground hover:bg-secondary hover:text-foreground"
+              >
+                <Settings className="size-[18px]" />
+              </Button>
+            )}
             {onLogout && (
               <Button
                 type="button"

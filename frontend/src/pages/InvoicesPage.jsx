@@ -8,6 +8,7 @@ export default function InvoicesPage() {
     selectedInvoice,
     onSelectInvoice,
     onClearInvoiceSelection,
+    onUpdateInvoiceState,
   } = useAppState()
 
   return (
@@ -17,6 +18,7 @@ export default function InvoicesPage() {
       selectedInvoice={selectedInvoice}
       onSelect={onSelectInvoice}
       onClearSelection={onClearInvoiceSelection}
+      onUpdateState={onUpdateInvoiceState}
     />
   )
 }
