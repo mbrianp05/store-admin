@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Image, Loader2, Plus, Save, X } from 'lucide-react'
 import { uploadProductPhoto } from '../api'
 import CategoryAutocomplete from './CategoryAutocomplete'
@@ -12,6 +12,22 @@ import { Label } from '@/components/ui/label'
 const MAX_FOTOS = 8
 const MAX_BYTES = 10 * 1024 * 1024
 
+const UNIDADES_BASE = [
+  'unidad',
+  'par',
+  'docena',
+  'metro',
+  'centímetro',
+  'kg',
+  'gramo',
+  'litro',
+  'ml',
+  'paquete',
+  'caja',
+  'rollo',
+  'set',
+]
+
 const fieldClass = 'mt-1.5 bg-background/50 focus-visible:bg-background/70'
 
 function fotosIniciales(product) {
@@ -24,7 +40,13 @@ function fotosIniciales(product) {
   return existentes.map((url) => ({ url, preview: url }))
 }
 
-export default function ProductForm({ product, onSave, onClose, categorias = [] }) {
+export default function ProductForm({
+  product,
+  onSave,
+  onClose,
+  categorias = [],
+  unidades = [],
+}) {
   const isEditing = Boolean(product)
   const [values, setValues] = useState(() => ({
     nombre: product?.nombre ?? '',
@@ -48,6 +70,17 @@ export default function ProductForm({ product, onSave, onClose, categorias = [] 
   const [saving, setSaving] = useState(false)
   const fileInputRef = useRef(null)
   const photosRef = useRef(photos)
+
+  const unidadesSugeridas = useMemo(() => {
+    const vistas = new Map()
+    for (const unidad of [...UNIDADES_BASE, ...unidades]) {
+      const valor = String(unidad || '').trim()
+      if (!valor) continue
+      const clave = valor.toLocaleLowerCase('es')
+      if (!vistas.has(clave)) vistas.set(clave, valor)
+    }
+    return [...vistas.values()]
+  }, [unidades])
 
   useEffect(() => {
     photosRef.current = photos
@@ -248,11 +281,17 @@ export default function ProductForm({ product, onSave, onClose, categorias = [] 
             </Label>
             <Input
               id="producto-unidad"
+              list="producto-unidades"
               value={values.unidad_medida}
               onChange={(event) => update('unidad_medida', event.target.value)}
               placeholder="Ej: unidad, metro, par"
               className={fieldClass}
             />
+            <datalist id="producto-unidades">
+              {unidadesSugeridas.map((unidad) => (
+                <option key={unidad} value={unidad} />
+              ))}
+            </datalist>
           </div>
 
           <div>

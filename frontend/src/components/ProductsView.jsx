@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { ArrowUpRight, Filter, Image, PackageOpen, Plus, Search, Tag, X } from 'lucide-react'
+import { ArrowUpRight, Filter, PackageOpen, Plus, Search, Tag, X } from 'lucide-react'
 import { formatCurrency } from '../lib/format'
 import { descuentoVigente, precioVigente } from '../lib/pricing'
 import ProductForm from './ProductForm'
@@ -46,7 +46,7 @@ function ProductCover({ product, inCart }) {
 
   return (
     <div className="relative aspect-[4/3] overflow-hidden border-b border-border bg-muted/30">
-      {showPhoto ? (
+      {showPhoto && (
         <img
           src={cover}
           alt={product.nombre}
@@ -55,11 +55,6 @@ function ProductCover({ product, inCart }) {
           onError={() => setFailedSrc(cover)}
           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
         />
-      ) : (
-        <div className="flex h-full flex-col items-center justify-center gap-2 text-muted-foreground">
-          <Image className="size-7" />
-          <span className="text-[11px]">Sin foto</span>
-        </div>
       )}
 
       {descuento && (
@@ -217,6 +212,13 @@ export default function ProductsView({
       .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
   }, [products])
 
+  const unidades = useMemo(
+    () =>
+      [...new Set(products.map((product) => (product.unidad_medida || '').trim()).filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b, 'es')),
+    [products],
+  )
+
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase()
     return products.filter((product) => {
@@ -272,6 +274,7 @@ export default function ProductsView({
             key="nuevo"
             product={null}
             categorias={categorias.map((item) => item.nombre)}
+            unidades={unidades}
             onSave={onCreate}
             onClose={() => setShowForm(false)}
           />

@@ -137,6 +137,13 @@ export default function ProductDetailPage() {
     [products],
   )
 
+  const unidades = useMemo(
+    () =>
+      [...new Set(products.map((item) => (item.unidad_medida || '').trim()).filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b, 'es')),
+    [products],
+  )
+
   if (loading) return <DetailSkeleton />
 
   if (!product) {
@@ -262,6 +269,7 @@ export default function ProductDetailPage() {
           key={product.nombre}
           product={product}
           categorias={categorias}
+          unidades={unidades}
           onSave={handleSave}
           onClose={() => setEditando(false)}
         />
