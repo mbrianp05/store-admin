@@ -4,6 +4,7 @@ import { useNavigate, useParams } from '@tanstack/react-router'
 import ProductForm from '../components/ProductForm'
 import ProductGallery from '../components/ProductGallery'
 import { useAppState } from '../app-context'
+import { useAuth } from '../auth-context'
 import { formatCurrency } from '../lib/format'
 import { diasEntre, formatFechaCorta, hoyISO } from '../lib/fechas'
 import { descuentoVigente, estadoDescuento, precioVigente } from '../lib/pricing'
@@ -43,7 +44,7 @@ function DetailSkeleton() {
   )
 }
 
-function DiscountSummary({ product }) {
+function DiscountSummary({ product, canManage }) {
   const estado = estadoDescuento(product)
   const descuento = estado ? product.descuento : null
   const vigente = descuentoVigente(product)
@@ -96,7 +97,9 @@ function DiscountSummary({ product }) {
             </>
           ) : (
             <p className="mt-2 text-sm text-muted-foreground">
-              Sin descuento programado. Podés agregar uno desde «Editar producto».
+              {canManage
+                ? 'Sin descuento programado. Podés agregar uno desde «Editar producto».'
+                : 'Sin descuento programado.'}
             </p>
           )}
         </div>
@@ -108,6 +111,7 @@ function DiscountSummary({ product }) {
 export default function ProductDetailPage() {
   const { nombre } = useParams({ from: '/_app/productos/$nombre' })
   const navigate = useNavigate()
+  const { user } = useAuth()
   const {
     products,
     loading,
@@ -116,6 +120,8 @@ export default function ProductDetailPage() {
     onUpdateProduct,
     onDeleteProduct,
   } = useAppState()
+
+  const canManage = Boolean(user)
 
   const [editando, setEditando] = useState(false)
   const [confirmando, setConfirmando] = useState(false)
@@ -215,56 +221,58 @@ export default function ProductDetailPage() {
           Volver a productos
         </Button>
 
-        <div className="flex flex-wrap items-center gap-1.5">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setEditando((actual) => !actual)}
-            aria-expanded={editando}
-          >
-            <Pencil className="size-3.5" />
-            {editando ? 'Cerrar edición' : 'Editar producto'}
-          </Button>
-
-          {confirmando ? (
-            <>
-              <Button
-                type="button"
-                variant="destructive"
-                size="sm"
-                onClick={handleDelete}
-                disabled={eliminando}
-                aria-busy={eliminando}
-              >
-                {eliminando ? 'Eliminando…' : 'Confirmar'}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setConfirmando(false)}
-                disabled={eliminando}
-              >
-                Cancelar
-              </Button>
-            </>
-          ) : (
+        {canManage && (
+          <div className="flex flex-wrap items-center gap-1.5">
             <Button
               type="button"
-              variant="ghost"
+              variant="outline"
               size="sm"
-              onClick={() => setConfirmando(true)}
-              className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+              onClick={() => setEditando((actual) => !actual)}
+              aria-expanded={editando}
             >
-              <Trash2 className="size-3.5" />
-              Eliminar
+              <Pencil className="size-3.5" />
+              {editando ? 'Cerrar edición' : 'Editar producto'}
             </Button>
-          )}
-        </div>
+
+            {confirmando ? (
+              <>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleDelete}
+                  disabled={eliminando}
+                  aria-busy={eliminando}
+                >
+                  {eliminando ? 'Eliminando…' : 'Confirmar'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setConfirmando(false)}
+                  disabled={eliminando}
+                >
+                  Cancelar
+                </Button>
+              </>
+            ) : (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setConfirmando(true)}
+                className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+              >
+                <Trash2 className="size-3.5" />
+                Eliminar
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
-      {editando && (
+      {canManage && editando && (
         <ProductForm
           key={product.nombre}
           product={product}
@@ -347,12 +355,12 @@ export default function ProductDetailPage() {
               <Button
                 type="button"
                 onClick={() => onAddToCart(product)}
-                disabled={sinStock}
+                disabled={canManage && sinStock}
                 size="lg"
                 className="mt-5 w-full"
               >
                 <Plus className="size-4" />
-                {sinStock
+                {canManage && sinStock
                   ? 'Sin stock'
                   : enCarrito > 0
                     ? `Agregar otra (${enCarrito} en el carrito)`
@@ -361,7 +369,7 @@ export default function ProductDetailPage() {
             </div>
           </Card>
 
-          <DiscountSummary product={product} />
+          <DiscountSummary product={product} canManage={canManage} />
         </div>
       </div>
     </div>

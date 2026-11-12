@@ -1,4 +1,4 @@
-import { createFileRoute, Navigate } from '@tanstack/react-router'
+import { createFileRoute, Navigate, useRouterState } from '@tanstack/react-router'
 import App from '../App'
 import AppLoader from '../components/AppLoader'
 import { useAuth } from '../auth-context'
@@ -9,12 +9,14 @@ export const Route = createFileRoute('/_app')({
 
 function AppLayout() {
   const { user, loading } = useAuth()
+  const pathname = useRouterState({ select: (state) => state.location.pathname })
 
   if (loading) {
     return <AppLoader mensaje="Verificando tu sesión…" />
   }
 
-  if (!user) {
+  // El catálogo es público; las facturas siguen siendo solo para cuentas.
+  if (!user && pathname.startsWith('/facturas')) {
     return <Navigate to="/login" replace />
   }
 

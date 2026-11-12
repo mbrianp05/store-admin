@@ -323,6 +323,12 @@ RUTAS_PUBLICAS = {
     '/api/auth/ubicaciones',
 }
 
+# El catálogo y las fotos son de consulta pública: un visitante puede ver los
+# productos y su ficha, pero todo lo demás sigue exigiendo sesión.
+RUTAS_PUBLICAS_LECTURA = {
+    '/api/products',
+}
+
 @app.before_request
 def exigir_sesion():
     if request.method == 'OPTIONS':
@@ -332,6 +338,9 @@ def exigir_sesion():
         return None
     if ruta in RUTAS_PUBLICAS:
         return None
+    if request.method in ('GET', 'HEAD'):
+        if ruta in RUTAS_PUBLICAS_LECTURA or ruta.startswith('/uploads/'):
+            return None
     if not session.get('usuario'):
         return jsonify({'error': 'Necesitás iniciar sesión.'}), 401
     return None

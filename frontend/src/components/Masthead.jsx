@@ -1,4 +1,4 @@
-import { LogOut, Package, ReceiptText, Settings, ShoppingCart } from 'lucide-react'
+import { LogIn, LogOut, Package, ReceiptText, Settings, ShoppingCart } from 'lucide-react'
 import { Link, useRouterState } from '@tanstack/react-router'
 import BrandMark from './BrandMark'
 import { Button } from '@/components/ui/button'
@@ -84,6 +84,7 @@ export default function Masthead({
 }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname })
   const isInvoices = pathname.startsWith('/facturas')
+  const autenticado = Boolean(user)
   const counts = { products: productCount, invoices: invoiceCount }
 
   return (
@@ -116,66 +117,79 @@ export default function Masthead({
                 count={counts.products}
                 active={!isInvoices}
               />
-              <SectionLink
-                to="/facturas"
-                icon={ReceiptText}
-                label="Facturas"
-                count={counts.invoices}
-                active={isInvoices}
-              />
+              {autenticado && (
+                <SectionLink
+                  to="/facturas"
+                  icon={ReceiptText}
+                  label="Facturas"
+                  count={counts.invoices}
+                  active={isInvoices}
+                />
+              )}
             </nav>
           </div>
 
           <div className="flex items-center gap-2.5">
             <p className="hidden text-xs text-muted-foreground lg:block">{today}</p>
-            {user && (
+            {autenticado && (
               <p className="hidden max-w-[14rem] truncate text-xs text-muted-foreground md:block">
                 {user.nombres} {user.apellidos}
               </p>
             )}
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={onOpenCart}
-              aria-label={
-                cartCount > 0
-                  ? `Abrir carrito (${cartCount} ${cartCount === 1 ? 'artículo' : 'artículos'})`
-                  : 'Abrir carrito'
-              }
-              className="relative text-muted-foreground hover:bg-secondary hover:text-foreground"
-            >
-              <ShoppingCart className="size-[18px]" />
-              {cartCount > 0 && (
-                <span className="absolute -right-1 -top-1 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-normal tabular-nums text-primary-foreground ring-2 ring-background">
-                  {cartCount > 99 ? '99+' : cartCount}
-                </span>
-              )}
-            </Button>
-            {onOpenSettings && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={onOpenSettings}
-                aria-label="Configuración"
-                title="Configuración"
-                className="text-muted-foreground hover:bg-secondary hover:text-foreground"
-              >
-                <Settings className="size-[18px]" />
-              </Button>
-            )}
-            {onLogout && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={onLogout}
-                aria-label="Cerrar sesión"
-                title="Cerrar sesión"
-                className="text-muted-foreground hover:bg-secondary hover:text-foreground"
-              >
-                <LogOut className="size-[18px]" />
+            {autenticado ? (
+              <>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={onOpenCart}
+                  aria-label={
+                    cartCount > 0
+                      ? `Abrir carrito (${cartCount} ${cartCount === 1 ? 'artículo' : 'artículos'})`
+                      : 'Abrir carrito'
+                  }
+                  className="relative text-muted-foreground hover:bg-secondary hover:text-foreground"
+                >
+                  <ShoppingCart className="size-[18px]" />
+                  {cartCount > 0 && (
+                    <span className="absolute -right-1 -top-1 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-normal tabular-nums text-primary-foreground ring-2 ring-background">
+                      {cartCount > 99 ? '99+' : cartCount}
+                    </span>
+                  )}
+                </Button>
+                {onOpenSettings && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={onOpenSettings}
+                    aria-label="Configuración"
+                    title="Configuración"
+                    className="text-muted-foreground hover:bg-secondary hover:text-foreground"
+                  >
+                    <Settings className="size-[18px]" />
+                  </Button>
+                )}
+                {onLogout && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={onLogout}
+                    aria-label="Cerrar sesión"
+                    title="Cerrar sesión"
+                    className="text-muted-foreground hover:bg-secondary hover:text-foreground"
+                  >
+                    <LogOut className="size-[18px]" />
+                  </Button>
+                )}
+              </>
+            ) : (
+              <Button asChild variant="outline" size="sm">
+                <Link to="/login">
+                  <LogIn className="size-4" />
+                  Ingresar
+                </Link>
               </Button>
             )}
           </div>
@@ -186,7 +200,7 @@ export default function Masthead({
         aria-label="Secciones"
         className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md sm:hidden"
       >
-        <div className="grid grid-cols-2">
+        <div className={cn('grid', autenticado ? 'grid-cols-2' : 'grid-cols-1')}>
           <MobileSectionLink
             to="/"
             icon={Package}
@@ -194,13 +208,15 @@ export default function Masthead({
             count={counts.products}
             active={!isInvoices}
           />
-          <MobileSectionLink
-            to="/facturas"
-            icon={ReceiptText}
-            label="Facturas"
-            count={counts.invoices}
-            active={isInvoices}
-          />
+          {autenticado && (
+            <MobileSectionLink
+              to="/facturas"
+              icon={ReceiptText}
+              label="Facturas"
+              count={counts.invoices}
+              active={isInvoices}
+            />
+          )}
         </div>
       </nav>
     </>

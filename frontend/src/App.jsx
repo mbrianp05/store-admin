@@ -47,11 +47,18 @@ export default function App() {
 
   const fetchData = useCallback(async () => {
     try {
-      const [productsData, invoicesData, configData] = await Promise.all([
-        getProducts(),
-        getInvoices(),
-        getConfig().catch(() => ({ costo_envio: 0 })),
-      ]);
+      const productsData = await getProducts();
+
+      // Un visitante solo ve el catálogo: facturas y configuración requieren sesión.
+      let invoicesData = [];
+      let configData = { costo_envio: 0 };
+      if (user) {
+        [invoicesData, configData] = await Promise.all([
+          getInvoices(),
+          getConfig().catch(() => ({ costo_envio: 0 })),
+        ]);
+      }
+
       setProducts(productsData);
       setInvoices(invoicesData);
       setConfig(configData);
@@ -60,7 +67,7 @@ export default function App() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     // oxlint-disable-next-line react/set-state-in-effect -- carga inicial desde la API
@@ -75,6 +82,11 @@ export default function App() {
 
   const addToCart = useCallback(
     (product) => {
+      if (!user) {
+        navigate({ to: "/login" });
+        return;
+      }
+
       const disponible = Number(product.stock) || 0;
       const enCarrito = cart
         .filter((item) => item.producto.nombre === product.nombre)
@@ -104,7 +116,7 @@ export default function App() {
         return [...current, { producto: product, cantidad: 1 }];
       });
     },
-    [cart, notify],
+    [cart, notify, navigate, user],
   );
 
   const changeQuantity = useCallback(

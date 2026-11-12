@@ -49,7 +49,7 @@ export default function LoginPage() {
   return (
     <AuthShell
       title="Ingresá a Mostrador"
-      description="Necesitás una cuenta para ver el inventario y emitir facturas."
+      description="Iniciá sesión para comprar, gestionar el inventario y emitir facturas."
       footer={
         <>
           ¿Todavía no tenés cuenta?{' '}

@@ -78,10 +78,11 @@ function ProductCover({ product, inCart }) {
   )
 }
 
-function ProductCard({ product, inCart, onAdd }) {
+function ProductCard({ product, inCart, onAdd, canBuy }) {
   const descuento = descuentoVigente(product)
   const precio = precioVigente(product)
   const sinStock = (Number(product.stock) || 0) <= 0
+  const bloqueado = canBuy && sinStock
 
   return (
     <Card className="group relative h-full gap-0 overflow-hidden py-0 transition-colors hover:border-foreground/20">
@@ -146,11 +147,11 @@ function ProductCard({ product, inCart, onAdd }) {
             variant="outline"
             size="sm"
             onClick={() => onAdd(product)}
-            disabled={sinStock}
+            disabled={bloqueado}
             aria-label={`Agregar ${product.nombre} al carrito`}
             className="relative z-20 h-7 w-full text-xs"
           >
-            {sinStock ? (
+            {bloqueado ? (
               'Sin stock'
             ) : (
               <>
@@ -196,6 +197,8 @@ export default function ProductsView({
   cart,
   onAddToCart,
   onCreate,
+  canManage = true,
+  canBuy = true,
 }) {
   const [showForm, setShowForm] = useState(false)
   const [categoria, setCategoria] = useState('')
@@ -256,19 +259,21 @@ export default function ProductsView({
               : `${products.length} ${products.length === 1 ? 'producto' : 'productos'} en inventario`}
           </p>
         </div>
-        <Button
-          type="button"
-          onClick={() => setShowForm((actual) => !actual)}
-          aria-expanded={showForm}
-          aria-controls="producto-form"
-          className="sm:self-end"
-        >
-          <Plus className="size-4" />
-          {showForm ? 'Cerrar formulario' : 'Agregar producto'}
-        </Button>
+        {canManage && (
+          <Button
+            type="button"
+            onClick={() => setShowForm((actual) => !actual)}
+            aria-expanded={showForm}
+            aria-controls="producto-form"
+            className="sm:self-end"
+          >
+            <Plus className="size-4" />
+            {showForm ? 'Cerrar formulario' : 'Agregar producto'}
+          </Button>
+        )}
       </header>
 
-      {showForm && (
+      {canManage && showForm && (
         <div id="producto-form">
           <ProductForm
             key="nuevo"
@@ -360,12 +365,16 @@ export default function ProductsView({
           </span>
           <h2 className="mt-5 text-lg font-semibold">No hay productos todavía</h2>
           <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-            Agregá el primer producto para empezar a armar el carrito y emitir facturas.
+            {canManage
+              ? 'Agregá el primer producto para empezar a armar el carrito y emitir facturas.'
+              : 'Cuando el mostrador publique productos, van a aparecer acá.'}
           </p>
-          <Button type="button" onClick={() => setShowForm(true)} className="mt-5">
-            <Plus className="size-4" />
-            Agregar producto
-          </Button>
+          {canManage && (
+            <Button type="button" onClick={() => setShowForm(true)} className="mt-5">
+              <Plus className="size-4" />
+              Agregar producto
+            </Button>
+          )}
         </Card>
       ) : filtered.length === 0 ? (
         <Card className="gap-0 px-6 py-16 text-center">
@@ -397,6 +406,7 @@ export default function ProductsView({
               product={product}
               inCart={quantityInCart(product.nombre)}
               onAdd={onAddToCart}
+              canBuy={canBuy}
             />
           ))}
         </div>
