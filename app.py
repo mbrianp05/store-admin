@@ -703,10 +703,6 @@ def update_invoice(numero):
     motivo = str(
         data.get('motivo_cancelacion') or data.get('motivo') or ''
     ).strip()
-    if estado == 'cancelada' and not motivo:
-        return jsonify({
-            'error': 'Escribí el motivo de la cancelación.'
-        }), 400
 
     usuario = str(session.get('usuario') or '')
     with STOCK_LOCK:

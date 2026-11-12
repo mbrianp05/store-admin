@@ -66,13 +66,11 @@ function EstadoSelector({ estado, onChange }) {
   const [guardando, setGuardando] = useState(null)
   const [cancelando, setCancelando] = useState(false)
   const [motivo, setMotivo] = useState('')
-  const [error, setError] = useState('')
 
   async function elegir(valor) {
     if (valor === estado || guardando) return
     if (valor === 'cancelada') {
       setCancelando(true)
-      setError('')
       return
     }
     setGuardando(valor)
@@ -81,10 +79,6 @@ function EstadoSelector({ estado, onChange }) {
   }
 
   async function confirmarCancelacion() {
-    if (!motivo.trim()) {
-      setError('Escribí el motivo de la cancelación.')
-      return
-    }
     setGuardando('cancelada')
     const ok = await onChange('cancelada', motivo.trim())
     setGuardando(null)
@@ -123,20 +117,16 @@ function EstadoSelector({ estado, onChange }) {
       {cancelando && (
         <div className="space-y-2 rounded-md border border-destructive/30 bg-destructive/5 p-2.5">
           <p className="text-[11px] font-medium text-destructive">
-            Motivo de la cancelación
+            Motivo de la cancelación{' '}
+            <span className="font-normal text-muted-foreground">(opcional)</span>
           </p>
           <Input
             value={motivo}
-            onChange={(event) => {
-              setMotivo(event.target.value)
-              setError('')
-            }}
+            onChange={(event) => setMotivo(event.target.value)}
             placeholder="Ej.: el cliente no retiró el pedido"
             maxLength={300}
-            aria-invalid={Boolean(error)}
             autoFocus
           />
-          {error && <p className="text-[11px] text-destructive">{error}</p>}
           <div className="flex flex-wrap gap-1.5">
             <Button
               type="button"
@@ -154,7 +144,6 @@ function EstadoSelector({ estado, onChange }) {
               onClick={() => {
                 setCancelando(false)
                 setMotivo('')
-                setError('')
               }}
               disabled={guardando === 'cancelada'}
             >
@@ -321,13 +310,13 @@ function InvoiceDetail({ invoice, onBack, onUpdateState }) {
 
       <div className="grid gap-5 border-t border-border px-5 py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:px-7">
         <div className="space-y-4">
-          {invoice.estado === 'cancelada' && invoice.motivo_cancelacion && (
+          {invoice.estado === 'cancelada' && (
             <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-destructive">
                 Factura cancelada
               </p>
               <p className="mt-1 text-sm text-foreground">
-                {invoice.motivo_cancelacion}
+                {invoice.motivo_cancelacion || 'Sin motivo especificado'}
               </p>
             </div>
           )}
@@ -363,10 +352,28 @@ function InvoiceDetail({ invoice, onBack, onUpdateState }) {
 
         {invoice.envio?.a_domicilio && (
           <div className="flex flex-col items-center gap-2 sm:justify-self-end">
-            <InvoiceQR value={invoice.qr} codigo={invoice.codigo} />
+            <div className="relative">
+              <div
+                aria-hidden={cancelada || undefined}
+                className={cn(
+                  cancelada &&
+                    'pointer-events-none select-none opacity-45 blur-[5px] grayscale',
+                )}
+              >
+                <InvoiceQR value={invoice.qr} codigo={invoice.codigo} />
+              </div>
+              {cancelada && (
+                <span className="absolute inset-0 grid place-items-center">
+                  <span className="rounded-full border border-destructive/40 bg-background/85 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-destructive shadow-sm">
+                    QR anulado
+                  </span>
+                </span>
+              )}
+            </div>
             <p className="max-w-[14rem] text-center text-[11px] leading-snug text-muted-foreground">
-              Compartí este QR con quien entrega el producto para verificar la
-              entrega.
+              {cancelada
+                ? 'La factura está cancelada: el QR ya no sirve para verificar la entrega.'
+                : 'Compartí este QR con quien entrega el producto para verificar la entrega.'}
             </p>
           </div>
         )}
