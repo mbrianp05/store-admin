@@ -275,8 +275,15 @@ export default function ProductDetailPage() {
         />
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-start">
-        <ProductGallery key={product.nombre} nombre={product.nombre} fotos={fotos} />
+      <div
+        className={cn(
+          'grid gap-6 lg:items-start',
+          fotos.length > 0 && 'lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]',
+        )}
+      >
+        {fotos.length > 0 && (
+          <ProductGallery key={product.nombre} nombre={product.nombre} fotos={fotos} />
+        )}
 
         <div className="space-y-4">
           <Card className="gap-0 py-0">
