@@ -1,11 +1,23 @@
-import { useState } from 'react'
-import { ArrowLeft, Check, ChevronRight, MapPin, ReceiptText, Truck } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import {
+  ArrowLeft,
+  Check,
+  ChevronRight,
+  MapPin,
+  ReceiptText,
+  Search,
+  Truck,
+  X,
+} from 'lucide-react'
 import { formatCurrency, formatDate } from '../lib/format'
 import { precioVigente } from '../lib/pricing'
+import { normalizarTexto } from '../lib/text'
+import DateRangePicker from './DateRangePicker'
 import InvoiceQR from './InvoiceQR'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 
@@ -408,6 +420,91 @@ function InvoiceDetail({ invoice, onBack, onUpdateState }) {
   )
 }
 
+const PERIODO_VACIO = { desde: null, hasta: null }
+
+function FiltrosFacturas({
+  busqueda,
+  onBusqueda,
+  periodo,
+  onPeriodo,
+  subtotalMin,
+  onSubtotalMin,
+  activos,
+  onLimpiar,
+}) {
+  return (
+    <Card className="gap-4 px-4 py-4 sm:px-5">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-sm font-semibold">Filtrar facturas</h2>
+        {activos && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onLimpiar}
+            className="-my-1 h-7 px-2 text-[11px] text-muted-foreground"
+          >
+            <X className="size-3.5" />
+            Limpiar filtros
+          </Button>
+        )}
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-1.5">
+          <Label htmlFor="facturas-producto" className="text-[11px] text-ink-soft">
+            Producto
+          </Label>
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              id="facturas-producto"
+              value={busqueda}
+              onChange={(event) => onBusqueda(event.target.value)}
+              placeholder="Buscar por producto"
+              className="bg-background/50 pl-8"
+            />
+          </div>
+        </div>
+
+        <div className="grid gap-1.5">
+          <Label htmlFor="facturas-periodo" className="text-[11px] text-ink-soft">
+            Rango de fechas
+          </Label>
+          <DateRangePicker
+            id="facturas-periodo"
+            desde={periodo.desde}
+            hasta={periodo.hasta}
+            onChange={onPeriodo}
+          />
+        </div>
+
+        <div className="grid gap-1.5">
+          <Label htmlFor="facturas-subtotal-min" className="text-[11px] text-ink-soft">
+            Subtotal mínimo
+          </Label>
+          <div className="relative">
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+              $
+            </span>
+            <Input
+              id="facturas-subtotal-min"
+              type="number"
+              min="0"
+              step="0.01"
+              inputMode="decimal"
+              value={subtotalMin}
+              onChange={(event) => onSubtotalMin(event.target.value)}
+              placeholder="Sin mínimo"
+              className="bg-background/50 pl-7"
+            />
+          </div>
+        </div>
+      </div>
+    </Card>
+  )
+}
+
 export default function InvoicesView({
   invoices,
   loading,
@@ -416,7 +513,47 @@ export default function InvoicesView({
   onClearSelection,
   onUpdateState,
 }) {
-  const sorted = [...invoices].sort((a, b) => b.numero - a.numero)
+  const [busqueda, setBusqueda] = useState('')
+  const [periodo, setPeriodo] = useState(PERIODO_VACIO)
+  const [subtotalMin, setSubtotalMin] = useState('')
+
+  const filtrosActivos =
+    busqueda.trim() !== '' ||
+    Boolean(periodo.desde || periodo.hasta) ||
+    subtotalMin.trim() !== ''
+
+  const sorted = useMemo(() => {
+    const termino = normalizarTexto(busqueda)
+    const minimo = subtotalMin.trim() === '' ? null : Number(subtotalMin)
+
+    return invoices
+      .filter((invoice) => {
+        if (termino) {
+          const coincide = invoice.items.some((item) =>
+            normalizarTexto(item.producto?.nombre).includes(termino),
+          )
+          if (!coincide) return false
+        }
+
+        const fecha = String(invoice.fecha || '').slice(0, 10)
+        if (periodo.desde && fecha < periodo.desde) return false
+        if (periodo.hasta && fecha > periodo.hasta) return false
+
+        const subtotal = Number(invoice.subtotal ?? invoice.total) || 0
+        if (minimo !== null && !Number.isNaN(minimo) && subtotal < minimo) {
+          return false
+        }
+
+        return true
+      })
+      .sort((a, b) => b.numero - a.numero)
+  }, [invoices, busqueda, periodo, subtotalMin])
+
+  function limpiarFiltros() {
+    setBusqueda('')
+    setPeriodo(PERIODO_VACIO)
+    setSubtotalMin('')
+  }
 
   return (
     <div className="space-y-6">
@@ -429,6 +566,19 @@ export default function InvoicesView({
         </p>
       </header>
 
+      <FiltrosFacturas
+        busqueda={busqueda}
+        onBusqueda={setBusqueda}
+        periodo={periodo}
+        onPeriodo={(valor) =>
+          setPeriodo({ desde: valor.desde || null, hasta: valor.hasta || null })
+        }
+        subtotalMin={subtotalMin}
+        onSubtotalMin={setSubtotalMin}
+        activos={filtrosActivos}
+        onLimpiar={limpiarFiltros}
+      />
+
       <div className="grid gap-6 lg:grid-cols-[19rem_minmax(0,1fr)] xl:grid-cols-[20rem_minmax(0,1fr)]">
         <section
           className={selectedInvoice ? 'hidden lg:block' : ''}
@@ -440,16 +590,42 @@ export default function InvoicesView({
             ) : sorted.length === 0 ? (
               <div className="px-6 py-14 text-center">
                 <span className="mx-auto grid size-12 place-items-center rounded-xl border border-border bg-muted/40 text-muted-foreground">
-                  <ReceiptText className="size-5" />
+                  {invoices.length === 0 ? (
+                    <ReceiptText className="size-5" />
+                  ) : (
+                    <Search className="size-5" />
+                  )}
                 </span>
-                <h2 className="mt-4 text-base font-semibold">No hay facturas</h2>
+                <h2 className="mt-4 text-base font-semibold">
+                  {invoices.length === 0
+                    ? 'No hay facturas'
+                    : 'Ninguna factura coincide'}
+                </h2>
                 <p className="mx-auto mt-1.5 max-w-xs text-sm leading-snug text-muted-foreground">
-                  Agregá productos al carrito y emití la primera factura desde el panel del
-                  carrito.
+                  {invoices.length === 0
+                    ? 'Agregá productos al carrito y emití la primera factura desde el panel del carrito.'
+                    : 'Probá con otro producto, otro periodo o un subtotal mínimo menor.'}
                 </p>
+                {invoices.length > 0 && filtrosActivos && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={limpiarFiltros}
+                    className="mt-4"
+                  >
+                    Limpiar filtros
+                  </Button>
+                )}
               </div>
             ) : (
               <ul className="space-y-1 p-2">
+                {filtrosActivos && (
+                  <li className="px-3 pb-1 pt-2 text-[11px] text-muted-foreground">
+                    {sorted.length} de {invoices.length}{' '}
+                    {invoices.length === 1 ? 'factura' : 'facturas'}
+                  </li>
+                )}
                 {sorted.map((invoice) => {
                   const isSelected = selectedInvoice?.numero === invoice.numero
                   const itemCount = invoice.items.reduce(
