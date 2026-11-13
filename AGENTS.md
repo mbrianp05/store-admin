@@ -44,5 +44,6 @@ Inventory, cart, and invoicing app: Flask JSON API + React/Tailwind frontend. UI
 - Frontend cart state is `{ producto, cantidad }` and JSON field names are Spanish (`nombre`, `precio`, `unidad_medida`, `cantidad`). Keep the React components and `app.py` in sync.
 - `Carrito.addChart` is spelled that way (not `addToCart`); `Carrito`/`Inventario` use camelCase methods while `Factura`/`GestorFacturas` mostly use snake_case.
 - Tailwind v4: add colors/fonts in the `@theme` block in `frontend/src/index.css`; there is no `tailwind.config.js`.
-- The app is intentionally stateless beyond the JSON files: no auth, no database, no user accounts.
-- `README.md` is UTF-16LE with a BOM, so the Read tool reports it as binary. Use `Get-Content README.md -Encoding Unicode`.
+- The app stores all state in JSON files (`data/`); there is no database. Auth is a signed session cookie backed by `data/usuarios.json`.
+- UI copy uses neutral Spanish (tuteo, not voseo). Branding is **Venture** and prices are formatted in CUP with `es-ES` locale.
+- `README.md` is UTF-8. Older copies were UTF-16LE with a BOM; if you see a BOM, normalize the file to UTF-8.
