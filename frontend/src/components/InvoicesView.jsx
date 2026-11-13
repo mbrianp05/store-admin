@@ -352,27 +352,19 @@ function InvoiceDetail({ invoice, onBack, onUpdateState }) {
 
         {invoice.envio?.a_domicilio && (
           <div className="flex flex-col items-center gap-2 sm:justify-self-end">
-            <div className="relative">
-              <div
-                aria-hidden={cancelada || undefined}
-                className={cn(
-                  cancelada &&
-                    'pointer-events-none select-none opacity-45 blur-[5px] grayscale',
-                )}
-              >
-                <InvoiceQR value={invoice.qr} codigo={invoice.codigo} />
-              </div>
-              {cancelada && (
-                <span className="absolute inset-0 grid place-items-center">
-                  <span className="rounded-full border border-destructive/40 bg-background/85 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-destructive shadow-sm">
-                    QR anulado
-                  </span>
-                </span>
-              )}
-            </div>
+            <InvoiceQR
+              value={invoice.qr}
+              codigo={invoice.codigo}
+              anulado={cancelada}
+            />
+            {cancelada && (
+              <span className="rounded-full border border-zinc-600/60 bg-zinc-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">
+                QR anulado
+              </span>
+            )}
             <p className="max-w-[14rem] text-center text-[11px] leading-snug text-muted-foreground">
               {cancelada
-                ? 'La factura está cancelada: el QR ya no sirve para verificar la entrega.'
+                ? 'La factura está cancelada: el QR quedó roto y ya no sirve para verificar la entrega.'
                 : 'Compartí este QR con quien entrega el producto para verificar la entrega.'}
             </p>
           </div>
