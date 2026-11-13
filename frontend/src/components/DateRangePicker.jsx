@@ -87,7 +87,7 @@ export default function DateRangePicker({ id, desde, hasta, onChange }) {
         )}
       >
         <CalendarDays className="size-4 shrink-0" />
-        <span className="truncate">{etiqueta || 'Elegí el periodo'}</span>
+        <span className="truncate">{etiqueta || 'Elige el periodo'}</span>
       </Button>
 
       {abierto && (
@@ -103,8 +103,8 @@ export default function DateRangePicker({ id, desde, hasta, onChange }) {
               {borrador.hasta
                 ? `${diasEntre(borrador.desde, borrador.hasta)} días elegidos`
                 : borrador.desde
-                  ? 'Elegí la fecha de fin'
-                  : 'Elegí la fecha de inicio'}
+                  ? 'Elige la fecha de fin'
+                  : 'Elige la fecha de inicio'}
             </p>
             <div className="flex items-center gap-0.5">
               <Button

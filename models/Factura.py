@@ -75,7 +75,7 @@ class Factura:
         if not self.envio["a_domicilio"]:
             return ""
         return (
-            f"MOSTRADOR|FAC-{self.numero:04d}|{self.fecha}|"
+            f"VENTURE|FAC-{self.numero:04d}|{self.fecha}|"
             f"{self.total:.2f}|{self.usuario or 'Cliente'}|"
             f"{self.envio['direccion']}|{self.codigo}"
         )

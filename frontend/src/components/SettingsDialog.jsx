@@ -24,7 +24,7 @@ export default function SettingsDialog({ open, onOpenChange, costoEnvio, onSave 
   async function guardar(event) {
     event.preventDefault()
     if (!valido) {
-      setError('Ingresá un monto válido, mayor o igual a cero.')
+      setError('Ingresa un monto válido, mayor o igual a cero.')
       return
     }
 
@@ -43,7 +43,7 @@ export default function SettingsDialog({ open, onOpenChange, costoEnvio, onSave 
           </span>
           <DialogTitle>Configuración de envío</DialogTitle>
           <DialogDescription>
-            Definí la tasa fija que se suma a las facturas con envío a domicilio.
+            Define la tasa fija que se suma a las facturas con envío a domicilio.
           </DialogDescription>
         </DialogHeader>
 

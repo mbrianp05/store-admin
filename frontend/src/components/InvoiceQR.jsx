@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils'
 
 function construirMatriz(texto) {
   const qr = qrcodegen.QrCode.encodeText(
-    texto || 'MOSTRADOR',
+    texto || 'VENTURE',
     qrcodegen.QrCode.Ecc.MEDIUM,
   )
   const size = qr.size

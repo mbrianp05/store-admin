@@ -37,9 +37,9 @@ MENSAJES_ZXCVBN = {
     "A word by itself is easy to guess": "Una sola palabra es fácil de adivinar.",
     "Names and surnames by themselves are easy to guess": "Los nombres y apellidos solos son fáciles de adivinar.",
     "Common names and surnames are easy to guess": "Los nombres y apellidos comunes son fáciles de adivinar.",
-    "Use a few words, avoid common phrases": "Combiná varias palabras y evitá frases comunes.",
-    "No need for symbols, digits, or uppercase letters": "No hace falta usar símbolos ni mayúsculas: sumá palabras.",
-    "Add another word or two. Uncommon words are better.": "Agregá una o dos palabras más, mejor si son poco comunes.",
+    "Use a few words, avoid common phrases": "Combina varias palabras y evita frases comunes.",
+    "No need for symbols, digits, or uppercase letters": "No hace falta usar símbolos ni mayúsculas: suma palabras.",
+    "Add another word or two. Uncommon words are better.": "Agrega una o dos palabras más, mejor si son poco comunes.",
     "Capitalization doesn't help very much": "Las mayúsculas ayudan poco.",
     "All-uppercase is almost as easy to guess as all-lowercase": "Escribir todo en mayúsculas no la hace más segura.",
     "Reversed words aren't much harder to guess": "Las palabras al revés son casi igual de fáciles de adivinar.",
@@ -108,21 +108,21 @@ def evaluar_password(password, datos_personales=()):
         return {
             "valida": False,
             "score": 0,
-            "mensaje": "Ingresá una contraseña.",
+            "mensaje": "Ingresa una contraseña.",
         }
 
     if len(password) < PASSWORD_MIN_LENGTH:
         return {
             "valida": False,
             "score": 0,
-            "mensaje": f"Usá al menos {PASSWORD_MIN_LENGTH} caracteres.",
+            "mensaje": f"Usa al menos {PASSWORD_MIN_LENGTH} caracteres.",
         }
 
     if len(password) > PASSWORD_MAX_LENGTH:
         return {
             "valida": False,
             "score": 0,
-            "mensaje": f"Usá como máximo {PASSWORD_MAX_LENGTH} caracteres.",
+            "mensaje": f"Usa como máximo {PASSWORD_MAX_LENGTH} caracteres.",
         }
 
     contexto = [
@@ -165,17 +165,17 @@ def validar_registro(datos, usuarios):
     errores = {}
 
     if not nombres:
-        errores["nombres"] = "Ingresá tus nombres."
+        errores["nombres"] = "Ingresa tus nombres."
     elif len(nombres) > 80:
         errores["nombres"] = "Los nombres son demasiado largos."
 
     if not apellidos:
-        errores["apellidos"] = "Ingresá tus apellidos."
+        errores["apellidos"] = "Ingresa tus apellidos."
     elif len(apellidos) > 80:
         errores["apellidos"] = "Los apellidos son demasiado largos."
 
     if not usuario:
-        errores["usuario"] = "Elegí un nombre de usuario."
+        errores["usuario"] = "Elige un nombre de usuario."
     elif not USUARIO_PATTERN.match(usuario):
         errores["usuario"] = (
             "El usuario debe tener entre 3 y 30 caracteres y usar solo letras, "
@@ -185,15 +185,15 @@ def validar_registro(datos, usuarios):
         errores["usuario"] = "Ese usuario ya está en uso."
 
     if not residencia:
-        errores["residencia"] = "Indicá dónde vivís."
+        errores["residencia"] = "Indica dónde vives."
     else:
         residencia = buscar_residencia(residencia)
         if not residencia:
-            errores["residencia"] = "Elegí un municipio de Cuba de la lista."
+            errores["residencia"] = "Elige un municipio de Cuba de la lista."
 
     if email:
         if len(email) > 254 or not EMAIL_PATTERN.match(email):
-            errores["email"] = "Ingresá un correo electrónico válido."
+            errores["email"] = "Ingresa un correo electrónico válido."
 
     evaluacion = evaluar_password(
         password,

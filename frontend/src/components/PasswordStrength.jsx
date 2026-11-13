@@ -12,7 +12,7 @@ export default function PasswordStrength({ password }) {
   if (!resultado) {
     return (
       <p className="text-xs text-muted-foreground">
-        Mínimo 8 caracteres. Mejor si combinás varias palabras.
+        Mínimo 8 caracteres. Mejor si combinas varias palabras.
       </p>
     )
   }
@@ -35,7 +35,7 @@ export default function PasswordStrength({ password }) {
       </div>
       <p className="text-xs text-muted-foreground">
         Seguridad: <span className="font-medium text-foreground">{nivel.etiqueta}</span>
-        {score < SCORE_MINIMO && ' · necesitás al menos «Aceptable»'}
+        {score < SCORE_MINIMO && ' · necesitas al menos «Aceptable»'}
       </p>
     </div>
   )

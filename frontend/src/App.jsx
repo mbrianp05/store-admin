@@ -96,7 +96,7 @@ export default function App() {
         notify(
           disponible === 0
             ? `"${product.nombre}" no tiene stock disponible.`
-            : `No podés agregar más de "${product.nombre}". Stock disponible: ${disponible}.`,
+            : `No puedes agregar más de "${product.nombre}". Stock disponible: ${disponible}.`,
           "error",
         );
         return;
@@ -126,7 +126,7 @@ export default function App() {
         const disponible = Number(item.producto.stock) || 0;
         if (item.cantidad + delta > disponible) {
           notify(
-            `No podés superar el stock de "${nombre}". Disponible: ${disponible}.`,
+            `No puedes superar el stock de "${nombre}". Disponible: ${disponible}.`,
             "error",
           );
           return;

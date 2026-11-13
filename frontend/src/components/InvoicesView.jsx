@@ -365,7 +365,7 @@ function InvoiceDetail({ invoice, onBack, onUpdateState }) {
             <p className="max-w-[14rem] text-center text-[11px] leading-snug text-muted-foreground">
               {cancelada
                 ? 'La factura está cancelada: el QR quedó roto y ya no sirve para verificar la entrega.'
-                : 'Compartí este QR con quien entrega el producto para verificar la entrega.'}
+                : 'Comparte este QR con quien entrega el producto para verificar la entrega.'}
             </p>
           </div>
         )}
@@ -602,8 +602,8 @@ export default function InvoicesView({
                 </h2>
                 <p className="mx-auto mt-1.5 max-w-xs text-sm leading-snug text-muted-foreground">
                   {invoices.length === 0
-                    ? 'Agregá productos al carrito y emití la primera factura desde el panel del carrito.'
-                    : 'Probá con otro producto, otro periodo o un subtotal mínimo menor.'}
+                    ? 'Agrega productos al carrito y emite la primera factura desde el panel del carrito.'
+                    : 'Prueba con otro producto, otro periodo o un subtotal mínimo menor.'}
                 </p>
                 {invoices.length > 0 && filtrosActivos && (
                   <Button
@@ -699,9 +699,9 @@ export default function InvoicesView({
                 <span className="mx-auto grid size-12 place-items-center rounded-xl border border-border bg-card text-muted-foreground">
                   <ReceiptText className="size-5" />
                 </span>
-                <h2 className="mt-4 text-base font-semibold">Elegí una factura</h2>
+                <h2 className="mt-4 text-base font-semibold">Elige una factura</h2>
                 <p className="mx-auto mt-1.5 max-w-xs text-sm leading-snug text-muted-foreground">
-                  Seleccioná una factura de la lista para ver sus artículos y su total.
+                  Selecciona una factura de la lista para ver sus artículos y su total.
                 </p>
               </div>
             </Card>

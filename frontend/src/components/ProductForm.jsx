@@ -115,7 +115,7 @@ export default function ProductForm({
 
     const room = MAX_FOTOS - photos.length
     if (room <= 0) {
-      setError('Podés subir hasta 8 fotos por producto.')
+      setError('Puedes subir hasta 8 fotos por producto.')
       return
     }
 
@@ -143,7 +143,7 @@ export default function ProductForm({
     const stock = Number(values.stock)
 
     if (!nombre) {
-      setError('Escribí un nombre para el producto.')
+      setError('Escribe un nombre para el producto.')
       return
     }
 
@@ -165,7 +165,7 @@ export default function ProductForm({
         return
       }
       if (!descuento.desde || !descuento.hasta) {
-        setError('Elegí las fechas de inicio y fin del descuento.')
+        setError('Elige las fechas de inicio y fin del descuento.')
         return
       }
       if (descuento.desde > descuento.hasta) {
@@ -225,7 +225,7 @@ export default function ProductForm({
             </h2>
             <p className="mt-1.5 text-sm text-muted-foreground">
               {isEditing
-                ? 'Actualizá los datos del inventario y guardá los cambios.'
+                ? 'Actualiza los datos del inventario y guarda los cambios.'
                 : 'Se guarda en el inventario y queda disponible para facturar.'}
             </p>
           </div>

@@ -1,11 +1,12 @@
-const currencyFormatter = new Intl.NumberFormat('es-AR', {
+const currencyFormatter = new Intl.NumberFormat('es-ES', {
   style: 'currency',
-  currency: 'ARS',
+  currency: 'CUP',
+  currencyDisplay: 'narrowSymbol',
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
 })
 
-const dateFormatter = new Intl.DateTimeFormat('es-AR', {
+const dateFormatter = new Intl.DateTimeFormat('es-ES', {
   day: '2-digit',
   month: 'short',
   year: 'numeric',

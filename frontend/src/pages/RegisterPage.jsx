@@ -120,32 +120,32 @@ export default function RegisterPage() {
     const usuario = datos.usuario.trim()
     const email = datos.email.trim()
 
-    if (!nombres) nuevos.nombres = 'Ingresá tus nombres.'
-    if (!apellidos) nuevos.apellidos = 'Ingresá tus apellidos.'
+    if (!nombres) nuevos.nombres = 'Ingresa tus nombres.'
+    if (!apellidos) nuevos.apellidos = 'Ingresa tus apellidos.'
 
     if (!usuario) {
-      nuevos.usuario = 'Elegí un nombre de usuario.'
+      nuevos.usuario = 'Elige un nombre de usuario.'
     } else if (!USUARIO_PATTERN.test(usuario)) {
       nuevos.usuario =
         'Entre 3 y 30 caracteres: letras, números, puntos, guiones o guiones bajos.'
     }
 
     if (!datos.residencia.trim()) {
-      nuevos.residencia = 'Indicá dónde vivís.'
+      nuevos.residencia = 'Indica dónde vives.'
     } else if (!residenciaCanonica) {
-      nuevos.residencia = 'Elegí un municipio de Cuba de la lista.'
+      nuevos.residencia = 'Elige un municipio de Cuba de la lista.'
     }
 
     if (email && !EMAIL_PATTERN.test(email)) {
-      nuevos.email = 'Ingresá un correo electrónico válido.'
+      nuevos.email = 'Ingresa un correo electrónico válido.'
     }
 
     if (!datos.password) {
-      nuevos.password = 'Elegí una contraseña.'
+      nuevos.password = 'Elige una contraseña.'
     } else if (datos.password.length < 8) {
-      nuevos.password = 'Usá al menos 8 caracteres.'
+      nuevos.password = 'Usa al menos 8 caracteres.'
     } else if (scorePassword < SCORE_MINIMO) {
-      nuevos.password = 'La contraseña es fácil de adivinar: sumá palabras.'
+      nuevos.password = 'La contraseña es fácil de adivinar: suma palabras.'
     }
 
     if (datos.repetir !== datos.password) {
@@ -162,7 +162,7 @@ export default function RegisterPage() {
     const nuevosErrores = validar()
     if (Object.keys(nuevosErrores).length > 0) {
       setErrores(nuevosErrores)
-      setErrorGeneral('Revisá los campos marcados.')
+      setErrorGeneral('Revisa los campos marcados.')
       return
     }
 
@@ -190,16 +190,16 @@ export default function RegisterPage() {
 
   return (
     <AuthShell
-      title="Creá tu cuenta"
+      title="Crea tu cuenta"
       description="Solo se aceptan personas que vivan en Cuba."
       footer={
         <>
-          ¿Ya tenés cuenta?{' '}
+          ¿Ya tienes cuenta?{' '}
           <Link
             to="/login"
             className="font-medium text-foreground underline underline-offset-4 hover:text-highlight"
           >
-            Ingresá
+            Ingresa
           </Link>
         </>
       }
@@ -262,7 +262,7 @@ export default function RegisterPage() {
 
         <Campo
           id="residencia"
-          label="¿Dónde vivís?"
+          label="¿Dónde vives?"
           error={errores.residencia}
           hint={
             <p className="text-xs text-muted-foreground">
@@ -270,7 +270,7 @@ export default function RegisterPage() {
                 ? 'Cargando municipios de Cuba…'
                 : errorUbicaciones
                   ? `No se pudieron cargar los municipios: ${errorUbicaciones}`
-                  : 'Empezá a escribir y elegí un municipio de la lista.'}
+                  : 'Empieza a escribir y elige un municipio de la lista.'}
             </p>
           }
         >

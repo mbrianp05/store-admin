@@ -179,7 +179,7 @@ def parsear_envio(valor):
 
     direccion = str(valor.get('direccion') or '').strip()
     if not direccion:
-        return None, 'Escribí la dirección de entrega.'
+        return None, 'Escribe la dirección de entrega.'
 
     return {
         'a_domicilio': True,
@@ -304,7 +304,7 @@ def index():
     if not os.path.exists(index_path):
         return jsonify({
             'error': 'Frontend no compilado',
-            'detalle': 'Ejecutá `npm run build` dentro de frontend/.',
+            'detalle': 'Ejecuta `npm run build` dentro de frontend/.',
         }), 503
     return send_from_directory(FRONTEND_DIST, 'index.html')
 
@@ -342,7 +342,7 @@ def exigir_sesion():
         if ruta in RUTAS_PUBLICAS_LECTURA or ruta.startswith('/uploads/'):
             return None
     if not session.get('usuario'):
-        return jsonify({'error': 'Necesitás iniciar sesión.'}), 401
+        return jsonify({'error': 'Necesitas iniciar sesión.'}), 401
     return None
 
 @app.errorhandler(413)
@@ -393,7 +393,7 @@ def auth_register():
     valores, errores = validar_registro(datos, usuarios)
     if errores:
         return jsonify({
-            'error': 'Revisá los datos ingresados.',
+            'error': 'Revisa los datos ingresados.',
             'campos': errores,
         }), 400
 
@@ -425,7 +425,7 @@ def auth_login():
         respuesta = jsonify({
             'error': (
                 'Demasiados intentos fallidos. '
-                f'Esperá {espera} segundos antes de volver a intentar.'
+                f'Espera {espera} segundos antes de volver a intentar.'
             ),
         })
         respuesta.headers['Retry-After'] = str(espera)
@@ -495,7 +495,7 @@ def upload_foto():
 
     extension = os.path.splitext(archivo.filename)[1].lower()
     if extension not in EXTENSIONES_FOTO:
-        return jsonify({'error': 'Formato no admitido. Usá JPG, PNG, WEBP, GIF o AVIF.'}), 400
+        return jsonify({'error': 'Formato no admitido. Usa JPG, PNG, WEBP, GIF o AVIF.'}), 400
 
     if not (archivo.mimetype or '').startswith('image/'):
         return jsonify({'error': 'El archivo no parece ser una imagen.'}), 400

@@ -366,8 +366,8 @@ export default function ProductsView({
           <h2 className="mt-5 text-lg font-semibold">No hay productos todavía</h2>
           <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
             {canManage
-              ? 'Agregá el primer producto para empezar a armar el carrito y emitir facturas.'
-              : 'Cuando el mostrador publique productos, van a aparecer acá.'}
+              ? 'Agrega el primer producto para empezar a armar el carrito y emitir facturas.'
+              : 'Cuando Venture publique productos, van a aparecer aquí.'}
           </p>
           {canManage && (
             <Button type="button" onClick={() => setShowForm(true)} className="mt-5">
@@ -387,7 +387,7 @@ export default function ProductsView({
               ? `No hay productos en la categoría «${categoria}»${
                   hasSearch ? ` para “${search.trim()}”` : ''
                 }.`
-              : `No encontramos productos para “${search.trim()}”. Probá con otro nombre o descripción.`}
+              : `No encontramos productos para “${search.trim()}”. Prueba con otro nombre o descripción.`}
           </p>
           <Button
             type="button"

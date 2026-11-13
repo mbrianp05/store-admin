@@ -1,10 +1,10 @@
-const fechaCortaFormatter = new Intl.DateTimeFormat('es-AR', {
+const fechaCortaFormatter = new Intl.DateTimeFormat('es-ES', {
   day: '2-digit',
   month: 'short',
   year: 'numeric',
 })
 
-const mesFormatter = new Intl.DateTimeFormat('es-AR', {
+const mesFormatter = new Intl.DateTimeFormat('es-ES', {
   month: 'long',
   year: 'numeric',
 })

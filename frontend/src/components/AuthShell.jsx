@@ -14,8 +14,8 @@ export default function AuthShell({ title, description, children, footer }) {
             <BrandMark className="size-6" />
           </span>
           <div>
-            <p className="text-lg font-semibold leading-none tracking-tight">Mostrador</p>
-            <p className="mt-1.5 text-xs text-muted-foreground">Insumos para bijouterie</p>
+            <p className="text-lg font-semibold leading-none tracking-tight">Venture</p>
+            <p className="mt-1.5 text-xs text-muted-foreground">Inventario y facturación</p>
           </div>
         </div>
 

@@ -31,7 +31,7 @@ export default function LoginPage() {
     setError('')
 
     if (!usuario.trim() || !password) {
-      setError('Ingresá tu usuario y tu contraseña.')
+      setError('Ingresa tu usuario y tu contraseña.')
       return
     }
 
@@ -48,16 +48,16 @@ export default function LoginPage() {
 
   return (
     <AuthShell
-      title="Ingresá a Mostrador"
-      description="Iniciá sesión para comprar, gestionar el inventario y emitir facturas."
+      title="Ingresa a Venture"
+      description="Inicia sesión para comprar, gestionar el inventario y emitir facturas."
       footer={
         <>
-          ¿Todavía no tenés cuenta?{' '}
+          ¿Todavía no tienes cuenta?{' '}
           <Link
             to="/registro"
             className="font-medium text-foreground underline underline-offset-4 hover:text-highlight"
           >
-            Creá una
+            Crea una
           </Link>
         </>
       }

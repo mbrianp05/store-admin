@@ -143,7 +143,7 @@ export default function CartPanel({
 
   function confirmarEntrega() {
     if (aDomicilio && !direccion.trim()) {
-      setErrorDireccion('Escribí la dirección de entrega.')
+      setErrorDireccion('Escribe la dirección de entrega.')
       return
     }
 
@@ -205,7 +205,7 @@ export default function CartPanel({
                 La lista está vacía
               </h3>
               <p className="mt-1.5 max-w-[15rem] text-xs leading-relaxed text-ink-soft">
-                Sumá productos desde el inventario y armá la lista.
+                Suma productos desde el inventario y arma la lista.
               </p>
             </div>
           ) : (
@@ -315,7 +315,7 @@ export default function CartPanel({
           </Button>
           <p className="mt-2 text-center text-[11px] text-ink-soft">
             {paso === 'carrito'
-              ? 'Revisá las cantidades antes de emitir.'
+              ? 'Revisa las cantidades antes de emitir.'
               : aDomicilio
                 ? 'El envío se coordina con el cliente.'
                 : 'Retiro en el mostrador.'}

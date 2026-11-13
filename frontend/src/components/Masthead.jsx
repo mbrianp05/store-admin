@@ -4,7 +4,7 @@ import BrandMark from './BrandMark'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
-const todayFormatter = new Intl.DateTimeFormat('es-AR', {
+const todayFormatter = new Intl.DateTimeFormat('es-ES', {
   weekday: 'short',
   day: '2-digit',
   month: 'short',
@@ -97,10 +97,10 @@ export default function Masthead({
             </span>
             <div className="min-w-0">
               <p className="text-base font-semibold leading-none tracking-tight">
-                Mostrador
+                Venture
               </p>
               <p className="mt-1 truncate text-[11px] leading-none text-muted-foreground">
-                Insumos para bijouterie
+                Inventario y facturación
               </p>
             </div>
 

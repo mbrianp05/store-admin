@@ -98,7 +98,7 @@ function DiscountSummary({ product, canManage }) {
           ) : (
             <p className="mt-2 text-sm text-muted-foreground">
               {canManage
-                ? 'Sin descuento programado. Podés agregar uno desde «Editar producto».'
+                ? 'Sin descuento programado. Puedes agregar uno desde «Editar producto».'
                 : 'Sin descuento programado.'}
             </p>
           )}
