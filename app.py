@@ -9,11 +9,14 @@ from flask import Flask, jsonify, request, send_from_directory, session
 from flask_cors import CORS
 
 from autenticacion import (
+    actualizar_password,
     buscar_usuario,
     cargar_usuarios,
     crear_usuario,
     guardar_usuarios,
     usuario_publico,
+    validar_cambio_password,
+    validar_perfil,
     validar_registro,
     verificar_password,
 )
@@ -260,6 +263,17 @@ def cargar_datos():
         pass
 
 
+def renombrar_facturas_usuario(anterior, nuevo):
+    """Conserva las facturas del usuario cuando cambia su nombre de usuario."""
+    cambiadas = False
+    for factura in gestor_facturas.facturas:
+        if factura.usuario.casefold() == anterior.casefold():
+            factura.usuario = nuevo
+            cambiadas = True
+    if cambiadas:
+        guardar_facturas()
+
+
 def renumerar_facturas_por_usuario():
     """Cada usuario tiene su propia secuencia de facturas: 1, 2, 3…"""
     por_usuario = {}
@@ -459,6 +473,66 @@ def auth_me():
         return jsonify({'error': 'No hay una sesión activa.'}), 401
 
     return jsonify(usuario_publico(cuenta))
+
+
+@app.route('/api/auth/perfil', methods=['PATCH'])
+def auth_update_profile():
+    nombre_sesion = session.get('usuario')
+    if not nombre_sesion:
+        return jsonify({'error': 'No hay una sesión activa.'}), 401
+
+    cuenta = buscar_usuario(usuarios, nombre_sesion)
+    if not cuenta:
+        session.clear()
+        return jsonify({'error': 'No hay una sesión activa.'}), 401
+
+    datos = request.get_json(silent=True) or {}
+    valores, errores = validar_perfil(datos, usuarios, cuenta)
+    if errores:
+        return jsonify({
+            'error': 'Revisa los datos ingresados.',
+            'campos': errores,
+        }), 400
+
+    anterior = cuenta['usuario']
+    with STOCK_LOCK:
+        cuenta['usuario'] = valores['usuario']
+        cuenta['residencia'] = valores['residencia']
+        cuenta['email'] = valores['email']
+        guardar_usuarios(usuarios)
+
+        if anterior != valores['usuario']:
+            renombrar_facturas_usuario(anterior, valores['usuario'])
+        session['usuario'] = valores['usuario']
+
+    return jsonify(usuario_publico(cuenta))
+
+
+@app.route('/api/auth/password', methods=['POST'])
+def auth_change_password():
+    nombre_sesion = session.get('usuario')
+    if not nombre_sesion:
+        return jsonify({'error': 'No hay una sesión activa.'}), 401
+
+    cuenta = buscar_usuario(usuarios, nombre_sesion)
+    if not cuenta:
+        session.clear()
+        return jsonify({'error': 'No hay una sesión activa.'}), 401
+
+    datos = request.get_json(silent=True) or {}
+    valores, errores = validar_cambio_password(datos, cuenta)
+    if errores:
+        return jsonify({
+            'error': 'Revisa los datos ingresados.',
+            'campos': errores,
+        }), 400
+
+    with STOCK_LOCK:
+        actualizar_password(cuenta, valores['password_nueva'])
+        guardar_usuarios(usuarios)
+
+    return jsonify({'success': True})
+
 
 # ===== ENDPOINTS API =====
 @app.route('/api/config', methods=['GET'])

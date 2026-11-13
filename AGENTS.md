@@ -28,7 +28,7 @@ Inventory, cart, and invoicing app: Flask JSON API + React/Tailwind frontend. UI
 
 ## API
 
-`GET/POST /api/products`, `DELETE /api/products/<nombre>`, `GET/POST /api/invoices`, `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`, `GET /api/auth/ubicaciones`.
+`GET/POST /api/products`, `DELETE /api/products/<nombre>`, `GET/POST /api/invoices`, `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`, `PATCH /api/auth/perfil`, `POST /api/auth/password`, `GET /api/auth/ubicaciones`.
 
 ## Gotchas
 

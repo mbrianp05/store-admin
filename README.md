@@ -241,6 +241,7 @@ frontend/
       ProductsPage.jsx
       ProductDetailPage.jsx
       InvoicesPage.jsx
+      ProfilePage.jsx          # Perfil: usuario, residencia, correo y contraseña
     routes/                    # Rutas de TanStack Router
       __root.jsx
       _app.jsx                 # Layout autenticado
@@ -248,6 +249,7 @@ frontend/
       registro.jsx
       _app/index.jsx
       _app/facturas.jsx
+      _app/perfil.jsx
       _app/productos/$nombre.jsx
 AGENTS.md                      # Notas para agentes y desarrollo
 README.md
@@ -263,6 +265,8 @@ README.md
 | `POST` | `/api/auth/login` | Inicia sesión con usuario y contraseña. |
 | `POST` | `/api/auth/logout` | Cierra la sesión. |
 | `GET` | `/api/auth/me` | Devuelve el usuario de la sesión actual. |
+| `PATCH` | `/api/auth/perfil` | Actualiza usuario, residencia y correo del usuario de la sesión. |
+| `POST` | `/api/auth/password` | Cambia la contraseña (requiere la contraseña actual). |
 | `GET` | `/api/auth/ubicaciones` | Lista los municipios de Cuba. |
 | `GET` | `/api/products` | Lista todos los productos. Público. |
 | `POST` | `/api/products` | Crea un producto. |

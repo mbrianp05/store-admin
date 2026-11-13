@@ -1,4 +1,4 @@
-import { LogIn, LogOut, Package, ReceiptText, Settings, ShoppingCart } from 'lucide-react'
+import { LogIn, LogOut, Package, ReceiptText, Settings, ShoppingCart, UserRound } from 'lucide-react'
 import { Link, useRouterState } from '@tanstack/react-router'
 import BrandMark from './BrandMark'
 import { Button } from '@/components/ui/button'
@@ -84,8 +84,13 @@ export default function Masthead({
 }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname })
   const isInvoices = pathname.startsWith('/facturas')
+  const isPerfil = pathname.startsWith('/perfil')
   const autenticado = Boolean(user)
   const counts = { products: productCount, invoices: invoiceCount }
+  const inicialUsuario = String(user?.nombres || user?.usuario || '?')
+    .trim()
+    .slice(0, 1)
+    .toUpperCase()
 
   return (
     <>
@@ -115,7 +120,7 @@ export default function Masthead({
                 icon={Package}
                 label="Productos"
                 count={counts.products}
-                active={!isInvoices}
+                active={!isInvoices && !isPerfil}
               />
               {autenticado && (
                 <SectionLink
@@ -132,9 +137,25 @@ export default function Masthead({
           <div className="flex items-center gap-2.5">
             <p className="hidden text-xs text-muted-foreground lg:block">{today}</p>
             {autenticado && (
-              <p className="hidden max-w-[14rem] truncate text-xs text-muted-foreground md:block">
-                {user.nombres} {user.apellidos}
-              </p>
+              <Link
+                to="/perfil"
+                title={`${user.nombres} ${user.apellidos}`.trim()}
+                aria-label={`Abrir el perfil de ${user.usuario}`}
+                aria-current={isPerfil ? 'page' : undefined}
+                className={cn(
+                  'hidden max-w-[15rem] items-center gap-2 rounded-md px-1.5 py-1 text-xs transition-colors md:inline-flex',
+                  isPerfil
+                    ? 'bg-secondary/70 text-foreground'
+                    : 'text-muted-foreground hover:bg-secondary/50 hover:text-foreground',
+                )}
+              >
+                <span className="grid size-6 shrink-0 place-items-center rounded-full border border-border bg-secondary text-[10px] font-semibold text-foreground">
+                  {inicialUsuario}
+                </span>
+                <span className="truncate font-medium text-foreground">
+                  @{user.usuario}
+                </span>
+              </Link>
             )}
             {autenticado ? (
               <>
@@ -200,13 +221,13 @@ export default function Masthead({
         aria-label="Secciones"
         className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md sm:hidden"
       >
-        <div className={cn('grid', autenticado ? 'grid-cols-2' : 'grid-cols-1')}>
+        <div className={cn('grid', autenticado ? 'grid-cols-3' : 'grid-cols-1')}>
           <MobileSectionLink
             to="/"
             icon={Package}
             label="Productos"
             count={counts.products}
-            active={!isInvoices}
+            active={!isInvoices && !isPerfil}
           />
           {autenticado && (
             <MobileSectionLink
@@ -215,6 +236,15 @@ export default function Masthead({
               label="Facturas"
               count={counts.invoices}
               active={isInvoices}
+            />
+          )}
+          {autenticado && (
+            <MobileSectionLink
+              to="/perfil"
+              icon={UserRound}
+              label="Perfil"
+              count={0}
+              active={isPerfil}
             />
           )}
         </div>

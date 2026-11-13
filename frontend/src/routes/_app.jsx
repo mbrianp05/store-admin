@@ -15,8 +15,10 @@ function AppLayout() {
     return <AppLoader mensaje="Verificando tu sesión…" />
   }
 
-  // El catálogo es público; las facturas siguen siendo solo para cuentas.
-  if (!user && pathname.startsWith('/facturas')) {
+  // El catálogo es público; las facturas y el perfil siguen siendo solo para cuentas.
+  const rutaPrivada =
+    pathname.startsWith('/facturas') || pathname.startsWith('/perfil')
+  if (!user && rutaPrivada) {
     return <Navigate to="/login" replace />
   }
 

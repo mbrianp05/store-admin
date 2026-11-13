@@ -1,9 +1,11 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import {
+  changePassword as apiChangePassword,
   getSession,
   login as apiLogin,
   logout as apiLogout,
   register as apiRegister,
+  updateProfile as apiUpdateProfile,
 } from './api'
 
 const AuthContext = createContext(null)
@@ -57,9 +59,20 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
+  const updateProfile = useCallback(async (datos) => {
+    const sesion = await apiUpdateProfile(datos)
+    setUser(sesion)
+    return sesion
+  }, [])
+
+  const changePassword = useCallback(
+    (actual, nueva) => apiChangePassword(actual, nueva),
+    [],
+  )
+
   const value = useMemo(
-    () => ({ user, loading, login, register, logout }),
-    [user, loading, login, register, logout],
+    () => ({ user, loading, login, register, logout, updateProfile, changePassword }),
+    [user, loading, login, register, logout, updateProfile, changePassword],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

@@ -143,6 +143,23 @@ export function logout() {
   })
 }
 
+export function updateProfile(datos) {
+  return request('/auth/perfil', {
+    method: 'PATCH',
+    body: JSON.stringify(datos),
+  })
+}
+
+export function changePassword(passwordActual, passwordNueva) {
+  return request('/auth/password', {
+    method: 'POST',
+    body: JSON.stringify({
+      password_actual: passwordActual,
+      password_nueva: passwordNueva,
+    }),
+  })
+}
+
 export function getUbicaciones() {
   return request('/auth/ubicaciones')
 }

@@ -151,6 +151,83 @@ def evaluar_password(password, datos_personales=()):
     return {"valida": False, "score": score, "mensaje": mensaje}
 
 
+def validar_perfil(datos, usuarios, cuenta):
+    """Valida los datos editables del perfil: usuario, residencia y correo."""
+    datos = datos if isinstance(datos, dict) else {}
+
+    usuario = str(datos.get("usuario") or "").strip()
+    residencia = str(datos.get("residencia") or "").strip()
+    email = str(datos.get("email") or "").strip()
+    actual = str(cuenta.get("usuario") or "").strip()
+
+    errores = {}
+
+    if not usuario:
+        errores["usuario"] = "Elige un nombre de usuario."
+    elif not USUARIO_PATTERN.match(usuario):
+        errores["usuario"] = (
+            "El usuario debe tener entre 3 y 30 caracteres y usar solo letras, "
+            "números, puntos, guiones o guiones bajos."
+        )
+    elif usuario.casefold() != actual.casefold() and buscar_usuario(usuarios, usuario):
+        errores["usuario"] = "Ese usuario ya está en uso."
+
+    if not residencia:
+        errores["residencia"] = "Indica dónde vives."
+    else:
+        residencia_canonica = buscar_residencia(residencia)
+        if not residencia_canonica:
+            errores["residencia"] = "Elige un municipio de Cuba de la lista."
+        else:
+            residencia = residencia_canonica
+
+    if email:
+        if len(email) > 254 or not EMAIL_PATTERN.match(email):
+            errores["email"] = "Ingresa un correo electrónico válido."
+
+    valores = {
+        "usuario": usuario,
+        "residencia": residencia,
+        "email": email,
+    }
+    return valores, errores
+
+
+def validar_cambio_password(datos, cuenta):
+    """Valida el cambio de contraseña de una cuenta existente."""
+    datos = datos if isinstance(datos, dict) else {}
+
+    actual = datos.get("password_actual")
+    nueva = datos.get("password_nueva")
+    errores = {}
+
+    if not isinstance(actual, str) or not actual:
+        errores["password_actual"] = "Ingresa tu contraseña actual."
+    elif not verificar_password(cuenta, actual):
+        errores["password_actual"] = "La contraseña actual no es correcta."
+
+    evaluacion = evaluar_password(
+        nueva,
+        datos_personales=[
+            cuenta.get("usuario"),
+            cuenta.get("nombres"),
+            cuenta.get("apellidos"),
+            cuenta.get("residencia"),
+            cuenta.get("email"),
+        ],
+    )
+    if not evaluacion["valida"]:
+        errores["password_nueva"] = evaluacion["mensaje"]
+    elif isinstance(actual, str) and actual == nueva:
+        errores["password_nueva"] = "Usa una contraseña distinta a la actual."
+
+    return {"password_actual": actual, "password_nueva": nueva}, errores
+
+
+def actualizar_password(cuenta, password):
+    cuenta["password_hash"] = generate_password_hash(password)
+
+
 def validar_registro(datos, usuarios):
     """Devuelve (valores_normalizados, errores_por_campo)."""
     datos = datos if isinstance(datos, dict) else {}
