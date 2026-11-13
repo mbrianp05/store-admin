@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { ArrowLeft, PackageOpen, Pencil, Percent, Plus, Tag, Trash2 } from 'lucide-react'
+import { ArrowLeft, Clock3, PackageOpen, Pencil, Percent, Plus, Tag, Trash2 } from 'lucide-react'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import ProductForm from '../components/ProductForm'
 import ProductGallery from '../components/ProductGallery'
@@ -8,6 +8,7 @@ import { useAuth } from '../auth-context'
 import { formatCurrency } from '../lib/format'
 import { diasEntre, formatFechaCorta, hoyISO } from '../lib/fechas'
 import { descuentoVigente, estadoDescuento, precioVigente } from '../lib/pricing'
+import { TEXTO_REPOSICION, esperaReposicion } from '../lib/stock'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -33,12 +34,12 @@ function DetailSkeleton() {
   return (
     <div className="space-y-6">
       <Skeleton className="h-8 w-40" />
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-        <Skeleton className="aspect-[4/3] rounded-xl" />
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         <div className="space-y-4">
           <Skeleton className="h-64 rounded-xl" />
           <Skeleton className="h-28 rounded-xl" />
         </div>
+        <Skeleton className="aspect-[4/3] rounded-xl" />
       </div>
     </div>
   )
@@ -286,13 +287,9 @@ export default function ProductDetailPage() {
       <div
         className={cn(
           'grid gap-6 lg:items-start',
-          fotos.length > 0 && 'lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]',
+          fotos.length > 0 && 'lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]',
         )}
       >
-        {fotos.length > 0 && (
-          <ProductGallery key={product.nombre} nombre={product.nombre} fotos={fotos} />
-        )}
-
         <div className="space-y-4">
           <Card className="gap-0 py-0">
             <div className="p-5 sm:p-6">
@@ -322,6 +319,13 @@ export default function ProductDetailPage() {
                   </Badge>
                 )}
               </div>
+
+              {esperaReposicion(product) && (
+                <p className="mt-3 flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <Clock3 className="size-3.5 shrink-0" />
+                  {TEXTO_REPOSICION}
+                </p>
+              )}
 
               <h1 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">
                 {product.nombre}
@@ -371,6 +375,10 @@ export default function ProductDetailPage() {
 
           <DiscountSummary product={product} canManage={canManage} />
         </div>
+
+        {fotos.length > 0 && (
+          <ProductGallery key={product.nombre} nombre={product.nombre} fotos={fotos} />
+        )}
       </div>
     </div>
   )

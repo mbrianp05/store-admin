@@ -23,6 +23,7 @@ class Producto:
         stock=0,
         categoria="",
         descuento=None,
+        reposicion_pendiente=False,
     ):
         self.nombre = nombre
         self.precio = precio
@@ -37,6 +38,8 @@ class Producto:
         except (TypeError, ValueError):
             self.stock = 0
         self.descuento = self.normalizar_descuento(descuento)
+        # Solo tiene sentido avisar de una reposición mientras no haya stock.
+        self.reposicion_pendiente = bool(reposicion_pendiente) and self.stock <= 0
 
     @staticmethod
     def normalizar_descuento(descuento):
@@ -76,7 +79,14 @@ class Producto:
             return self.precio
         return round(self.precio * (100 - vigente["porcentaje"]) / 100, 2)
 
-    def actualizar_info(self, precio=None, descripcion=None, fotos=None, stock=None):
+    def actualizar_info(
+        self,
+        precio=None,
+        descripcion=None,
+        fotos=None,
+        stock=None,
+        reposicion_pendiente=None,
+    ):
         if precio is not None:
             self.precio = precio
         if descripcion is not None:
@@ -88,3 +98,7 @@ class Producto:
                 self.stock = max(0, int(stock))
             except (TypeError, ValueError):
                 pass
+        if reposicion_pendiente is not None:
+            self.reposicion_pendiente = bool(reposicion_pendiente)
+        if self.stock > 0:
+            self.reposicion_pendiente = False

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Image, Loader2, Plus, Save, X } from 'lucide-react'
 import { uploadProductPhoto } from '../api'
+import { TEXTO_REPOSICION } from '../lib/stock'
 import CategoryAutocomplete from './CategoryAutocomplete'
 import DiscountEditor from './DiscountEditor'
 import { Badge } from '@/components/ui/badge'
@@ -66,6 +67,9 @@ export default function ProductForm({
       : null,
   )
   const [photos, setPhotos] = useState(() => fotosIniciales(product))
+  const [reposicionPendiente, setReposicionPendiente] = useState(() =>
+    Boolean(product?.reposicion_pendiente),
+  )
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const fileInputRef = useRef(null)
@@ -200,6 +204,7 @@ export default function ProductForm({
         stock,
         categoria: values.categoria.trim(),
         descuento: descuentoPayload,
+        reposicion_pendiente: stock === 0 ? reposicionPendiente : false,
         fotos: urls.filter(Boolean),
       })
     } catch (uploadError) {
@@ -210,6 +215,8 @@ export default function ProductForm({
 
     if (saved) onClose()
   }
+
+  const sinStock = Number(values.stock) === 0
 
   return (
     <Card className="animate-in fade-in slide-in-from-bottom-2 gap-0 py-0 duration-200">
@@ -310,6 +317,22 @@ export default function ProductForm({
               placeholder="0"
               className={fieldClass}
             />
+            {sinStock && (
+              <label className="mt-2 flex items-start gap-2 text-sm text-muted-foreground">
+                <input
+                  type="checkbox"
+                  checked={reposicionPendiente}
+                  onChange={(event) => setReposicionPendiente(event.target.checked)}
+                  className="mt-0.5 size-4 shrink-0 accent-primary"
+                />
+                <span>
+                  Se espera reponer el stock
+                  <span className="mt-0.5 block text-[11px] leading-snug">
+                    Se mostrará «{TEXTO_REPOSICION}» en el catálogo.
+                  </span>
+                </span>
+              </label>
+            )}
           </div>
 
           <div>

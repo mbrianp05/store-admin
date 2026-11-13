@@ -624,6 +624,7 @@ def add_product():
         stock=stock,
         categoria=normalizar_categoria(data.get('categoria')),
         descuento=descuento,
+        reposicion_pendiente=bool(data.get('reposicion_pendiente')),
     )
     with STOCK_LOCK:
         inventario.addProducto(producto)
@@ -682,6 +683,11 @@ def update_product(nombre):
             producto.categoria = normalizar_categoria(data.get('categoria'))
         if 'descuento' in data:
             producto.descuento = descuento_nuevo
+        if 'reposicion_pendiente' in data:
+            producto.reposicion_pendiente = bool(data.get('reposicion_pendiente'))
+        # Al volver a tener stock, el aviso de reposición deja de tener sentido.
+        if producto.stock > 0:
+            producto.reposicion_pendiente = False
         if isinstance(fotos, list):
             producto.fotos = [url for url in fotos if isinstance(url, str) and url]
         elif data.get('foto'):
