@@ -548,6 +548,15 @@ export default function InvoicesView({
       .sort((a, b) => b.numero - a.numero)
   }, [invoices, busqueda, periodo, subtotalMin])
 
+  const totalFiltrado = sorted.reduce(
+    (total, invoice) =>
+      invoice.estado === 'cancelada' ? total : total + (Number(invoice.total) || 0),
+    0,
+  )
+  const canceladasFiltradas = sorted.filter(
+    (invoice) => invoice.estado === 'cancelada',
+  ).length
+
   function limpiarFiltros() {
     setBusqueda('')
     setPeriodo(PERIODO_VACIO)
@@ -584,6 +593,32 @@ export default function InvoicesView({
           aria-label="Facturas emitidas"
         >
           <Card className="gap-0 overflow-hidden py-0">
+            {!loading && sorted.length > 0 && (
+              <div className="flex flex-wrap items-end justify-between gap-x-3 gap-y-2 border-b border-border/70 px-4 py-3">
+                <div className="min-w-0">
+                  <p className="text-xs text-muted-foreground">
+                    {filtrosActivos
+                      ? `${sorted.length} de ${invoices.length}`
+                      : sorted.length}{' '}
+                    {sorted.length === 1 ? 'factura' : 'facturas'}
+                  </p>
+                  {canceladasFiltradas > 0 && (
+                    <p className="mt-0.5 text-[10px] text-muted-foreground">
+                      No incluye {canceladasFiltradas}{' '}
+                      {canceladasFiltradas === 1 ? 'cancelada' : 'canceladas'}.
+                    </p>
+                  )}
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="text-[10px] text-muted-foreground">
+                    {filtrosActivos ? 'Total filtrado' : 'Total facturado'}
+                  </p>
+                  <p className="text-lg font-semibold leading-tight tracking-tight tabular-nums">
+                    {formatCurrency(totalFiltrado)}
+                  </p>
+                </div>
+              </div>
+            )}
             {loading ? (
               <InvoiceListSkeleton />
             ) : sorted.length === 0 ? (
@@ -619,12 +654,6 @@ export default function InvoicesView({
               </div>
             ) : (
               <ul className="space-y-1 p-2">
-                {filtrosActivos && (
-                  <li className="px-3 pb-1 pt-2 text-[11px] text-muted-foreground">
-                    {sorted.length} de {invoices.length}{' '}
-                    {invoices.length === 1 ? 'factura' : 'facturas'}
-                  </li>
-                )}
                 {sorted.map((invoice) => {
                   const isSelected = selectedInvoice?.numero === invoice.numero
                   const itemCount = invoice.items.reduce(

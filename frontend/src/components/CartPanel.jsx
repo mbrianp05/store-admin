@@ -287,8 +287,11 @@ export default function CartPanel({
 
                   <p className="flex items-start gap-1.5 text-[11px] leading-snug text-ink-soft">
                     <Truck className="mt-0.5 size-3.5 shrink-0" />
-                    La factura quedará <strong className="font-semibold text-ink">pendiente</strong>{' '}
-                    hasta que se entregue y pague.
+                    <span>
+                      La factura quedará{' '}
+                      <strong className="font-semibold text-ink">pendiente</strong>{' '}
+                      hasta que se entregue y pague.
+                    </span>
                   </p>
                 </div>
               ) : (
