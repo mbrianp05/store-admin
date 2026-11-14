@@ -22,6 +22,7 @@ La aplicación permite:
 - **Roles**: visitante (`guest`), cliente, empleado y administrador, con permisos distintos sobre productos, facturas y usuarios.
 - **Administrar usuarios**: solo el administrador cambia roles y consulta la actividad de cada cuenta.
 - **Panel de contabilidad**: métricas de facturación, cobros, ventas por mes, productos y clientes principales.
+- **Agrupar envíos**: empleados y administradores reúnen facturas a domicilio en un envío único y las pasan a estado «En envío».
 
 ## ✅ Requisitos
 
@@ -195,15 +196,27 @@ El encabezado fijo muestra la marca **Venture** y la fecha del día. Las pestañ
 ### 🧾 Facturas
 
 - **Listar**: historial ordenado de la más reciente a la más antigua. Un `cliente` ve solo sus facturas; `empleado` y `admin` ven las de todas las cuentas, con el usuario emisor indicado.
+- **Alternar alcance**: empleados y administradores pueden cambiar entre «Todas» y «Mías», porque también pueden comprar.
 - **Filtrar**: por producto, periodo, estado y subtotal mínimo.
+- **Paginación**: el historial muestra 8 facturas por página y los controles están en la parte superior de la lista.
 - **Ver detalle**: número, fecha, estado, artículos, precio unitario, subtotal, envío y total.
 - **Cambiar estado**: pendiente, en envío, pagada o cancelada; solo `empleado` y `admin` pueden hacerlo. La cancelación admite un motivo opcional.
+- **Stock**: cancelar una factura devuelve sus productos al inventario; reactivarla vuelve a descontarlos (responde **409** si ya no alcanza el stock).
 - **QR de entrega**: las facturas con envío a domicilio incluyen un código QR; al cancelar la factura, el QR se muestra anulado.
 - **Navegación responsive**: en pantallas pequeñas, el detalle incluye un botón para volver al listado.
+
+### 🚚 Envíos (empleados y administración)
+
+- **Facturas disponibles**: lista solo las facturas a domicilio pendientes que aún no pertenecen a un envío.
+- **Agrupar**: selecciona varias facturas y crea un envío único; todas pasan a estado `en_envio`.
+- **Seguimiento**: cada envío muestra código, fecha, creador, facturas, destinos y total.
+- **Completar o cancelar**: «Marcar entregado» cobra las facturas (`pagada`); «Cancelar envío» las devuelve a `pendiente`.
+- **Paginación**: facturas disponibles y envíos se paginan de 8 en 8 con los controles arriba.
 
 ### 🧑‍💼 Usuarios (solo administración)
 
 - **Listar**: todas las cuentas con rol, residencia, correo, fecha de registro y cantidad de facturas.
+- **Paginación**: 8 cuentas por página con los controles en la parte superior.
 - **Filtrar**: por nombre, usuario o correo.
 - **Cambiar rol**: cliente, empleado o administrador; el cambio se aplica de inmediato.
 - **Protección**: la cuenta fundadora se marca como tal y no se puede dejar el sistema sin administradores.
@@ -211,8 +224,9 @@ El encabezado fijo muestra la marca **Venture** y la fecha del día. Las pestañ
 ### 📊 Contabilidad (solo administración)
 
 - **Resumen**: total facturado, cobrado y pendiente, porcentaje de cobro, ticket promedio y facturas por estado.
-- **Gráficos**: evolución mensual de la facturación, distribución por estado, productos más vendidos y clientes con mayor importe.
+- **Gráficos**: evolución mensual de la facturación, distribución por estado, productos que más dinero dejaron y clientes con mayor importe, con Recharts.
 - **Detalle**: últimas facturas y tablas de productos y clientes principales.
+- **Productos**: ranking de los 8 productos con más ingresos, con unidades y porcentaje de participación.
 - **Alcance**: las facturas canceladas se excluyen de los totales y gráficos de ventas.
 
 ## 🗂️ Estructura del proyecto
@@ -267,7 +281,8 @@ frontend/
       CartPanel.jsx            # Carrito de escritorio y móvil
       InvoicesView.jsx         # Historial y detalle de facturas
       InvoiceQR.jsx            # Código QR de entrega
-      AccountingCharts.jsx     # Gráficos SVG del panel de contabilidad
+      Pagination.jsx           # Controles de paginación reutilizables
+      AccountingCharts.jsx     # Gráficos Recharts del panel de contabilidad
       SettingsDialog.jsx       # Configuración del costo de envío
       LocationAutocomplete.jsx # Autocompletado de municipios de Cuba
       PasswordStrength.jsx     # Medidor de fuerza de contraseña
@@ -281,6 +296,7 @@ frontend/
       ProfilePage.jsx          # Perfil: usuario, residencia, correo y contraseña
       UsersPage.jsx            # Administración de cuentas y roles
       AccountingPage.jsx       # Panel de contabilidad
+      EnviosPage.jsx           # Agrupación de facturas a domicilio en envíos
     routes/                    # Rutas de TanStack Router
       __root.jsx
       _app.jsx                 # Layout autenticado
@@ -291,6 +307,7 @@ frontend/
       _app/perfil.jsx
       _app/usuarios.jsx        # Solo administración
       _app/contabilidad.jsx    # Solo administración
+      _app/envios.jsx          # Empleados y administración
       _app/productos/$nombre.jsx
 AGENTS.md                      # Notas para agentes y desarrollo
 README.md
@@ -323,6 +340,9 @@ README.md
 | `GET` | `/api/invoices` | Lista las facturas del usuario; `empleado` y `admin` ven todas. |
 | `POST` | `/api/invoices` | Emite una factura y descuenta stock. Cualquier cuenta con sesión. |
 | `PATCH` | `/api/invoices/<numero>` | Cambia el estado de una factura. `empleado` o `admin`. |
+| `GET` | `/api/envios` | Lista los envíos y las facturas a domicilio disponibles. `empleado` o `admin`. |
+| `POST` | `/api/envios` | Agrupa facturas a domicilio en un envío y las pasa a `en_envio`. `empleado` o `admin`. |
+| `PATCH` | `/api/envios/<id>` | Marca un envío como `entregado` o `cancelado`. `empleado` o `admin`. |
 | `GET` | `/uploads/<archivo>` | Sirve una foto subida. Público. |
 | `GET` | `/` | Sirve `frontend/dist/index.html` (503 si no está compilado). |
 
@@ -379,7 +399,7 @@ Requiere rol `admin`. Agrega las facturas del negocio y devuelve:
 - `resumen`: `total_facturado`, `total_cobrado`, `total_pendiente`, `porcentaje_cobrado`, `ticket_promedio`, `facturas_total`, `facturas_validas`, `facturas_canceladas`, `facturas_pendientes`, `clientes` y `productos_vendidos`.
 - `por_estado`: cantidad e importe por cada estado de factura.
 - `por_mes`: total y cantidad de facturas de los últimos 8 meses (`clave` y `etiqueta`).
-- `top_productos` y `top_clientes`: los cinco primeros por importe.
+- `top_productos` y `top_clientes`: los ocho productos y los clientes con mayor importe; cada producto incluye `cantidad` y `participacion` (% del total facturado).
 - `ultimas_facturas`: las seis más recientes.
 - `generado`: marca temporal ISO de la respuesta.
 
@@ -538,7 +558,75 @@ Devuelve las facturas de la más antigua a la más reciente. Un `cliente` recibe
 - Solo `empleado` y `admin` pueden cambiar estados; un `cliente` recibe **403**.
 - El número de factura es por usuario y puede repetirse entre cuentas. Para desambiguar, envía también `usuario` en el cuerpo; si hay varias coincidencias y no se indica, responde **409**.
 - Si no existe una factura que coincida, responde **404**.
-- La cancelación no repone el stock automáticamente.
+- Cancelar repone el stock de los productos de la factura. Repetir la cancelación no lo duplica.
+- Reactivar una factura cancelada vuelve a descontar el stock; si el producto ya no existe o no alcanza, responde **409** y no cambia el estado.
+- Las facturas históricas cuyos productos ya no están en el inventario se cancelan igual, omitiendo el stock de esos productos.
+
+### GET /api/envios
+
+Requiere rol `empleado` o `admin`. Devuelve los envíos agrupados y las facturas a domicilio que aún pueden agruparse:
+
+```json
+{
+  "envios": [
+    {
+      "id": "6f6a5c4c8d5e4d5f9a1b2c3d4e5f6a7b",
+      "codigo": "ENV-A1B2C3",
+      "fecha": "2026-11-14T15:30:00+00:00",
+      "estado": "en_envio",
+      "creado_por": "maria.perez",
+      "notas": "Ruta de la tarde",
+      "facturas": [
+        {
+          "codigo": "A1B2C3D4",
+          "numero": 1,
+          "fecha": "2026-11-14",
+          "usuario": "maria.perez",
+          "total": 25.0,
+          "costo_envio": 5.0,
+          "estado": "en_envio",
+          "ubicacion": "Centro Habana, La Habana",
+          "direccion": "Calle 10 #123"
+        }
+      ],
+      "cantidad_facturas": 1,
+      "destinos": ["Calle 10 #123, Centro Habana, La Habana"],
+      "total": 25.0,
+      "costo": 5.0
+    }
+  ],
+  "facturas_disponibles": []
+}
+```
+
+- `facturas_disponibles` contiene facturas con `envio.a_domicilio` en estado `pendiente` o `en_envio` que no pertenecen a ningún envío.
+- Los envíos se devuelven del más reciente al más antiguo.
+
+### POST /api/envios
+
+```json
+{
+  "facturas": ["A1B2C3D4", "E5F6A7B8"],
+  "notas": "Ruta de la tarde"
+}
+```
+
+- Requiere rol `empleado` o `admin`.
+- Cada elemento puede ser el `codigo` de la factura o un objeto `{ "codigo": "..." }`.
+- Todas deben ser facturas a domicilio, no canceladas, no pagadas y no incluidas en otro envío.
+- Al agrupar, todas pasan automáticamente a estado `en_envio` y se guarda el envío en `data/envios.json`.
+- Responde **400** si la selección está vacía o contiene una factura no válida, **409** si alguna ya pertenece a otro envío o no se puede agrupar.
+
+### PATCH /api/envios/<id>
+
+```json
+{ "estado": "entregado" }
+```
+
+- Requiere rol `empleado` o `admin`.
+- `entregado` pasa las facturas del envío a `pagada`.
+- `cancelado` devuelve a `pendiente` las facturas que seguían en `en_envio`.
+- Un envío cancelado ya no admite cambios (**409**).
 
 ## 🧪 Scripts y calidad
 

@@ -18,26 +18,29 @@ Inventory, cart, and invoicing app: Flask JSON API + React/Tailwind frontend. UI
 - `limitador.py` — rate limit en memoria para el login (fallos por IP y por IP+usuario).
 - `models/` — domain classes (`Producto`, `Inventario`, `Carrito`, `Factura`, `GestorFacturas`) re-exported from `models/__init__.py`. Use relative imports inside the package.
 - `frontend/` — Vite + React 19 + Tailwind CSS v4. Entrypoint `src/main.jsx`; `src/App.jsx` owns view/cart/invoice state.
-- `frontend/src/components/` — UI pieces; `ProductsView`, `CartPanel`, `InvoicesView`, `ProductForm`, `Sidebar`, `Toast`, `Icons`; admin pieces are `AccountingCharts`; auth pieces are `AuthShell`, `LocationAutocomplete`, `PasswordStrength`, `AppLoader`.
-- `frontend/src/pages/` — `LoginPage`, `RegisterPage`, `ProductsPage`, `InvoicesPage`, `UsersPage` (admin), `AccountingPage` (admin).
-- `frontend/src/routes/` — file-based TanStack Router routes; `_app.jsx` is the authenticated layout and enforces the admin-only routes, `login.jsx` and `registro.jsx` are public, `_app/usuarios.jsx` and `_app/contabilidad.jsx` are admin-only.
+- `frontend/src/components/` — UI pieces; `ProductsView`, `CartPanel`, `InvoicesView`, `ProductForm`, `Pagination`, auth pieces `AuthShell`, `LocationAutocomplete`, `PasswordStrength`, `AppLoader`; admin charts are `AccountingCharts` (Recharts).
+- `frontend/src/pages/` — `LoginPage`, `RegisterPage`, `ProductsPage`, `InvoicesPage`, `UsersPage` (admin), `AccountingPage` (admin), `EnviosPage` (empleado/admin).
+- `frontend/src/routes/` — file-based TanStack Router routes; `_app.jsx` is the authenticated layout and enforces admin-only and staff-only routes, `login.jsx` and `registro.jsx` are public, `_app/usuarios.jsx` and `_app/contabilidad.jsx` are admin-only, `_app/envios.jsx` is staff-only.
 - `frontend/src/auth-context.jsx` — session state (`user`, `loading`, `login`, `register`, `logout`, `refreshUser`).
 - `frontend/src/lib/roles.js` — role labels and permission helpers (`esAdmin`, `puedeGestionarProductos`, `puedeCambiarEstadoFactura`, …).
 - `frontend/src/api.js` — all API calls (`/api` relative). `frontend/src/lib/format.js` — currency/date/unit formatting.
 - `frontend/src/index.css` — Tailwind import, `@theme` design tokens, and base styles.
-- `data/` — runtime JSON state (`inventario.json`, `facturas.json`), gitignored; created on demand.
+- `data/` — runtime JSON state (`inventario.json`, `facturas.json`, `envios.json`), gitignored; created on demand.
 
 ## API
 
-`GET/POST /api/products`, `PUT/DELETE /api/products/<nombre>`, `POST /api/uploads`, `GET/PUT /api/config`, `GET/POST /api/invoices`, `PATCH /api/invoices/<numero>`, `GET /api/contabilidad`, `GET /api/admin/usuarios`, `PATCH /api/admin/usuarios/<nombre>/rol`, `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`, `GET /api/auth/estado`, `PATCH /api/auth/perfil`, `POST /api/auth/password`, `GET /api/auth/ubicaciones`.
+`GET/POST /api/products`, `PUT/DELETE /api/products/<nombre>`, `POST /api/uploads`, `GET/PUT /api/config`, `GET/POST /api/invoices`, `PATCH /api/invoices/<numero>`, `GET/POST /api/envios`, `PATCH /api/envios/<id>`, `GET /api/contabilidad`, `GET /api/admin/usuarios`, `PATCH /api/admin/usuarios/<nombre>/rol`, `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`, `GET /api/auth/estado`, `PATCH /api/auth/perfil`, `POST /api/auth/password`, `GET /api/auth/ubicaciones`.
 
 ## Gotchas
 
 - `data/*.json` is local state (only `ejemplo_*.json` is tracked). If `data/inventario.json` is missing, `cargar_datos()` seeds four sample products.
 - Auth: users live in `data/usuarios.json` with `scrypt` password hashes (never plaintext). Registration is open and asks for nombres, apellidos, usuario, residencia (Cuban municipality), optional email, and a zxcvbn-strong password.
 - Roles live on each user as `rol`: `cliente`, `empleado` or `admin`. `guest` is the unauthenticated visitor and is never stored. The first account in an empty file becomes `admin`; later accounts default to `cliente`. `normalizar_roles()` also promotes the first stored account when an older file has no roles.
-- Permission guards use `@requiere_roles(...)` in `app.py` and return `403` for a session without the needed role: product writes and uploads require `empleado`/`admin`, invoice state changes require `empleado`/`admin`, and `/api/admin/*`, `/api/contabilidad`, `PUT /api/config` require `admin`. Demoting the last admin returns `409`.
-- `GET /api/invoices` returns all invoices for `empleado`/`admin` and only the caller's invoices for `cliente`. Invoice numbers restart per user, so `PATCH /api/invoices/<numero>` accepts an optional `usuario` and returns `409` when the number is ambiguous.
+- Permission guards use `@requiere_roles(...)` in `app.py` and return `403` for a session without the needed role: product writes, uploads, invoice state changes and `/api/envios` require `empleado`/`admin`, and `/api/admin/*`, `/api/contabilidad`, `PUT /api/config` require `admin`. Demoting the last admin returns `409`.
+- `GET /api/invoices` returns all invoices for `empleado`/`admin` and only the caller's invoices for `cliente`. Invoice numbers restart per user, so `PATCH /api/invoices/<numero>` accepts an optional `usuario` and returns `409` when the number is ambiguous. The invoices UI lets staff switch between «Todas» and «Mías».
+- Cancelling an invoice restores its products' stock; cancelling again is idempotent. Reactivating a cancelled invoice deducts stock again and returns `409` if a product is missing or insufficient. Historical invoices with products no longer in inventory are skipped during restoration.
+- Shipments live in `data/envios.json`. A shipment stores invoice references by `codigo` (stable across per-user renumbering). Grouping only accepts home-delivery invoices in `pendiente`/`en_envio` that are not already in another shipment; it sets them to `en_envio`. PATCH `entregado` sets them `pagada`, PATCH `cancelado` returns them to `pendiente`.
+- Invoices, users, available shipment invoices and shipments are paginated 8 per page; pagination controls sit at the top of each list (`frontend/src/components/Pagination.jsx`).
 - `GET /api/auth/estado` is public and reports `hay_usuarios`, `total_usuarios` and `primer_usuario_admin`; login and registration use it to show the first-admin banner.
 - Every `/api/*` and `/uploads/*` request except the `/api/auth` routes and `GET /api/products` requires the session cookie; the SPA redirects to `/login` when `GET /api/auth/me` returns 401.
 - `SECRET_KEY` and `SESSION_COOKIE_SECURE` are read from the environment; without `SECRET_KEY`, a stable key is generated at `data/secret_key`. Set `SESSION_COOKIE_SECURE=1` behind HTTPS.
@@ -45,7 +48,7 @@ Inventory, cart, and invoicing app: Flask JSON API + React/Tailwind frontend. UI
 - Residence validation accepts `Municipio, Provincia` or a unique municipality name; duplicate names such as San Luis require the province.
 - Login rate limit lives in `limitador.py` and is per-process: 5 failures per IP+usuario and 10 per IP in 15 minutes, blocked for 15 minutes, then a successful login clears both counters. Configure with `LOGIN_MAX_INTENTOS`, `LOGIN_MAX_INTENTOS_IP`, `LOGIN_VENTANA_SEGUNDOS`, `LOGIN_BLOQUEO_SEGUNDOS`. It returns `429` with `Retry-After`.
 - `data/facturas.json` stores items as `[product_dict, cantidad]` pairs, not objects; both loaders assume that shape.
-- Invoice numbers: the server owns `next_invoice_number` (module global, restored from existing invoices). The client sends `numero` on POST but the server ignores it — do not rely on the client value.
+- Invoice numbers: the server owns the per-user sequence (`siguiente_numero_factura`). The client sends `numero` on POST but the server ignores it — do not rely on the client value.
 - Frontend cart state is `{ producto, cantidad }` and JSON field names are Spanish (`nombre`, `precio`, `unidad_medida`, `cantidad`). Keep the React components and `app.py` in sync.
 - `Carrito.addChart` is spelled that way (not `addToCart`); `Carrito`/`Inventario` use camelCase methods while `Factura`/`GestorFacturas` mostly use snake_case.
 - Tailwind v4: add colors/fonts in the `@theme` block in `frontend/src/index.css`; there is no `tailwind.config.js`.
