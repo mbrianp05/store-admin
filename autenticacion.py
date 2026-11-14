@@ -18,6 +18,11 @@ PASSWORD_MIN_LENGTH = 8
 PASSWORD_MAX_LENGTH = 128
 PASSWORD_MIN_SCORE = 2  # 0-4 en zxcvbn
 
+# Roles de la aplicación. `guest` es el visitante sin sesión y no se guarda.
+ROLES = ("cliente", "empleado", "admin")
+ROL_POR_DEFECTO = "cliente"
+ROL_ADMIN = "admin"
+
 USUARIO_PATTERN = re.compile(r"^[A-Za-z0-9._-]{3,30}$")
 EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]{2,}$")
 
@@ -46,6 +51,26 @@ MENSAJES_ZXCVBN = {
     "Predictable substitutions like '@' instead of 'a' don't help very much": "Cambiar «a» por «@» no la hace mucho más segura.",
 }
 
+def normalizar_rol(valor):
+    """Devuelve un rol válido; cualquier valor desconocido cae en cliente."""
+    return valor if valor in ROLES else ROL_POR_DEFECTO
+
+
+def normalizar_roles(usuarios):
+    """Asegura que cada cuenta tenga rol y que siempre exista un admin.
+
+    La primera cuenta registrada (el orden del JSON) es la fundadora: si el
+    archivo viene de versiones anteriores sin roles, esa cuenta pasa a admin.
+    """
+    for usuario in usuarios:
+        usuario["rol"] = normalizar_rol(usuario.get("rol"))
+
+    if usuarios and not any(u.get("rol") == ROL_ADMIN for u in usuarios):
+        usuarios[0]["rol"] = ROL_ADMIN
+
+    return usuarios
+
+
 def cargar_usuarios():
     try:
         with open(USUARIOS_PATH, "r", encoding="utf-8") as archivo:
@@ -54,7 +79,12 @@ def cargar_usuarios():
         return []
     if not isinstance(datos, list):
         return []
-    return [usuario for usuario in datos if isinstance(usuario, dict) and usuario.get("usuario")]
+    usuarios = [
+        usuario
+        for usuario in datos
+        if isinstance(usuario, dict) and usuario.get("usuario")
+    ]
+    return normalizar_roles(usuarios)
 
 
 def guardar_usuarios(usuarios):
@@ -81,10 +111,19 @@ def usuario_publico(usuario):
         "residencia": usuario.get("residencia", ""),
         "email": usuario.get("email", ""),
         "creado": usuario.get("creado", ""),
+        "rol": normalizar_rol(usuario.get("rol")),
     }
 
 
-def crear_usuario(nombres, apellidos, usuario, residencia, email, password):
+def crear_usuario(
+    nombres,
+    apellidos,
+    usuario,
+    residencia,
+    email,
+    password,
+    rol=ROL_POR_DEFECTO,
+):
     return {
         "usuario": usuario,
         "nombres": nombres,
@@ -93,6 +132,7 @@ def crear_usuario(nombres, apellidos, usuario, residencia, email, password):
         "email": email,
         "password_hash": generate_password_hash(password),
         "creado": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "rol": normalizar_rol(rol),
     }
 
 

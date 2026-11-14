@@ -2,18 +2,23 @@ import json
 import os
 import secrets
 import threading
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
+from functools import wraps
 from uuid import uuid4
 
 from flask import Flask, jsonify, request, send_from_directory, session
 from flask_cors import CORS
 
 from autenticacion import (
+    ROL_ADMIN,
+    ROL_POR_DEFECTO,
+    ROLES,
     actualizar_password,
     buscar_usuario,
     cargar_usuarios,
     crear_usuario,
     guardar_usuarios,
+    normalizar_rol,
     usuario_publico,
     validar_cambio_password,
     validar_perfil,
@@ -135,6 +140,49 @@ def limpiar_intentos_login(ip, nombre_usuario):
     LIMITE_LOGIN_IP.limpiar(ip)
     if nombre_usuario:
         LIMITE_LOGIN_USUARIO.limpiar(clave_login_usuario(ip, nombre_usuario))
+
+
+# Empleados y administradores comparten la gestión operativa del negocio.
+ROLES_GESTION = ("empleado", ROL_ADMIN)
+
+
+def usuario_sesion():
+    """Devuelve la cuenta de la sesión actual o None si ya no es válida."""
+    nombre_usuario = session.get("usuario")
+    if not nombre_usuario:
+        return None
+
+    cuenta = buscar_usuario(usuarios, nombre_usuario)
+    if not cuenta:
+        session.clear()
+        return None
+    return cuenta
+
+
+def rol_sesion():
+    cuenta = usuario_sesion()
+    return normalizar_rol(cuenta.get("rol")) if cuenta else None
+
+
+def requiere_roles(*roles):
+    """Restringe un endpoint a los roles indicados."""
+
+    def decorador(funcion):
+        @wraps(funcion)
+        def envoltura(*args, **kwargs):
+            cuenta = usuario_sesion()
+            if not cuenta:
+                return jsonify({"error": "Necesitas iniciar sesión."}), 401
+            if normalizar_rol(cuenta.get("rol")) not in roles:
+                return jsonify({
+                    "error": "No tienes permisos para realizar esta acción.",
+                }), 403
+            return funcion(*args, **kwargs)
+
+        return envoltura
+
+    return decorador
+
 
 def normalizar_categoria(valor):
     return str(valor or '').strip()[:60]
@@ -334,6 +382,7 @@ RUTAS_PUBLICAS = {
     '/api/auth/register',
     '/api/auth/logout',
     '/api/auth/me',
+    '/api/auth/estado',
     '/api/auth/ubicaciones',
 }
 
@@ -400,6 +449,17 @@ def api_internal_error(error):
 def auth_ubicaciones():
     return jsonify(MUNICIPIOS)
 
+
+@app.route('/api/auth/estado', methods=['GET'])
+def auth_estado():
+    """Informa si ya existe alguna cuenta; la primera registrada será admin."""
+    return jsonify({
+        'hay_usuarios': bool(usuarios),
+        'total_usuarios': len(usuarios),
+        'primer_usuario_admin': not usuarios,
+    })
+
+
 @app.route('/api/auth/register', methods=['POST'])
 def auth_register():
     global usuarios
@@ -418,6 +478,8 @@ def auth_register():
         residencia=valores['residencia'],
         email=valores['email'],
         password=valores['password'],
+        # La primera cuenta de la página es, por definición, la administradora.
+        rol=ROL_ADMIN if not usuarios else ROL_POR_DEFECTO,
     )
     usuarios.append(usuario)
     guardar_usuarios(usuarios)
@@ -534,6 +596,228 @@ def auth_change_password():
     return jsonify({'success': True})
 
 
+# ===== ADMINISTRACIÓN =====
+MESES_CORTOS = (
+    'ene', 'feb', 'mar', 'abr', 'may', 'jun',
+    'jul', 'ago', 'sep', 'oct', 'nov', 'dic',
+)
+
+
+@app.route('/api/admin/usuarios', methods=['GET'])
+@requiere_roles(ROL_ADMIN)
+def admin_listar_usuarios():
+    facturas_por_usuario = {}
+    for factura in gestor_facturas.facturas:
+        clave = factura.usuario.casefold()
+        facturas_por_usuario[clave] = facturas_por_usuario.get(clave, 0) + 1
+
+    return jsonify([
+        {
+            **usuario_publico(usuario),
+            'fundador': indice == 0,
+            'facturas': facturas_por_usuario.get(
+                usuario['usuario'].casefold(), 0
+            ),
+        }
+        for indice, usuario in enumerate(usuarios)
+    ])
+
+
+@app.route('/api/admin/usuarios/<nombre>/rol', methods=['PATCH'])
+@requiere_roles(ROL_ADMIN)
+def admin_cambiar_rol(nombre):
+    datos = request.get_json(silent=True) or {}
+    rol = str(datos.get('rol') or '').strip()
+    if rol not in ROLES:
+        return jsonify({'error': 'El rol indicado no es válido.'}), 400
+
+    cuenta = buscar_usuario(usuarios, nombre)
+    if not cuenta:
+        return jsonify({'error': 'Usuario no encontrado.'}), 404
+
+    rol_actual = normalizar_rol(cuenta.get('rol'))
+    if rol == rol_actual:
+        return jsonify(usuario_publico(cuenta))
+
+    admins = [
+        usuario
+        for usuario in usuarios
+        if normalizar_rol(usuario.get('rol')) == ROL_ADMIN
+    ]
+    if rol_actual == ROL_ADMIN and rol != ROL_ADMIN and len(admins) <= 1:
+        return jsonify({
+            'error': 'Debe quedar al menos un administrador en Venture.',
+        }), 409
+
+    with STOCK_LOCK:
+        cuenta['rol'] = rol
+        guardar_usuarios(usuarios)
+
+    return jsonify(usuario_publico(cuenta))
+
+
+def claves_meses_recientes(cantidad=8):
+    """Devuelve [(año, mes)] de los últimos meses, del más viejo al actual."""
+    hoy = date.today()
+    anio, mes = hoy.year, hoy.month
+    claves = []
+    for _ in range(cantidad):
+        claves.append((anio, mes))
+        mes -= 1
+        if mes == 0:
+            mes = 12
+            anio -= 1
+    return list(reversed(claves))
+
+
+def datos_contabilidad():
+    """Agrega métricas de facturación para el panel de administración."""
+    facturas = list(gestor_facturas.facturas)
+    validas = [f for f in facturas if f.estado != 'cancelada']
+
+    total_facturado = round(sum(float(f.total) for f in validas), 2)
+    total_cobrado = round(
+        sum(float(f.total) for f in validas if f.estado == 'pagada'), 2
+    )
+    total_pendiente = round(
+        sum(
+            float(f.total)
+            for f in validas
+            if f.estado in ('pendiente', 'en_envio')
+        ),
+        2,
+    )
+
+    facturas_pendientes = sum(
+        1 for f in validas if f.estado in ('pendiente', 'en_envio')
+    )
+    clientes_unicos = {f.usuario.casefold() for f in validas if f.usuario}
+    productos_vendidos = sum(
+        cantidad for f in validas for _, cantidad in f.items
+    )
+
+    por_estado = []
+    for estado in ESTADOS_FACTURA:
+        grupo = [f for f in facturas if f.estado == estado]
+        por_estado.append({
+            'estado': estado,
+            'cantidad': len(grupo),
+            'total': round(sum(float(f.total) for f in grupo), 2),
+        })
+
+    por_mes = []
+    for anio, mes in claves_meses_recientes():
+        clave = f'{anio:04d}-{mes:02d}'
+        grupo = [
+            f for f in validas if str(f.fecha)[:7] == clave
+        ]
+        por_mes.append({
+            'clave': clave,
+            'etiqueta': f'{MESES_CORTOS[mes - 1]} {str(anio)[2:]}',
+            'total': round(sum(float(f.total) for f in grupo), 2),
+            'facturas': len(grupo),
+        })
+
+    productos = {}
+    for factura in validas:
+        for producto, cantidad in factura.items:
+            precio = (
+                producto.precio_vigente(factura.fecha)
+                if hasattr(producto, 'precio_vigente')
+                else producto.precio
+            )
+            fila = productos.setdefault(producto.nombre, {
+                'nombre': producto.nombre,
+                'cantidad': 0,
+                'total': 0.0,
+            })
+            fila['cantidad'] += cantidad
+            fila['total'] = round(fila['total'] + precio * cantidad, 2)
+
+    top_productos = sorted(
+        productos.values(),
+        key=lambda fila: (fila['total'], fila['cantidad']),
+        reverse=True,
+    )[:5]
+
+    cuentas = {
+        usuario['usuario'].casefold(): usuario for usuario in usuarios
+    }
+    clientes = {}
+    for factura in validas:
+        clave = factura.usuario.casefold()
+        fila = clientes.setdefault(clave, {
+            'usuario': factura.usuario,
+            'nombre': '',
+            'facturas': 0,
+            'total': 0.0,
+        })
+        cuenta = cuentas.get(clave)
+        if cuenta:
+            fila['nombre'] = (
+                f"{cuenta.get('nombres', '')} {cuenta.get('apellidos', '')}"
+            ).strip()
+        fila['facturas'] += 1
+        fila['total'] = round(fila['total'] + float(factura.total), 2)
+
+    top_clientes = sorted(
+        clientes.values(),
+        key=lambda fila: (fila['total'], fila['facturas']),
+        reverse=True,
+    )[:5]
+
+    ultimas = sorted(
+        facturas,
+        key=lambda f: (str(f.fecha), f.numero),
+        reverse=True,
+    )[:6]
+
+    porcentaje_cobrado = (
+        round(total_cobrado / total_facturado * 100, 1)
+        if total_facturado
+        else 0
+    )
+
+    return {
+        'generado': datetime.now(timezone.utc).isoformat(timespec='seconds'),
+        'resumen': {
+            'total_facturado': total_facturado,
+            'total_cobrado': total_cobrado,
+            'total_pendiente': total_pendiente,
+            'porcentaje_cobrado': porcentaje_cobrado,
+            'ticket_promedio': (
+                round(total_facturado / len(validas), 2) if validas else 0
+            ),
+            'facturas_total': len(facturas),
+            'facturas_validas': len(validas),
+            'facturas_canceladas': len(facturas) - len(validas),
+            'facturas_pendientes': facturas_pendientes,
+            'clientes': len(clientes_unicos),
+            'productos_vendidos': productos_vendidos,
+        },
+        'por_estado': por_estado,
+        'por_mes': por_mes,
+        'top_productos': top_productos,
+        'top_clientes': top_clientes,
+        'ultimas_facturas': [
+            {
+                'numero': f.numero,
+                'fecha': str(f.fecha),
+                'usuario': f.usuario,
+                'total': f.total,
+                'estado': f.estado,
+            }
+            for f in ultimas
+        ],
+    }
+
+
+@app.route('/api/contabilidad', methods=['GET'])
+@requiere_roles(ROL_ADMIN)
+def get_contabilidad():
+    return jsonify(datos_contabilidad())
+
+
 # ===== ENDPOINTS API =====
 @app.route('/api/config', methods=['GET'])
 def get_config():
@@ -541,6 +825,7 @@ def get_config():
 
 
 @app.route('/api/config', methods=['PUT'])
+@requiere_roles(ROL_ADMIN)
 def update_config():
     global configuracion
     data = request.get_json(silent=True) or {}
@@ -562,6 +847,7 @@ def update_config():
 
 
 @app.route('/api/uploads', methods=['POST'])
+@requiere_roles(*ROLES_GESTION)
 def upload_foto():
     archivo = request.files.get('foto')
     if not archivo or not archivo.filename:
@@ -585,6 +871,7 @@ def get_products():
         return jsonify([p.__dict__ for p in inventario.productos])
 
 @app.route('/api/products', methods=['POST'])
+@requiere_roles(*ROLES_GESTION)
 def add_product():
     data = request.get_json(silent=True) or {}
     nombre = str(data.get('nombre') or '').strip()
@@ -632,6 +919,7 @@ def add_product():
     return jsonify(producto.__dict__)
 
 @app.route('/api/products/<nombre>', methods=['PUT'])
+@requiere_roles(*ROLES_GESTION)
 def update_product(nombre):
     data = request.get_json(silent=True) or {}
     producto = inventario.searchProducto(nombre)
@@ -698,6 +986,7 @@ def update_product(nombre):
     return jsonify(producto.__dict__)
 
 @app.route('/api/products/<nombre>', methods=['DELETE'])
+@requiere_roles(*ROLES_GESTION)
 def delete_product(nombre):
     with STOCK_LOCK:
         producto = inventario.searchProducto(nombre)
@@ -710,6 +999,10 @@ def delete_product(nombre):
 @app.route('/api/invoices', methods=['GET'])
 def get_invoices():
     usuario = str(session.get('usuario') or '')
+    # Clientes ven solo sus facturas; empleados y administradores, todas.
+    if rol_sesion() in ROLES_GESTION:
+        return jsonify([f.to_dict() for f in gestor_facturas.facturas])
+
     return jsonify([
         f.to_dict()
         for f in gestor_facturas.facturas
@@ -783,6 +1076,7 @@ def create_invoice():
     return jsonify(factura.to_dict())
 
 @app.route('/api/invoices/<int:numero>', methods=['PATCH'])
+@requiere_roles(*ROLES_GESTION)
 def update_invoice(numero):
     data = request.get_json(silent=True) or {}
     estado = str(data.get('estado') or '').strip()
@@ -792,12 +1086,29 @@ def update_invoice(numero):
     motivo = str(
         data.get('motivo_cancelacion') or data.get('motivo') or ''
     ).strip()
+    usuario = str(data.get('usuario') or '').strip()
 
-    usuario = str(session.get('usuario') or '')
     with STOCK_LOCK:
-        factura = gestor_facturas.searchFactura(numero, usuario)
-        if not factura:
-            return jsonify({'error': 'Factura no encontrada.'}), 404
+        if usuario:
+            factura = gestor_facturas.searchFactura(numero, usuario)
+            if not factura:
+                return jsonify({'error': 'Factura no encontrada.'}), 404
+        else:
+            # La numeración es por usuario: con varias cuentas puede repetirse.
+            coincidencias = [
+                f for f in gestor_facturas.facturas if f.numero == numero
+            ]
+            if not coincidencias:
+                return jsonify({'error': 'Factura no encontrada.'}), 404
+            if len(coincidencias) > 1:
+                return jsonify({
+                    'error': (
+                        'Hay varias facturas con ese número. '
+                        'Indica el usuario de la factura.'
+                    ),
+                }), 409
+            factura = coincidencias[0]
+
         factura.cambiar_estado(estado, motivo)
         guardar_facturas()
 
