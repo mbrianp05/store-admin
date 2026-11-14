@@ -109,18 +109,43 @@ export function createInvoice(items, envio = null) {
   })
 }
 
-export function updateInvoiceState(numero, estado, motivoCancelacion = '') {
+export function updateInvoiceState(
+  numero,
+  estado,
+  motivoCancelacion = '',
+  usuario = '',
+) {
   return request(`/invoices/${encodeURIComponent(numero)}`, {
     method: 'PATCH',
     body: JSON.stringify({
       estado,
       motivo_cancelacion: motivoCancelacion,
+      usuario,
     }),
   })
 }
 
 export function getSession() {
   return request('/auth/me')
+}
+
+export function getAuthEstado() {
+  return request('/auth/estado')
+}
+
+export function getUsers() {
+  return request('/admin/usuarios')
+}
+
+export function updateUserRole(usuario, rol) {
+  return request(`/admin/usuarios/${encodeURIComponent(usuario)}/rol`, {
+    method: 'PATCH',
+    body: JSON.stringify({ rol }),
+  })
+}
+
+export function getAccounting() {
+  return request('/contabilidad')
 }
 
 export function login(usuario, password) {

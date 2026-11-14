@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
+  Crown,
   Eye,
   EyeOff,
   LoaderCircle,
@@ -8,7 +9,7 @@ import {
 import { Link, Navigate, useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { useAuth } from '../auth-context'
-import { getUbicaciones } from '../api'
+import { getAuthEstado, getUbicaciones } from '../api'
 import AppLoader from '../components/AppLoader'
 import AuthShell from '../components/AuthShell'
 import LocationAutocomplete, {
@@ -62,6 +63,23 @@ export default function RegisterPage() {
   const [errorUbicaciones, setErrorUbicaciones] = useState('')
   const [verPassword, setVerPassword] = useState(false)
   const [enviando, setEnviando] = useState(false)
+  const [primerUsuario, setPrimerUsuario] = useState(false)
+
+  useEffect(() => {
+    let activo = true
+
+    getAuthEstado()
+      .then((estado) => {
+        if (activo) setPrimerUsuario(Boolean(estado.primer_usuario_admin))
+      })
+      .catch(() => {
+        // Si falla, el registro sigue disponible sin el aviso de administración.
+      })
+
+    return () => {
+      activo = false
+    }
+  }, [])
 
   useEffect(() => {
     let activo = true
@@ -205,6 +223,23 @@ export default function RegisterPage() {
       }
     >
       <form onSubmit={handleSubmit} className="grid gap-4" noValidate>
+        {primerUsuario && (
+          <div className="flex gap-3 rounded-xl border border-highlight/30 bg-highlight/[0.07] p-3.5">
+            <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-highlight/15 text-highlight">
+              <Crown className="size-4" />
+            </span>
+            <div>
+              <p className="text-sm font-medium text-highlight">
+                Serás la cuenta administradora
+              </p>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                Al ser la primera cuenta de Venture, tendrás acceso a la gestión
+                de usuarios y al panel de contabilidad desde el primer ingreso.
+              </p>
+            </div>
+          </div>
+        )}
+
         {errorGeneral && (
           <Alert variant="destructive">
             <AlertDescription>{errorGeneral}</AlertDescription>

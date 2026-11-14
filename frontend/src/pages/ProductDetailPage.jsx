@@ -8,6 +8,7 @@ import { useAuth } from '../auth-context'
 import { formatCurrency } from '../lib/format'
 import { diasEntre, formatFechaCorta, hoyISO } from '../lib/fechas'
 import { descuentoVigente, estadoDescuento, precioVigente } from '../lib/pricing'
+import { puedeGestionarProductos } from '../lib/roles'
 import { TEXTO_REPOSICION, esperaReposicion } from '../lib/stock'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -122,7 +123,7 @@ export default function ProductDetailPage() {
     onDeleteProduct,
   } = useAppState()
 
-  const canManage = Boolean(user)
+  const canManage = puedeGestionarProductos(user)
 
   const [editando, setEditando] = useState(false)
   const [confirmando, setConfirmando] = useState(false)

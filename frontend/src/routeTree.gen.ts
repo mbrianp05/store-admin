@@ -13,8 +13,10 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as RegistroRouteImport } from './routes/registro'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
+import { Route as AppContabilidadRouteImport } from './routes/_app/contabilidad'
 import { Route as AppFacturasRouteImport } from './routes/_app/facturas'
 import { Route as AppPerfilRouteImport } from './routes/_app/perfil'
+import { Route as AppUsuariosRouteImport } from './routes/_app/usuarios'
 import { Route as AppProductosNombreRouteImport } from './routes/_app/productos/$nombre'
 
 const AppRoute = AppRouteImport.update({
@@ -36,6 +38,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppContabilidadRoute = AppContabilidadRouteImport.update({
+  id: '/contabilidad',
+  path: '/contabilidad',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppFacturasRoute = AppFacturasRouteImport.update({
   id: '/facturas',
   path: '/facturas',
@@ -44,6 +51,11 @@ const AppFacturasRoute = AppFacturasRouteImport.update({
 const AppPerfilRoute = AppPerfilRouteImport.update({
   id: '/perfil',
   path: '/perfil',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppUsuariosRoute = AppUsuariosRouteImport.update({
+  id: '/usuarios',
+  path: '/usuarios',
   getParentRoute: () => AppRoute,
 } as any)
 const AppProductosNombreRoute = AppProductosNombreRouteImport.update({
@@ -56,15 +68,19 @@ export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/login': typeof LoginRoute
   '/registro': typeof RegistroRoute
+  '/contabilidad': typeof AppContabilidadRoute
   '/facturas': typeof AppFacturasRoute
   '/perfil': typeof AppPerfilRoute
+  '/usuarios': typeof AppUsuariosRoute
   '/productos/$nombre': typeof AppProductosNombreRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/registro': typeof RegistroRoute
+  '/contabilidad': typeof AppContabilidadRoute
   '/facturas': typeof AppFacturasRoute
   '/perfil': typeof AppPerfilRoute
+  '/usuarios': typeof AppUsuariosRoute
   '/': typeof AppIndexRoute
   '/productos/$nombre': typeof AppProductosNombreRoute
 }
@@ -73,8 +89,10 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/registro': typeof RegistroRoute
+  '/_app/contabilidad': typeof AppContabilidadRoute
   '/_app/facturas': typeof AppFacturasRoute
   '/_app/perfil': typeof AppPerfilRoute
+  '/_app/usuarios': typeof AppUsuariosRoute
   '/_app/': typeof AppIndexRoute
   '/_app/productos/$nombre': typeof AppProductosNombreRoute
 }
@@ -84,15 +102,19 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/registro'
+    | '/contabilidad'
     | '/facturas'
     | '/perfil'
+    | '/usuarios'
     | '/productos/$nombre'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
     | '/registro'
+    | '/contabilidad'
     | '/facturas'
     | '/perfil'
+    | '/usuarios'
     | '/'
     | '/productos/$nombre'
   id:
@@ -100,8 +122,10 @@ export interface FileRouteTypes {
     | '/_app'
     | '/login'
     | '/registro'
+    | '/_app/contabilidad'
     | '/_app/facturas'
     | '/_app/perfil'
+    | '/_app/usuarios'
     | '/_app/'
     | '/_app/productos/$nombre'
   fileRoutesById: FileRoutesById
@@ -142,6 +166,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/contabilidad': {
+      id: '/_app/contabilidad'
+      path: '/contabilidad'
+      fullPath: '/contabilidad'
+      preLoaderRoute: typeof AppContabilidadRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/facturas': {
       id: '/_app/facturas'
       path: '/facturas'
@@ -156,6 +187,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPerfilRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/usuarios': {
+      id: '/_app/usuarios'
+      path: '/usuarios'
+      fullPath: '/usuarios'
+      preLoaderRoute: typeof AppUsuariosRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/productos/$nombre': {
       id: '/_app/productos/$nombre'
       path: '/productos/$nombre'
@@ -167,15 +205,19 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppContabilidadRoute: typeof AppContabilidadRoute
   AppFacturasRoute: typeof AppFacturasRoute
   AppPerfilRoute: typeof AppPerfilRoute
+  AppUsuariosRoute: typeof AppUsuariosRoute
   AppIndexRoute: typeof AppIndexRoute
   AppProductosNombreRoute: typeof AppProductosNombreRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppContabilidadRoute: AppContabilidadRoute,
   AppFacturasRoute: AppFacturasRoute,
   AppPerfilRoute: AppPerfilRoute,
+  AppUsuariosRoute: AppUsuariosRoute,
   AppIndexRoute: AppIndexRoute,
   AppProductosNombreRoute: AppProductosNombreRoute,
 }

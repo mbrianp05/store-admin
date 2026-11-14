@@ -193,20 +193,28 @@ export default function App() {
   }, [cart, navigate, notify]);
 
   const handleUpdateInvoiceState = useCallback(
-    async (numero, estado, motivoCancelacion = "") => {
+    async (numero, estado, motivoCancelacion = "", usuario = "") => {
       try {
         const updated = await updateInvoiceState(
           numero,
           estado,
           motivoCancelacion,
+          usuario,
         );
         setInvoices((current) =>
           current.map((invoice) =>
-            invoice.numero === updated.numero ? updated : invoice,
+            invoice.numero === updated.numero &&
+            invoice.usuario === updated.usuario
+              ? updated
+              : invoice,
           ),
         );
         setSelectedInvoice((current) =>
-          current && current.numero === updated.numero ? updated : current,
+          current &&
+          current.numero === updated.numero &&
+          current.usuario === updated.usuario
+            ? updated
+            : current,
         );
         notify(`Factura #${updated.numero}: estado actualizado.`);
         return true;

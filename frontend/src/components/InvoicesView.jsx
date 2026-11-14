@@ -48,6 +48,19 @@ function estadoInfo(valor) {
   return ESTADOS.find((estado) => estado.valor === valor) || ESTADOS[0]
 }
 
+function claveFactura(invoice) {
+  return `${invoice.usuario || ''}-${invoice.numero}`
+}
+
+function mismaFactura(a, b) {
+  return Boolean(
+    a &&
+      b &&
+      a.numero === b.numero &&
+      String(a.usuario || '') === String(b.usuario || ''),
+  )
+}
+
 function EstadoBadge({ estado }) {
   const info = estadoInfo(estado)
   return (
@@ -218,13 +231,13 @@ function EntregaInfo({ envio, costo, cancelada = false }) {
   )
 }
 
-function InvoiceDetail({ invoice, onBack, onUpdateState }) {
+function InvoiceDetail({ invoice, onBack, onUpdateState, canUpdateState }) {
   const itemCount = invoice.items.reduce((total, item) => total + item.cantidad, 0)
   const cancelada = invoice.estado === 'cancelada'
 
   return (
     <Card
-      key={invoice.numero}
+      key={claveFactura(invoice)}
       className="animate-in fade-in slide-in-from-bottom-2 gap-0 overflow-hidden py-0 duration-200"
     >
       <header className="border-b border-border px-5 py-5 sm:px-7">
@@ -331,14 +344,21 @@ function InvoiceDetail({ invoice, onBack, onUpdateState }) {
 
           <div>
             <h3 className="text-xs font-medium text-muted-foreground">Estado del pedido</h3>
-            <div className="mt-2">
-              <EstadoSelector
-                estado={invoice.estado}
-                onChange={(estado, motivo) =>
-                  onUpdateState(invoice.numero, estado, motivo)
-                }
-              />
-            </div>
+            {canUpdateState ? (
+              <div className="mt-2">
+                <EstadoSelector
+                  estado={invoice.estado}
+                  onChange={(estado, motivo) =>
+                    onUpdateState(invoice.numero, estado, motivo, invoice.usuario)
+                  }
+                />
+              </div>
+            ) : (
+              <p className="mt-2 rounded-lg border border-border bg-muted/30 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
+                Un empleado o administrador se encarga de actualizar el estado de
+                esta factura.
+              </p>
+            )}
           </div>
 
           {!invoice.envio?.a_domicilio && (
@@ -511,6 +531,8 @@ export default function InvoicesView({
   onSelect,
   onClearSelection,
   onUpdateState,
+  canUpdateState = false,
+  showOwner = false,
 }) {
   const [busqueda, setBusqueda] = useState('')
   const [periodo, setPeriodo] = useState(PERIODO_VACIO)
@@ -655,13 +677,13 @@ export default function InvoicesView({
             ) : (
               <ul className="space-y-1 p-2">
                 {sorted.map((invoice) => {
-                  const isSelected = selectedInvoice?.numero === invoice.numero
+                  const isSelected = mismaFactura(selectedInvoice, invoice)
                   const itemCount = invoice.items.reduce(
                     (total, item) => total + item.cantidad,
                     0,
                   )
                   return (
-                    <li key={invoice.numero}>
+                    <li key={claveFactura(invoice)}>
                       <Button
                         type="button"
                         variant="ghost"
@@ -686,6 +708,11 @@ export default function InvoicesView({
                             <span className="text-[11px] text-muted-foreground">
                               {itemCount} {itemCount === 1 ? 'artículo' : 'artículos'}
                             </span>
+                            {showOwner && invoice.usuario && (
+                              <span className="text-[11px] text-muted-foreground">
+                                @{invoice.usuario}
+                              </span>
+                            )}
                           </span>
                         </span>
                         <span
@@ -721,6 +748,7 @@ export default function InvoicesView({
               invoice={selectedInvoice}
               onBack={onClearSelection}
               onUpdateState={onUpdateState}
+              canUpdateState={canUpdateState}
             />
           ) : (
             <Card className="grid min-h-64 place-items-center gap-0 border-dashed bg-card/50 px-6 py-12 text-center">

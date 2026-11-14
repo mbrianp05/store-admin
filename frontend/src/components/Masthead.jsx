@@ -1,7 +1,18 @@
-import { LogIn, LogOut, Package, ReceiptText, Settings, ShoppingCart, UserRound } from 'lucide-react'
+import {
+  ChartColumn,
+  LogIn,
+  LogOut,
+  Package,
+  ReceiptText,
+  Settings,
+  ShoppingCart,
+  UserRound,
+  Users,
+} from 'lucide-react'
 import { Link, useRouterState } from '@tanstack/react-router'
 import BrandMark from './BrandMark'
 import { Button } from '@/components/ui/button'
+import { esAdmin } from '@/lib/roles'
 import { cn } from '@/lib/utils'
 
 const todayFormatter = new Intl.DateTimeFormat('es-ES', {
@@ -12,10 +23,11 @@ const todayFormatter = new Intl.DateTimeFormat('es-ES', {
 
 const today = todayFormatter.format(new Date())
 
-function SectionLink({ to, icon: Icon, label, count, active }) {
+function SectionLink({ to, icon: Icon, label, count, active, compact = false }) {
   return (
     <Link
       to={to}
+      title={compact ? label : undefined}
       aria-current={active ? 'page' : undefined}
       className={cn(
         'relative inline-flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors',
@@ -27,17 +39,19 @@ function SectionLink({ to, icon: Icon, label, count, active }) {
       <Icon
         className={cn('size-4', active ? 'text-foreground' : 'text-muted-foreground')}
       />
-      <span>{label}</span>
-      <span
-        className={cn(
-          'inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold leading-normal tabular-nums',
-          active
-            ? 'bg-secondary text-foreground'
-            : 'bg-muted/60 text-muted-foreground',
-        )}
-      >
-        {count}
-      </span>
+      <span className={cn(compact && 'hidden lg:inline')}>{label}</span>
+      {count != null && (
+        <span
+          className={cn(
+            'inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold leading-normal tabular-nums',
+            active
+              ? 'bg-secondary text-foreground'
+              : 'bg-muted/60 text-muted-foreground',
+          )}
+        >
+          {count}
+        </span>
+      )}
       {active && (
         <span className="absolute inset-x-2.5 -bottom-1.5 h-0.5 rounded-full bg-foreground" />
       )}
@@ -68,7 +82,7 @@ function MobileSectionLink({ to, icon: Icon, label, count, active }) {
           </span>
         )}
       </span>
-      <span>{label}</span>
+      <span className="max-w-full truncate">{label}</span>
     </Link>
   )
 }
@@ -85,7 +99,11 @@ export default function Masthead({
   const pathname = useRouterState({ select: (state) => state.location.pathname })
   const isInvoices = pathname.startsWith('/facturas')
   const isPerfil = pathname.startsWith('/perfil')
+  const isUsuarios = pathname.startsWith('/usuarios')
+  const isContabilidad = pathname.startsWith('/contabilidad')
+  const isProductos = !isInvoices && !isPerfil && !isUsuarios && !isContabilidad
   const autenticado = Boolean(user)
+  const admin = esAdmin(user)
   const counts = { products: productCount, invoices: invoiceCount }
   const inicialUsuario = String(user?.nombres || user?.usuario || '?')
     .trim()
@@ -120,7 +138,7 @@ export default function Masthead({
                 icon={Package}
                 label="Productos"
                 count={counts.products}
-                active={!isInvoices && !isPerfil}
+                active={isProductos}
               />
               {autenticado && (
                 <SectionLink
@@ -131,11 +149,29 @@ export default function Masthead({
                   active={isInvoices}
                 />
               )}
+              {admin && (
+                <>
+                  <SectionLink
+                    to="/contabilidad"
+                    icon={ChartColumn}
+                    label="Contabilidad"
+                    active={isContabilidad}
+                    compact
+                  />
+                  <SectionLink
+                    to="/usuarios"
+                    icon={Users}
+                    label="Usuarios"
+                    active={isUsuarios}
+                    compact
+                  />
+                </>
+              )}
             </nav>
           </div>
 
           <div className="flex items-center gap-2.5">
-            <p className="hidden text-xs text-muted-foreground lg:block">{today}</p>
+            <p className="hidden text-xs text-muted-foreground 2xl:block">{today}</p>
             {autenticado && (
               <Link
                 to="/perfil"
@@ -143,7 +179,7 @@ export default function Masthead({
                 aria-label={`Abrir el perfil de ${user.usuario}`}
                 aria-current={isPerfil ? 'page' : undefined}
                 className={cn(
-                  'hidden max-w-[15rem] items-center gap-2 rounded-md px-1.5 py-1 text-xs transition-colors md:inline-flex',
+                  'hidden max-w-[15rem] items-center gap-2 rounded-md px-1.5 py-1 text-xs transition-colors xl:inline-flex',
                   isPerfil
                     ? 'bg-secondary/70 text-foreground'
                     : 'text-muted-foreground hover:bg-secondary/50 hover:text-foreground',
@@ -178,7 +214,7 @@ export default function Masthead({
                     </span>
                   )}
                 </Button>
-                {onOpenSettings && (
+                {onOpenSettings && admin && (
                   <Button
                     type="button"
                     variant="ghost"
@@ -221,13 +257,22 @@ export default function Masthead({
         aria-label="Secciones"
         className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md sm:hidden"
       >
-        <div className={cn('grid', autenticado ? 'grid-cols-3' : 'grid-cols-1')}>
+        <div
+          className={cn(
+            'grid',
+            autenticado
+              ? admin
+                ? 'grid-cols-5'
+                : 'grid-cols-3'
+              : 'grid-cols-1',
+          )}
+        >
           <MobileSectionLink
             to="/"
             icon={Package}
             label="Productos"
             count={counts.products}
-            active={!isInvoices && !isPerfil}
+            active={isProductos}
           />
           {autenticado && (
             <MobileSectionLink
@@ -236,6 +281,24 @@ export default function Masthead({
               label="Facturas"
               count={counts.invoices}
               active={isInvoices}
+            />
+          )}
+          {admin && (
+            <MobileSectionLink
+              to="/contabilidad"
+              icon={ChartColumn}
+              label="Contab."
+              count={0}
+              active={isContabilidad}
+            />
+          )}
+          {admin && (
+            <MobileSectionLink
+              to="/usuarios"
+              icon={Users}
+              label="Usuarios"
+              count={0}
+              active={isUsuarios}
             />
           )}
           {autenticado && (

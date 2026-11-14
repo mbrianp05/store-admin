@@ -1,6 +1,7 @@
 import ProductsView from '../components/ProductsView'
 import { useAppState } from '../app-context'
 import { useAuth } from '../auth-context'
+import { puedeGestionarProductos } from '../lib/roles'
 
 export default function ProductsPage() {
   const { user } = useAuth()
@@ -23,7 +24,7 @@ export default function ProductsPage() {
       cart={cart}
       onAddToCart={onAddToCart}
       onCreate={onCreateProduct}
-      canManage={Boolean(user)}
+      canManage={puedeGestionarProductos(user)}
       canBuy={Boolean(user)}
     />
   )

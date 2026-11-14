@@ -29,6 +29,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { evaluarPassword, SCORE_MINIMO } from '@/lib/password'
+import { ROL_INFO, rolDe } from '@/lib/roles'
 import { normalizarTexto } from '@/lib/text'
 import { cn } from '@/lib/utils'
 
@@ -173,6 +174,8 @@ export default function ProfilePage() {
   if (!user) return null
 
   const alta = formatearFechaAlta(user.creado)
+  const rol = rolDe(user)
+  const rolInfo = ROL_INFO[rol]
   const hayCambios =
     datos.usuario.trim() !== user.usuario ||
     datos.residencia.trim() !== user.residencia ||
@@ -339,6 +342,12 @@ export default function ProfilePage() {
                 <p className="mt-1 truncate text-sm text-muted-foreground">
                   @{user.usuario}
                 </p>
+                <Badge
+                  variant="outline"
+                  className={cn('mt-2 w-fit', rolInfo.clase)}
+                >
+                  {rolInfo.etiqueta}
+                </Badge>
               </div>
             </div>
           </div>
