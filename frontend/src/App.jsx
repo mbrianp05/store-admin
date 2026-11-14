@@ -80,6 +80,25 @@ export default function App() {
     fetchData();
   }, [fetchData]);
 
+  const refreshInvoices = useCallback(async () => {
+    if (!user) return;
+    try {
+      const data = await getInvoices();
+      setInvoices(data);
+      setSelectedInvoice((current) =>
+        current
+          ? data.find(
+              (invoice) =>
+                invoice.numero === current.numero &&
+                String(invoice.usuario || '') === String(current.usuario || ''),
+            ) || null
+          : current,
+      );
+    } catch {
+      // La lista se vuelve a intentar en la próxima acción del usuario.
+    }
+  }, [user]);
+
   const addToCart = useCallback(
     (product) => {
       if (!user) {
@@ -216,6 +235,8 @@ export default function App() {
             ? updated
             : current,
         );
+        // Cancelar o reactivar una factura ajusta el stock en el servidor.
+        getProducts().then(setProducts).catch(() => {});
         notify(`Factura #${updated.numero}: estado actualizado.`);
         return true;
       } catch (stateError) {
@@ -329,6 +350,7 @@ export default function App() {
     onSelectInvoice: setSelectedInvoice,
     onClearInvoiceSelection: () => setSelectedInvoice(null),
     onUpdateInvoiceState: handleUpdateInvoiceState,
+    onRefreshInvoices: refreshInvoices,
   };
 
   return (

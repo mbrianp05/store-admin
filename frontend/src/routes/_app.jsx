@@ -2,10 +2,11 @@ import { createFileRoute, Navigate, useRouterState } from '@tanstack/react-route
 import App from '../App'
 import AppLoader from '../components/AppLoader'
 import { useAuth } from '../auth-context'
-import { esAdmin } from '../lib/roles'
+import { esAdmin, puedeCambiarEstadoFactura } from '../lib/roles'
 
-const RUTAS_PRIVADAS = ['/facturas', '/perfil', '/usuarios', '/contabilidad']
+const RUTAS_PRIVADAS = ['/facturas', '/perfil', '/usuarios', '/contabilidad', '/envios']
 const RUTAS_ADMIN = ['/usuarios', '/contabilidad']
+const RUTAS_GESTION = ['/envios']
 
 export const Route = createFileRoute('/_app')({
   component: AppLayout,
@@ -26,6 +27,14 @@ function AppLayout() {
 
   // Usuarios y contabilidad son exclusivos de administración.
   if (!esAdmin(user) && RUTAS_ADMIN.some((ruta) => pathname.startsWith(ruta))) {
+    return <Navigate to="/" replace />
+  }
+
+  // La gestión de envíos está reservada a empleados y administración.
+  if (
+    !puedeCambiarEstadoFactura(user) &&
+    RUTAS_GESTION.some((ruta) => pathname.startsWith(ruta))
+  ) {
     return <Navigate to="/" replace />
   }
 

@@ -14,6 +14,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as RegistroRouteImport } from './routes/registro'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppContabilidadRouteImport } from './routes/_app/contabilidad'
+import { Route as AppEnviosRouteImport } from './routes/_app/envios'
 import { Route as AppFacturasRouteImport } from './routes/_app/facturas'
 import { Route as AppPerfilRouteImport } from './routes/_app/perfil'
 import { Route as AppUsuariosRouteImport } from './routes/_app/usuarios'
@@ -43,6 +44,11 @@ const AppContabilidadRoute = AppContabilidadRouteImport.update({
   path: '/contabilidad',
   getParentRoute: () => AppRoute,
 } as any)
+const AppEnviosRoute = AppEnviosRouteImport.update({
+  id: '/envios',
+  path: '/envios',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppFacturasRoute = AppFacturasRouteImport.update({
   id: '/facturas',
   path: '/facturas',
@@ -69,6 +75,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/registro': typeof RegistroRoute
   '/contabilidad': typeof AppContabilidadRoute
+  '/envios': typeof AppEnviosRoute
   '/facturas': typeof AppFacturasRoute
   '/perfil': typeof AppPerfilRoute
   '/usuarios': typeof AppUsuariosRoute
@@ -78,6 +85,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/registro': typeof RegistroRoute
   '/contabilidad': typeof AppContabilidadRoute
+  '/envios': typeof AppEnviosRoute
   '/facturas': typeof AppFacturasRoute
   '/perfil': typeof AppPerfilRoute
   '/usuarios': typeof AppUsuariosRoute
@@ -90,6 +98,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/registro': typeof RegistroRoute
   '/_app/contabilidad': typeof AppContabilidadRoute
+  '/_app/envios': typeof AppEnviosRoute
   '/_app/facturas': typeof AppFacturasRoute
   '/_app/perfil': typeof AppPerfilRoute
   '/_app/usuarios': typeof AppUsuariosRoute
@@ -103,6 +112,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/registro'
     | '/contabilidad'
+    | '/envios'
     | '/facturas'
     | '/perfil'
     | '/usuarios'
@@ -112,6 +122,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/registro'
     | '/contabilidad'
+    | '/envios'
     | '/facturas'
     | '/perfil'
     | '/usuarios'
@@ -123,6 +134,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/registro'
     | '/_app/contabilidad'
+    | '/_app/envios'
     | '/_app/facturas'
     | '/_app/perfil'
     | '/_app/usuarios'
@@ -173,6 +185,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppContabilidadRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/envios': {
+      id: '/_app/envios'
+      path: '/envios'
+      fullPath: '/envios'
+      preLoaderRoute: typeof AppEnviosRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/facturas': {
       id: '/_app/facturas'
       path: '/facturas'
@@ -206,6 +225,7 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppContabilidadRoute: typeof AppContabilidadRoute
+  AppEnviosRoute: typeof AppEnviosRoute
   AppFacturasRoute: typeof AppFacturasRoute
   AppPerfilRoute: typeof AppPerfilRoute
   AppUsuariosRoute: typeof AppUsuariosRoute
@@ -215,6 +235,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppContabilidadRoute: AppContabilidadRoute,
+  AppEnviosRoute: AppEnviosRoute,
   AppFacturasRoute: AppFacturasRoute,
   AppPerfilRoute: AppPerfilRoute,
   AppUsuariosRoute: AppUsuariosRoute,

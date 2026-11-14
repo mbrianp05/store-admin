@@ -27,6 +27,7 @@ export default function InvoicesPage() {
       onUpdateState={onUpdateInvoiceState}
       canUpdateState={puedeCambiarEstadoFactura(user)}
       showOwner={puedeVerTodasLasFacturas(user)}
+      usuarioActual={user?.usuario || ''}
     />
   )
 }

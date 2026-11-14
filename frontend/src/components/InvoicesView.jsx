@@ -14,6 +14,7 @@ import { precioVigente } from '../lib/pricing'
 import { normalizarTexto } from '../lib/text'
 import DateRangePicker from './DateRangePicker'
 import InvoiceQR from './InvoiceQR'
+import Pagination from './Pagination'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -440,6 +441,7 @@ function InvoiceDetail({ invoice, onBack, onUpdateState, canUpdateState }) {
 }
 
 const PERIODO_VACIO = { desde: null, hasta: null }
+const FACTURAS_POR_PAGINA = 8
 
 function FiltrosFacturas({
   busqueda,
@@ -533,10 +535,23 @@ export default function InvoicesView({
   onUpdateState,
   canUpdateState = false,
   showOwner = false,
+  usuarioActual = '',
 }) {
   const [busqueda, setBusqueda] = useState('')
   const [periodo, setPeriodo] = useState(PERIODO_VACIO)
   const [subtotalMin, setSubtotalMin] = useState('')
+  const [pagina, setPagina] = useState(1)
+  const [alcance, setAlcance] = useState('todas')
+
+  const puedeAlternarAlcance = showOwner && Boolean(usuarioActual)
+  const facturasBase = useMemo(() => {
+    if (!puedeAlternarAlcance || alcance === 'todas') return invoices
+    const objetivo = String(usuarioActual).toLocaleLowerCase('es')
+    return invoices.filter(
+      (invoice) =>
+        String(invoice.usuario || '').toLocaleLowerCase('es') === objetivo,
+    )
+  }, [invoices, alcance, puedeAlternarAlcance, usuarioActual])
 
   const filtrosActivos =
     busqueda.trim() !== '' ||
@@ -547,7 +562,7 @@ export default function InvoicesView({
     const termino = normalizarTexto(busqueda)
     const minimo = subtotalMin.trim() === '' ? null : Number(subtotalMin)
 
-    return invoices
+    return facturasBase
       .filter((invoice) => {
         if (termino) {
           const coincide = invoice.items.some((item) =>
@@ -568,7 +583,7 @@ export default function InvoicesView({
         return true
       })
       .sort((a, b) => b.numero - a.numero)
-  }, [invoices, busqueda, periodo, subtotalMin])
+  }, [facturasBase, busqueda, periodo, subtotalMin])
 
   const totalFiltrado = sorted.reduce(
     (total, invoice) =>
@@ -579,32 +594,103 @@ export default function InvoicesView({
     (invoice) => invoice.estado === 'cancelada',
   ).length
 
+  const totalPaginas = Math.max(
+    1,
+    Math.ceil(sorted.length / FACTURAS_POR_PAGINA),
+  )
+  const paginaActual = Math.min(pagina, totalPaginas)
+  const inicioPagina = (paginaActual - 1) * FACTURAS_POR_PAGINA
+  const visibles = sorted.slice(
+    inicioPagina,
+    inicioPagina + FACTURAS_POR_PAGINA,
+  )
+
   function limpiarFiltros() {
     setBusqueda('')
     setPeriodo(PERIODO_VACIO)
     setSubtotalMin('')
+    setPagina(1)
   }
 
   return (
     <div className="space-y-6">
-      <header className="border-b border-border pb-5">
-        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Facturas</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          {invoices.length === 0
-            ? 'Todavía no se emitió ninguna factura.'
-            : `${invoices.length} ${invoices.length === 1 ? 'factura emitida' : 'facturas emitidas'}`}
-        </p>
+      <header className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-5">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Facturas</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {facturasBase.length === 0
+              ? alcance === 'mias'
+                ? 'Todavía no emitiste ninguna factura.'
+                : 'Todavía no se emitió ninguna factura.'
+              : `${facturasBase.length} ${
+                  facturasBase.length === 1 ? 'factura' : 'facturas'
+                } ${alcance === 'mias' ? 'tuyas' : 'emitidas'}`}
+          </p>
+        </div>
+
+        {puedeAlternarAlcance && (
+          <div
+            role="group"
+            aria-label="Alcance de las facturas"
+            className="inline-flex items-center rounded-lg border border-border bg-card p-0.5"
+          >
+            {[
+              { valor: 'todas', etiqueta: 'Todas', total: invoices.length },
+              {
+                valor: 'mias',
+                etiqueta: 'Mías',
+                total: invoices.filter(
+                  (invoice) =>
+                    String(invoice.usuario || '').toLocaleLowerCase('es') ===
+                    String(usuarioActual).toLocaleLowerCase('es'),
+                ).length,
+              },
+            ].map((opcion) => {
+              const activo = alcance === opcion.valor
+              return (
+                <button
+                  key={opcion.valor}
+                  type="button"
+                  aria-pressed={activo}
+                  onClick={() => {
+                    setAlcance(opcion.valor)
+                    setPagina(1)
+                    onClearSelection?.()
+                  }}
+                  className={cn(
+                    'inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors',
+                    activo
+                      ? 'bg-secondary text-foreground shadow-xs'
+                      : 'text-muted-foreground hover:text-foreground',
+                  )}
+                >
+                  {opcion.etiqueta}
+                  <span className="tabular-nums text-[11px] text-muted-foreground">
+                    {opcion.total}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        )}
       </header>
 
       <FiltrosFacturas
         busqueda={busqueda}
-        onBusqueda={setBusqueda}
+        onBusqueda={(valor) => {
+          setBusqueda(valor)
+          setPagina(1)
+        }}
         periodo={periodo}
-        onPeriodo={(valor) =>
+        onPeriodo={(valor) => {
           setPeriodo({ desde: valor.desde || null, hasta: valor.hasta || null })
-        }
+          setPagina(1)
+        }}
         subtotalMin={subtotalMin}
-        onSubtotalMin={setSubtotalMin}
+        onSubtotalMin={(valor) => {
+          setSubtotalMin(valor)
+          setPagina(1)
+        }}
         activos={filtrosActivos}
         onLimpiar={limpiarFiltros}
       />
@@ -620,7 +706,7 @@ export default function InvoicesView({
                 <div className="min-w-0">
                   <p className="text-xs text-muted-foreground">
                     {filtrosActivos
-                      ? `${sorted.length} de ${invoices.length}`
+                      ? `${sorted.length} de ${facturasBase.length}`
                       : sorted.length}{' '}
                     {sorted.length === 1 ? 'factura' : 'facturas'}
                   </p>
@@ -646,23 +732,25 @@ export default function InvoicesView({
             ) : sorted.length === 0 ? (
               <div className="px-6 py-14 text-center">
                 <span className="mx-auto grid size-12 place-items-center rounded-xl border border-border bg-muted/40 text-muted-foreground">
-                  {invoices.length === 0 ? (
+                  {facturasBase.length === 0 ? (
                     <ReceiptText className="size-5" />
                   ) : (
                     <Search className="size-5" />
                   )}
                 </span>
                 <h2 className="mt-4 text-base font-semibold">
-                  {invoices.length === 0
+                  {facturasBase.length === 0
                     ? 'No hay facturas'
                     : 'Ninguna factura coincide'}
                 </h2>
                 <p className="mx-auto mt-1.5 max-w-xs text-sm leading-snug text-muted-foreground">
-                  {invoices.length === 0
-                    ? 'Agrega productos al carrito y emite la primera factura desde el panel del carrito.'
+                  {facturasBase.length === 0
+                    ? alcance === 'mias'
+                      ? 'Cuando emitas una factura desde el carrito la verás aquí.'
+                      : 'Agrega productos al carrito y emite la primera factura desde el panel del carrito.'
                     : 'Prueba con otro producto, otro periodo o un subtotal mínimo menor.'}
                 </p>
-                {invoices.length > 0 && filtrosActivos && (
+                {facturasBase.length > 0 && filtrosActivos && (
                   <Button
                     type="button"
                     variant="outline"
@@ -675,8 +763,19 @@ export default function InvoicesView({
                 )}
               </div>
             ) : (
-              <ul className="space-y-1 p-2">
-                {sorted.map((invoice) => {
+              <>
+                <Pagination
+                  pagina={paginaActual}
+                  totalPaginas={totalPaginas}
+                  total={sorted.length}
+                  desde={inicioPagina + 1}
+                  hasta={inicioPagina + visibles.length}
+                  onCambio={setPagina}
+                  etiqueta="facturas"
+                  className="border-t-0 border-b"
+                />
+                <ul className="space-y-1 p-2">
+                {visibles.map((invoice) => {
                   const isSelected = mismaFactura(selectedInvoice, invoice)
                   const itemCount = invoice.items.reduce(
                     (total, item) => total + item.cantidad,
@@ -735,6 +834,7 @@ export default function InvoicesView({
                   )
                 })}
               </ul>
+              </>
             )}
           </Card>
         </section>

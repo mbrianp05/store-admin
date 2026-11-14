@@ -125,6 +125,24 @@ export function updateInvoiceState(
   })
 }
 
+export function getEnvios() {
+  return request('/envios')
+}
+
+export function createEnvio(codigos, notas = '') {
+  return request('/envios', {
+    method: 'POST',
+    body: JSON.stringify({ facturas: codigos, notas }),
+  })
+}
+
+export function updateEnvioEstado(envioId, estado) {
+  return request(`/envios/${encodeURIComponent(envioId)}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ estado }),
+  })
+}
+
 export function getSession() {
   return request('/auth/me')
 }

@@ -6,13 +6,14 @@ import {
   ReceiptText,
   Settings,
   ShoppingCart,
+  Truck,
   UserRound,
   Users,
 } from 'lucide-react'
 import { Link, useRouterState } from '@tanstack/react-router'
 import BrandMark from './BrandMark'
 import { Button } from '@/components/ui/button'
-import { esAdmin } from '@/lib/roles'
+import { esAdmin, puedeCambiarEstadoFactura } from '@/lib/roles'
 import { cn } from '@/lib/utils'
 
 const todayFormatter = new Intl.DateTimeFormat('es-ES', {
@@ -101,9 +102,12 @@ export default function Masthead({
   const isPerfil = pathname.startsWith('/perfil')
   const isUsuarios = pathname.startsWith('/usuarios')
   const isContabilidad = pathname.startsWith('/contabilidad')
-  const isProductos = !isInvoices && !isPerfil && !isUsuarios && !isContabilidad
+  const isEnvios = pathname.startsWith('/envios')
+  const isProductos =
+    !isInvoices && !isPerfil && !isUsuarios && !isContabilidad && !isEnvios
   const autenticado = Boolean(user)
   const admin = esAdmin(user)
+  const staff = puedeCambiarEstadoFactura(user)
   const counts = { products: productCount, invoices: invoiceCount }
   const inicialUsuario = String(user?.nombres || user?.usuario || '?')
     .trim()
@@ -147,6 +151,15 @@ export default function Masthead({
                   label="Facturas"
                   count={counts.invoices}
                   active={isInvoices}
+                />
+              )}
+              {staff && (
+                <SectionLink
+                  to="/envios"
+                  icon={Truck}
+                  label="Envíos"
+                  active={isEnvios}
+                  compact
                 />
               )}
               {admin && (
@@ -262,8 +275,10 @@ export default function Masthead({
             'grid',
             autenticado
               ? admin
-                ? 'grid-cols-5'
-                : 'grid-cols-3'
+                ? 'grid-cols-6'
+                : staff
+                  ? 'grid-cols-4'
+                  : 'grid-cols-3'
               : 'grid-cols-1',
           )}
         >
@@ -281,6 +296,15 @@ export default function Masthead({
               label="Facturas"
               count={counts.invoices}
               active={isInvoices}
+            />
+          )}
+          {staff && (
+            <MobileSectionLink
+              to="/envios"
+              icon={Truck}
+              label="Envíos"
+              count={0}
+              active={isEnvios}
             />
           )}
           {admin && (

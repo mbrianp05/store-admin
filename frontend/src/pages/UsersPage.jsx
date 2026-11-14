@@ -15,6 +15,7 @@ import {
 import { toast } from 'sonner'
 import { getUsers, updateUserRole } from '../api'
 import { useAuth } from '../auth-context'
+import Pagination from '../components/Pagination'
 import { ROLES, ROL_INFO, rolDe } from '../lib/roles'
 import { normalizarTexto } from '../lib/text'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -30,6 +31,8 @@ const fechaFormatter = new Intl.DateTimeFormat('es-ES', {
   month: 'short',
   year: 'numeric',
 })
+
+const USUARIOS_POR_PAGINA = 8
 
 function formatearFecha(valor) {
   if (!valor) return 'Sin fecha'
@@ -53,19 +56,19 @@ function nombreVisible(usuario) {
 
 function StatCard({ icon: Icon, etiqueta, valor, tono }) {
   return (
-    <Card className="gap-0 px-4 py-4">
-      <div className="flex items-center gap-3">
+    <Card className="gap-0 px-3 py-3">
+      <div className="flex items-center gap-2.5">
         <span
           className={cn(
-            'grid size-9 shrink-0 place-items-center rounded-lg border',
+            'grid size-8 shrink-0 place-items-center rounded-lg border',
             tono,
           )}
         >
-          <Icon className="size-4" />
+          <Icon className="size-3.5" />
         </span>
         <div>
-          <p className="text-xs text-muted-foreground">{etiqueta}</p>
-          <p className="text-xl font-semibold tabular-nums leading-tight">
+          <p className="text-[11px] text-muted-foreground">{etiqueta}</p>
+          <p className="text-lg font-semibold tabular-nums leading-tight">
             {valor}
           </p>
         </div>
@@ -101,6 +104,7 @@ export default function UsersPage() {
   const [error, setError] = useState('')
   const [busqueda, setBusqueda] = useState('')
   const [guardando, setGuardando] = useState(null)
+  const [pagina, setPagina] = useState(1)
 
   const cargar = useCallback(async () => {
     setLoading(true)
@@ -146,6 +150,17 @@ export default function UsersPage() {
 
   const unicoAdmin = conteo.admin <= 1
 
+  const totalPaginas = Math.max(
+    1,
+    Math.ceil(filtrados.length / USUARIOS_POR_PAGINA),
+  )
+  const paginaActual = Math.min(pagina, totalPaginas)
+  const inicioPagina = (paginaActual - 1) * USUARIOS_POR_PAGINA
+  const visibles = filtrados.slice(
+    inicioPagina,
+    inicioPagina + USUARIOS_POR_PAGINA,
+  )
+
   async function cambiarRol(usuario, nuevoRol) {
     if (nuevoRol === rolDe(usuario) || guardando) return
 
@@ -173,16 +188,15 @@ export default function UsersPage() {
   const hayBusqueda = busqueda.trim() !== ''
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-4 border-b border-border pb-5">
+    <div className="space-y-5">
+      <header className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+          <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
             Usuarios
           </h1>
-          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            La primera cuenta registrada nace como administradora. Desde aquí
-            puedes asignar el rol de cada persona y asegurarte de que siempre
-            quede alguien al mando.
+          <p className="mt-1.5 max-w-2xl text-xs text-muted-foreground sm:text-sm">
+            Asigna el rol de cada persona y asegúrate de que siempre quede
+            alguien al mando.
           </p>
         </div>
         <Badge
@@ -222,7 +236,7 @@ export default function UsersPage() {
       </div>
 
       <Card className="gap-0 overflow-hidden py-0">
-        <div className="flex flex-col gap-3 border-b border-border/70 px-4 py-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex flex-col gap-3 border-b border-border/70 px-4 py-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h2 className="text-sm font-semibold">Listado de cuentas</h2>
             <p className="mt-1 text-xs text-muted-foreground" aria-live="polite">
@@ -239,7 +253,10 @@ export default function UsersPage() {
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={busqueda}
-              onChange={(event) => setBusqueda(event.target.value)}
+              onChange={(event) => {
+                setBusqueda(event.target.value)
+                setPagina(1)
+              }}
               placeholder="Buscar por nombre o usuario"
               className="pl-9 pr-9"
             />
@@ -248,7 +265,10 @@ export default function UsersPage() {
                 type="button"
                 variant="ghost"
                 size="icon-sm"
-                onClick={() => setBusqueda('')}
+                onClick={() => {
+                  setBusqueda('')
+                  setPagina(1)
+                }}
                 aria-label="Limpiar búsqueda"
                 className="absolute right-2 top-1/2 size-7 -translate-y-1/2 text-muted-foreground"
               >
@@ -257,6 +277,19 @@ export default function UsersPage() {
             )}
           </label>
         </div>
+
+        {!loading && !error && filtrados.length > 0 && (
+          <Pagination
+            pagina={paginaActual}
+            totalPaginas={totalPaginas}
+            total={filtrados.length}
+            desde={inicioPagina + 1}
+            hasta={inicioPagina + visibles.length}
+            onCambio={setPagina}
+            etiqueta="usuarios"
+            className="border-t-0 border-b"
+          />
+        )}
 
         {error ? (
           <div className="px-4 py-6">
@@ -291,7 +324,10 @@ export default function UsersPage() {
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => setBusqueda('')}
+              onClick={() => {
+                setBusqueda('')
+                setPagina(1)
+              }}
               className="mt-4"
             >
               Limpiar búsqueda
@@ -299,7 +335,7 @@ export default function UsersPage() {
           </div>
         ) : (
           <ul>
-            {filtrados.map((usuario) => {
+            {visibles.map((usuario) => {
               const rol = rolDe(usuario)
               const info = ROL_INFO[rol]
               const esUnoMismo = user?.usuario === usuario.usuario
@@ -309,12 +345,12 @@ export default function UsersPage() {
               return (
                 <li
                   key={usuario.usuario}
-                  className="flex flex-col gap-3 border-t border-border/70 px-4 py-4 first:border-0 sm:flex-row sm:items-center sm:justify-between"
+                  className="flex flex-col gap-3 border-t border-border/70 px-4 py-3 first:border-0 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="flex min-w-0 items-center gap-3">
                     <span
                       className={cn(
-                        'grid size-10 shrink-0 place-items-center rounded-full border text-xs font-semibold',
+                        'grid size-9 shrink-0 place-items-center rounded-full border text-[11px] font-semibold',
                         info.clase,
                       )}
                     >

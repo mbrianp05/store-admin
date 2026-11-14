@@ -43,6 +43,7 @@ DATA_DIR = os.path.join(BASE_DIR, 'data')
 UPLOAD_DIR = os.path.join(DATA_DIR, 'uploads')
 INVENTARIO_PATH = os.path.join(DATA_DIR, 'inventario.json')
 FACTURAS_PATH = os.path.join(DATA_DIR, 'facturas.json')
+ENVIOS_PATH = os.path.join(DATA_DIR, 'envios.json')
 CONFIG_PATH = os.path.join(DATA_DIR, 'config.json')
 FRONTEND_DIST = os.path.join(BASE_DIR, 'frontend', 'dist')
 EXTENSIONES_FOTO = {'.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif'}
@@ -84,6 +85,7 @@ CORS(app)
 # Inicializar datos
 inventario = Inventario()
 gestor_facturas = GestorFacturas()
+envios = []
 usuarios = cargar_usuarios()
 configuracion = {'costo_envio': 0.0}
 
@@ -310,6 +312,13 @@ def cargar_datos():
     except FileNotFoundError:
         pass
 
+    # Cargar envíos (agrupaciones de facturas a domicilio)
+    try:
+        with open(ENVIOS_PATH, "r", encoding="utf-8") as f:
+            envios.extend(json.load(f))
+    except FileNotFoundError:
+        pass
+
 
 def renombrar_facturas_usuario(anterior, nuevo):
     """Conserva las facturas del usuario cuando cambia su nombre de usuario."""
@@ -358,6 +367,93 @@ def guardar_facturas():
     os.makedirs(DATA_DIR, exist_ok=True)
     with open(FACTURAS_PATH, "w", encoding="utf-8") as f:
         json.dump(data, f, default=str, ensure_ascii=False)
+
+
+def guardar_envios():
+    os.makedirs(DATA_DIR, exist_ok=True)
+    with open(ENVIOS_PATH, "w", encoding="utf-8") as f:
+        json.dump(envios, f, default=str, ensure_ascii=False, indent=2)
+
+
+def factura_por_codigo(codigo):
+    for factura in gestor_facturas.facturas:
+        if factura.codigo == codigo:
+            return factura
+    return None
+
+
+def codigos_en_envios():
+    """Códigos de facturas ya incluidas en algún envío."""
+    codigos = set()
+    for envio in envios:
+        if envio.get("estado") == "cancelado":
+            continue
+        for ref in envio.get("facturas", []):
+            codigo = ref.get("codigo") if isinstance(ref, dict) else ref
+            if codigo:
+                codigos.add(codigo)
+    return codigos
+
+
+def resumen_factura_envio(factura):
+    """Copia estable de los datos de la factura para mostrarla en el envío."""
+    return {
+        "codigo": factura.codigo,
+        "numero": factura.numero,
+        "fecha": str(factura.fecha),
+        "usuario": factura.usuario,
+        "total": factura.total,
+        "costo_envio": factura.costo_envio,
+        "estado": factura.estado,
+        "ubicacion": factura.envio["ubicacion"],
+        "direccion": factura.envio["direccion"],
+    }
+
+
+def envio_publico(envio):
+    """Combina la referencia guardada con el estado actual de cada factura."""
+    facturas = []
+    for ref in envio.get("facturas", []):
+        codigo = ref.get("codigo") if isinstance(ref, dict) else ref
+        factura = factura_por_codigo(codigo)
+        if factura:
+            facturas.append(resumen_factura_envio(factura))
+        elif isinstance(ref, dict):
+            facturas.append(dict(ref))
+
+    destinos = []
+    for factura in facturas:
+        destino = ", ".join(
+            parte for parte in (factura.get("direccion"), factura.get("ubicacion")) if parte
+        )
+        if destino and destino not in destinos:
+            destinos.append(destino)
+
+    return {
+        "id": envio.get("id"),
+        "codigo": envio.get("codigo"),
+        "fecha": envio.get("fecha"),
+        "estado": envio.get("estado", "en_envio"),
+        "creado_por": envio.get("creado_por", ""),
+        "notas": envio.get("notas", ""),
+        "facturas": facturas,
+        "cantidad_facturas": len(facturas),
+        "destinos": destinos,
+        "total": round(sum(float(f.get("total") or 0) for f in facturas), 2),
+        "costo": round(sum(float(f.get("costo_envio") or 0) for f in facturas), 2),
+    }
+
+
+def facturas_disponibles_para_envio():
+    """Facturas a domicilio que aún no pertenecen a un envío."""
+    ocupadas = codigos_en_envios()
+    return [
+        factura.to_dict()
+        for factura in gestor_facturas.facturas
+        if factura.envio["a_domicilio"]
+        and factura.estado not in ("cancelada", "pagada")
+        and factura.codigo not in ocupadas
+    ]
 
 # ===== SERVIR LA INTERFAZ =====
 @app.route('/')
@@ -738,7 +834,14 @@ def datos_contabilidad():
         productos.values(),
         key=lambda fila: (fila['total'], fila['cantidad']),
         reverse=True,
-    )[:5]
+    )[:8]
+
+    for fila in top_productos:
+        fila['participacion'] = (
+            round(fila['total'] / total_facturado * 100, 1)
+            if total_facturado
+            else 0
+        )
 
     cuentas = {
         usuario['usuario'].casefold(): usuario for usuario in usuarios
@@ -1075,6 +1178,34 @@ def create_invoice():
 
     return jsonify(factura.to_dict())
 
+def validar_stock_para_factura(factura):
+    """Comprueba que el inventario pueda cubrir de nuevo los artículos."""
+    faltantes = []
+    for producto, cantidad in factura.items:
+        actual = inventario.searchProducto(producto.nombre)
+        if not actual:
+            faltantes.append(f'"{producto.nombre}" ya no está en el inventario')
+        elif actual.stock < cantidad:
+            faltantes.append(
+                f'"{actual.nombre}" solo tiene {actual.stock} disponibles'
+            )
+    return faltantes
+
+
+def ajustar_stock_factura(factura, signo):
+    """Suma (signo 1) o resta (signo -1) las cantidades de una factura."""
+    cambiado = False
+    for producto, cantidad in factura.items:
+        actual = inventario.searchProducto(producto.nombre)
+        if not actual:
+            continue
+        actual.stock = max(0, actual.stock + signo * cantidad)
+        if actual.stock > 0:
+            actual.reposicion_pendiente = False
+        cambiado = True
+    return cambiado
+
+
 @app.route('/api/invoices/<int:numero>', methods=['PATCH'])
 @requiere_roles(*ROLES_GESTION)
 def update_invoice(numero):
@@ -1109,10 +1240,141 @@ def update_invoice(numero):
                 }), 409
             factura = coincidencias[0]
 
+        stock_cambiado = False
+        if estado == 'cancelada' and factura.estado != 'cancelada':
+            # Cancelar devuelve al inventario lo que la factura había descontado.
+            stock_cambiado = ajustar_stock_factura(factura, 1)
+        elif factura.estado == 'cancelada' and estado != 'cancelada':
+            # Reactivar una factura cancelada vuelve a descontar el stock.
+            faltantes = validar_stock_para_factura(factura)
+            if faltantes:
+                return jsonify({
+                    'error': (
+                        'No hay stock suficiente para reactivar la factura: '
+                        + '; '.join(faltantes)
+                        + '.'
+                    ),
+                }), 409
+            stock_cambiado = ajustar_stock_factura(factura, -1)
+
         factura.cambiar_estado(estado, motivo)
+        if stock_cambiado:
+            guardar_inventario()
         guardar_facturas()
 
     return jsonify(factura.to_dict())
+
+
+@app.route('/api/envios', methods=['GET'])
+@requiere_roles(*ROLES_GESTION)
+def get_envios():
+    return jsonify({
+        'envios': [envio_publico(envio) for envio in reversed(envios)],
+        'facturas_disponibles': facturas_disponibles_para_envio(),
+    })
+
+
+@app.route('/api/envios', methods=['POST'])
+@requiere_roles(*ROLES_GESTION)
+def create_envio():
+    data = request.get_json(silent=True) or {}
+    seleccion = data.get('facturas')
+    if not isinstance(seleccion, list) or not seleccion:
+        return jsonify({'error': 'Selecciona al menos una factura para el envío.'}), 400
+
+    notas = str(data.get('notas') or '').strip()[:300]
+
+    with STOCK_LOCK:
+        ocupadas = codigos_en_envios()
+        elegidas = []
+        vistos = set()
+
+        for entrada in seleccion:
+            codigo = (
+                str(entrada.get('codigo') or '').strip()
+                if isinstance(entrada, dict)
+                else str(entrada or '').strip()
+            )
+            if not codigo:
+                return jsonify({'error': 'Hay una factura inválida en la selección.'}), 400
+            if codigo in vistos:
+                return jsonify({'error': 'Una factura está repetida en la selección.'}), 400
+            vistos.add(codigo)
+
+            factura = factura_por_codigo(codigo)
+            if not factura:
+                return jsonify({'error': 'Alguna de las facturas ya no existe.'}), 404
+            if not factura.envio['a_domicilio']:
+                return jsonify({
+                    'error': f'La factura #{factura.numero} no es un envío a domicilio.',
+                }), 400
+            if factura.estado in ('cancelada', 'pagada'):
+                return jsonify({
+                    'error': (
+                        f'La factura #{factura.numero} está {factura.estado} '
+                        'y no se puede agrupar.'
+                    ),
+                }), 409
+            if codigo in ocupadas:
+                return jsonify({
+                    'error': f'La factura #{factura.numero} ya pertenece a otro envío.',
+                }), 409
+            elegidas.append(factura)
+
+        envio = {
+            'id': uuid4().hex,
+            'codigo': f'ENV-{secrets.token_hex(3).upper()}',
+            'fecha': datetime.now(timezone.utc).isoformat(timespec='seconds'),
+            'estado': 'en_envio',
+            'creado_por': str(session.get('usuario') or ''),
+            'notas': notas,
+            'facturas': [resumen_factura_envio(factura) for factura in elegidas],
+        }
+
+        for factura in elegidas:
+            factura.cambiar_estado('en_envio')
+
+        envios.append(envio)
+        guardar_facturas()
+        guardar_envios()
+
+    return jsonify(envio_publico(envio)), 201
+
+
+@app.route('/api/envios/<envio_id>', methods=['PATCH'])
+@requiere_roles(*ROLES_GESTION)
+def update_envio(envio_id):
+    data = request.get_json(silent=True) or {}
+    estado = str(data.get('estado') or '').strip()
+    if estado not in ('entregado', 'cancelado'):
+        return jsonify({'error': 'El estado del envío no es válido.'}), 400
+
+    envio = next((item for item in envios if item.get('id') == envio_id), None)
+    if not envio:
+        return jsonify({'error': 'Envío no encontrado.'}), 404
+
+    if envio.get('estado') == 'cancelado':
+        return jsonify({'error': 'Este envío ya está cancelado.'}), 409
+
+    with STOCK_LOCK:
+        for ref in envio.get('facturas', []):
+            codigo = ref.get('codigo') if isinstance(ref, dict) else ref
+            factura = factura_por_codigo(codigo)
+            if not factura or factura.estado == 'cancelada':
+                continue
+            if estado == 'entregado':
+                # El envío se completó: las facturas quedan cobradas.
+                factura.cambiar_estado('pagada')
+            elif factura.estado == 'en_envio':
+                # Al cancelar el envío, las facturas vuelven a estar pendientes.
+                factura.cambiar_estado('pendiente')
+
+        envio['estado'] = estado
+        guardar_facturas()
+        guardar_envios()
+
+    return jsonify(envio_publico(envio))
+
 
 if __name__ == '__main__':
     cargar_datos()

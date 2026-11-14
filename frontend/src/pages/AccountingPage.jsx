@@ -59,24 +59,24 @@ function EstadoBadge({ estado }) {
 
 function KpiCard({ icon: Icon, etiqueta, valor, detalle, tono }) {
   return (
-    <Card className="gap-0 px-4 py-4">
-      <div className="flex items-start justify-between gap-3">
+    <Card className="gap-0 px-3 py-3">
+      <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-xs text-muted-foreground">{etiqueta}</p>
-          <p className="mt-1.5 truncate text-xl font-semibold tabular-nums tracking-tight">
+          <p className="text-[11px] text-muted-foreground">{etiqueta}</p>
+          <p className="mt-1 truncate text-lg font-semibold tabular-nums tracking-tight">
             {valor}
           </p>
-          <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
+          <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground">
             {detalle}
           </p>
         </div>
         <span
           className={cn(
-            'grid size-9 shrink-0 place-items-center rounded-lg border',
+            'grid size-8 shrink-0 place-items-center rounded-lg border',
             tono,
           )}
         >
-          <Icon className="size-4" />
+          <Icon className="size-3.5" />
         </span>
       </div>
     </Card>
@@ -85,19 +85,19 @@ function KpiCard({ icon: Icon, etiqueta, valor, detalle, tono }) {
 
 function AccountingSkeleton() {
   return (
-    <div className="space-y-6">
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="space-y-4">
+      <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
         {Array.from({ length: 4 }).map((_, index) => (
-          <Skeleton key={index} className="h-[104px] rounded-xl" />
+          <Skeleton key={index} className="h-[86px] rounded-xl" />
         ))}
       </div>
-      <div className="grid gap-6 xl:grid-cols-3">
-        <Skeleton className="h-80 rounded-xl xl:col-span-2" />
-        <Skeleton className="h-80 rounded-xl" />
+      <div className="grid gap-4 xl:grid-cols-5">
+        <Skeleton className="h-64 rounded-xl xl:col-span-3" />
+        <Skeleton className="h-64 rounded-xl xl:col-span-2" />
       </div>
-      <div className="grid gap-6 xl:grid-cols-2">
-        <Skeleton className="h-72 rounded-xl" />
-        <Skeleton className="h-72 rounded-xl" />
+      <div className="grid gap-4 xl:grid-cols-5">
+        <Skeleton className="h-80 rounded-xl xl:col-span-3" />
+        <Skeleton className="h-80 rounded-xl xl:col-span-2" />
       </div>
     </div>
   )
@@ -128,23 +128,22 @@ export default function AccountingPage() {
   const resumen = datos?.resumen
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-4 border-b border-border pb-5">
+    <div className="space-y-4">
+      <header className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+          <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
             Contabilidad
           </h1>
-          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            Radiografía financiera de Venture: facturación, cobros, estados de
-            las facturas y los productos y clientes que más pesan.
+          <p className="mt-1 max-w-2xl text-xs text-muted-foreground sm:text-sm">
+            Facturación, cobros, productos y clientes que más pesan en Venture.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Badge
             variant="outline"
-            className="gap-1.5 border-emerald-400/40 bg-emerald-400/10 px-3 py-1 text-emerald-300"
+            className="gap-1.5 border-emerald-400/40 bg-emerald-400/10 px-2.5 py-0.5 text-[11px] text-emerald-300"
           >
-            <ShieldCheck className="size-3.5" />
+            <ShieldCheck className="size-3" />
             Solo administración
           </Badge>
           <Button
@@ -183,7 +182,7 @@ export default function AccountingPage() {
         <AccountingSkeleton />
       ) : (
         <>
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
             <KpiCard
               icon={CircleDollarSign}
               etiqueta="Facturación total"
@@ -224,26 +223,35 @@ export default function AccountingPage() {
             />
           </div>
 
-          <div className="grid gap-6 xl:grid-cols-3">
-            <RevenueChart datos={datos.por_mes} />
-            <StatusDonut datos={datos.por_estado} />
+          <div className="grid gap-4 xl:grid-cols-5">
+            <RevenueChart
+              datos={datos.por_mes}
+              className="xl:col-span-3"
+            />
+            <StatusDonut datos={datos.por_estado} className="xl:col-span-2" />
           </div>
 
-          <div className="grid gap-6 xl:grid-cols-2">
-            <TopProductsChart productos={datos.top_productos} />
-            <TopClientsChart clientes={datos.top_clientes} />
+          <div className="grid gap-4 xl:grid-cols-5">
+            <TopProductsChart
+              productos={datos.top_productos}
+              className="xl:col-span-3"
+            />
+            <TopClientsChart
+              clientes={datos.top_clientes}
+              className="xl:col-span-2"
+            />
           </div>
 
           <Card className="gap-0 overflow-hidden py-0">
-            <CardHeader className="border-b border-border/70 py-5">
+            <CardHeader className="border-b border-border/70 px-4 py-3">
               <div className="flex flex-wrap items-end justify-between gap-3">
-                <div className="flex items-center gap-2.5">
-                  <span className="grid size-8 place-items-center rounded-lg bg-secondary text-foreground">
-                    <ReceiptText className="size-4" />
+                <div className="flex items-center gap-2">
+                  <span className="grid size-7 place-items-center rounded-lg bg-secondary text-foreground">
+                    <ReceiptText className="size-3.5" />
                   </span>
                   <div>
-                    <CardTitle className="text-base">Últimas facturas</CardTitle>
-                    <p className="mt-1 text-xs text-muted-foreground">
+                    <CardTitle className="text-sm">Últimas facturas</CardTitle>
+                    <p className="mt-0.5 text-[11px] text-muted-foreground">
                       Movimientos recientes de todas las cuentas
                     </p>
                   </div>
@@ -278,21 +286,21 @@ export default function AccountingPage() {
                 <table className="w-full min-w-[34rem] text-left text-sm">
                   <thead>
                     <tr className="border-b border-border/70 text-[11px] uppercase tracking-wide text-muted-foreground">
-                      <th scope="col" className="px-4 py-2.5 font-medium">
+                      <th scope="col" className="px-4 py-2 font-medium">
                         Factura
                       </th>
-                      <th scope="col" className="px-4 py-2.5 font-medium">
+                      <th scope="col" className="px-4 py-2 font-medium">
                         Fecha
                       </th>
-                      <th scope="col" className="px-4 py-2.5 font-medium">
+                      <th scope="col" className="px-4 py-2 font-medium">
                         Cliente
                       </th>
-                      <th scope="col" className="px-4 py-2.5 font-medium">
+                      <th scope="col" className="px-4 py-2 font-medium">
                         Estado
                       </th>
                       <th
                         scope="col"
-                        className="px-4 py-2.5 text-right font-medium"
+                        className="px-4 py-2 text-right font-medium"
                       >
                         Total
                       </th>
@@ -304,19 +312,19 @@ export default function AccountingPage() {
                         key={`${factura.usuario}-${factura.numero}-${factura.fecha}`}
                         className="border-b border-border/50 last:border-0"
                       >
-                        <td className="px-4 py-3 font-semibold tabular-nums">
+                        <td className="px-4 py-2 font-semibold tabular-nums">
                           #{factura.numero}
                         </td>
-                        <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">
+                        <td className="whitespace-nowrap px-4 py-2 text-muted-foreground">
                           {formatDate(factura.fecha)}
                         </td>
-                        <td className="px-4 py-3 text-muted-foreground">
+                        <td className="px-4 py-2 text-muted-foreground">
                           {factura.usuario ? `@${factura.usuario}` : 'Sin cuenta'}
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-2">
                           <EstadoBadge estado={factura.estado} />
                         </td>
-                        <td className="whitespace-nowrap px-4 py-3 text-right font-semibold tabular-nums">
+                        <td className="whitespace-nowrap px-4 py-2 text-right font-semibold tabular-nums">
                           {formatCurrency(factura.total)}
                         </td>
                       </tr>
