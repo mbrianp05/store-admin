@@ -19,6 +19,9 @@ La aplicación permite:
 - **Persistir los datos** en archivos JSON locales.
 - **Autenticación**: registro e inicio de sesión con usuario y contraseña.
 - **Validar contraseñas**: se exige una contraseña suficientemente fuerte según zxcvbn.
+- **Roles**: visitante (`guest`), cliente, empleado y administrador, con permisos distintos sobre productos, facturas y usuarios.
+- **Administrar usuarios**: solo el administrador cambia roles y consulta la actividad de cada cuenta.
+- **Panel de contabilidad**: métricas de facturación, cobros, ventas por mes, productos y clientes principales.
 
 ## ✅ Requisitos
 
@@ -134,7 +137,7 @@ Abre `http://localhost:5000`. Flask sirve `frontend/dist` en `/` y la API en `/a
 
 ## 🖥️ Uso de la interfaz
 
-El encabezado fijo muestra la marca **Venture**, las pestañas **Productos** y **Facturas** con la cantidad de cada una, y la fecha del día.
+El encabezado fijo muestra la marca **Venture** y la fecha del día. Las pestañas **Productos** y **Facturas** muestran la cantidad de cada una; los administradores ven además **Contabilidad** y **Usuarios**.
 
 - En escritorio, el carrito aparece como panel fijo a la derecha.
 - En pantallas pequeñas, cuando hay artículos, una barra inferior muestra el total del carrito y abre el panel deslizante.
@@ -144,12 +147,29 @@ El encabezado fijo muestra la marca **Venture**, las pestañas **Productos** y *
 ### 🔐 Autenticación
 
 - **Registro**: nombres, apellidos, usuario, residencia y contraseña; el correo electrónico es opcional.
+- **Primera cuenta**: si todavía no hay usuarios, la primera persona que se registre obtiene el rol `admin`. La pantalla de acceso lo avisa con un banner («La primera cuenta será la administradora»).
 - **Residencia**: debe ser un municipio de Cuba, elegido desde un campo con autocompletado.
 - **Contraseña**: mínimo 8 caracteres y fortaleza «Aceptable» o superior según zxcvbn.
 - **Inicio de sesión**: con usuario y contraseña; la sesión se guarda en una cookie firmada.
 - **Acceso**: sin sesión, las rutas privadas redirigen a `/login` y la API responde `401`.
 - **Cerrar sesión**: botón en el encabezado.
 - **Límite de intentos**: 5 fallos por usuario e IP y 10 por IP cada 15 minutos; al superarlos la API responde `429` con `Retry-After`.
+
+### 🧑‍🤝‍🧑 Roles y permisos
+
+| Rol | Puede comprar y facturar | Gestiona productos | Cambia estados de facturas | Ve todas las facturas | Administra usuarios, contabilidad y configuración |
+| --- | --- | --- | --- | --- | --- |
+| `guest` (sin sesión) | No | No | No | No | No |
+| `cliente` | Sí | No | No | Solo las propias | No |
+| `empleado` | Sí | Sí | Sí | Sí | No |
+| `admin` | Sí | Sí | Sí | Sí | Sí |
+
+- El rol `guest` no se guarda: describe a cualquier visitante sin sesión.
+- Las cuentas nuevas se crean como `cliente`, salvo la primera, que es `admin`.
+- Un `empleado` o `admin` puede emitir facturas y también gestionar el negocio; no son roles excluyentes.
+- Solo un `admin` puede asignar roles desde **Usuarios** y abrir **Contabilidad**.
+- El backend aplica los permisos con `403`; la interfaz oculta las acciones que el rol no permite.
+- No se puede quitar el rol al último administrador: la API responde `409`.
 
 ### 📦 Productos
 
@@ -162,6 +182,7 @@ El encabezado fijo muestra la marca **Venture**, las pestañas **Productos** y *
 - **Datos del producto**: nombre, precio, unidad de medida (`unidad`, `metro`, `par`, etc.), stock, categoría, descripción opcional y descuento.
 - **Fotos**: hasta 8 por producto, de 10 MB como máximo cada una. Formatos admitidos: JPG, JPEG, PNG, WEBP, GIF y AVIF. La primera foto se usa como portada.
 - **Agregar al carrito**: valida el stock disponible y avisa si no se puede sumar más cantidad.
+- **Permisos**: los botones de agregar, editar y eliminar producto solo aparecen para `empleado` y `admin`; un `cliente` puede consultar el catálogo y comprar.
 
 ### 🛒 Carrito
 
@@ -173,18 +194,32 @@ El encabezado fijo muestra la marca **Venture**, las pestañas **Productos** y *
 
 ### 🧾 Facturas
 
-- **Listar**: historial del usuario ordenado de la más reciente a la más antigua.
+- **Listar**: historial ordenado de la más reciente a la más antigua. Un `cliente` ve solo sus facturas; `empleado` y `admin` ven las de todas las cuentas, con el usuario emisor indicado.
 - **Filtrar**: por producto, periodo, estado y subtotal mínimo.
 - **Ver detalle**: número, fecha, estado, artículos, precio unitario, subtotal, envío y total.
-- **Cambiar estado**: pendiente, en envío, pagada o cancelada; la cancelación admite un motivo opcional.
+- **Cambiar estado**: pendiente, en envío, pagada o cancelada; solo `empleado` y `admin` pueden hacerlo. La cancelación admite un motivo opcional.
 - **QR de entrega**: las facturas con envío a domicilio incluyen un código QR; al cancelar la factura, el QR se muestra anulado.
 - **Navegación responsive**: en pantallas pequeñas, el detalle incluye un botón para volver al listado.
+
+### 🧑‍💼 Usuarios (solo administración)
+
+- **Listar**: todas las cuentas con rol, residencia, correo, fecha de registro y cantidad de facturas.
+- **Filtrar**: por nombre, usuario o correo.
+- **Cambiar rol**: cliente, empleado o administrador; el cambio se aplica de inmediato.
+- **Protección**: la cuenta fundadora se marca como tal y no se puede dejar el sistema sin administradores.
+
+### 📊 Contabilidad (solo administración)
+
+- **Resumen**: total facturado, cobrado y pendiente, porcentaje de cobro, ticket promedio y facturas por estado.
+- **Gráficos**: evolución mensual de la facturación, distribución por estado, productos más vendidos y clientes con mayor importe.
+- **Detalle**: últimas facturas y tablas de productos y clientes principales.
+- **Alcance**: las facturas canceladas se excluyen de los totales y gráficos de ventas.
 
 ## 🗂️ Estructura del proyecto
 
 ```text
 app.py                         # API Flask y servidor de frontend/dist
-autenticacion.py               # Registro, contraseñas y persistencia de usuarios
+autenticacion.py               # Registro, contraseñas, roles y persistencia de usuarios
 ubicaciones.py                 # Municipios de Cuba para el autocompletado
 limitador.py                   # Rate limit en memoria para el login
 models/
@@ -216,6 +251,7 @@ frontend/
       pricing.js               # Descuentos y precio vigente
       password.js              # Evaluación local de contraseñas
       text.js                  # Normalización de texto para búsquedas
+      roles.js                 # Roles, etiquetas y permisos del frontend
       utils.js                 # Utilidad cn() para clases
     components/
       AuthShell.jsx            # Marco visual de login y registro
@@ -231,6 +267,7 @@ frontend/
       CartPanel.jsx            # Carrito de escritorio y móvil
       InvoicesView.jsx         # Historial y detalle de facturas
       InvoiceQR.jsx            # Código QR de entrega
+      AccountingCharts.jsx     # Gráficos SVG del panel de contabilidad
       SettingsDialog.jsx       # Configuración del costo de envío
       LocationAutocomplete.jsx # Autocompletado de municipios de Cuba
       PasswordStrength.jsx     # Medidor de fuerza de contraseña
@@ -242,6 +279,8 @@ frontend/
       ProductDetailPage.jsx
       InvoicesPage.jsx
       ProfilePage.jsx          # Perfil: usuario, residencia, correo y contraseña
+      UsersPage.jsx            # Administración de cuentas y roles
+      AccountingPage.jsx       # Panel de contabilidad
     routes/                    # Rutas de TanStack Router
       __root.jsx
       _app.jsx                 # Layout autenticado
@@ -250,6 +289,8 @@ frontend/
       _app/index.jsx
       _app/facturas.jsx
       _app/perfil.jsx
+      _app/usuarios.jsx        # Solo administración
+      _app/contabilidad.jsx    # Solo administración
       _app/productos/$nombre.jsx
 AGENTS.md                      # Notas para agentes y desarrollo
 README.md
@@ -261,27 +302,88 @@ README.md
 
 | Método | Ruta | Descripción |
 | --- | --- | --- |
-| `POST` | `/api/auth/register` | Registra un usuario y abre su sesión. |
+| `POST` | `/api/auth/register` | Registra un usuario y abre su sesión. La primera cuenta es `admin`. |
 | `POST` | `/api/auth/login` | Inicia sesión con usuario y contraseña. |
 | `POST` | `/api/auth/logout` | Cierra la sesión. |
-| `GET` | `/api/auth/me` | Devuelve el usuario de la sesión actual. |
+| `GET` | `/api/auth/me` | Devuelve el usuario de la sesión actual, incluido su rol. |
+| `GET` | `/api/auth/estado` | Indica si existen cuentas y si la próxima registrada será `admin`. Público. |
 | `PATCH` | `/api/auth/perfil` | Actualiza usuario, residencia y correo del usuario de la sesión. |
 | `POST` | `/api/auth/password` | Cambia la contraseña (requiere la contraseña actual). |
 | `GET` | `/api/auth/ubicaciones` | Lista los municipios de Cuba. |
+| `GET` | `/api/admin/usuarios` | Lista las cuentas con su rol y cantidad de facturas. Solo `admin`. |
+| `PATCH` | `/api/admin/usuarios/<nombre>/rol` | Cambia el rol de una cuenta. Solo `admin`. |
 | `GET` | `/api/products` | Lista todos los productos. Público. |
-| `POST` | `/api/products` | Crea un producto. |
-| `PUT` | `/api/products/<nombre>` | Actualiza un producto por su nombre actual. |
-| `DELETE` | `/api/products/<nombre>` | Elimina un producto. |
-| `POST` | `/api/uploads` | Sube una foto (`multipart/form-data`, campo `foto`). |
+| `POST` | `/api/products` | Crea un producto. `empleado` o `admin`. |
+| `PUT` | `/api/products/<nombre>` | Actualiza un producto por su nombre actual. `empleado` o `admin`. |
+| `DELETE` | `/api/products/<nombre>` | Elimina un producto. `empleado` o `admin`. |
+| `POST` | `/api/uploads` | Sube una foto (`multipart/form-data`, campo `foto`). `empleado` o `admin`. |
 | `GET` | `/api/config` | Devuelve la configuración actual (`costo_envio`). |
-| `PUT` | `/api/config` | Actualiza el costo fijo de envío. |
-| `GET` | `/api/invoices` | Lista las facturas del usuario de la sesión. |
-| `POST` | `/api/invoices` | Emite una factura y descuenta stock. |
-| `PATCH` | `/api/invoices/<numero>` | Cambia el estado de una factura del usuario. |
+| `PUT` | `/api/config` | Actualiza el costo fijo de envío. Solo `admin`. |
+| `GET` | `/api/contabilidad` | Devuelve las métricas y series del panel de contabilidad. Solo `admin`. |
+| `GET` | `/api/invoices` | Lista las facturas del usuario; `empleado` y `admin` ven todas. |
+| `POST` | `/api/invoices` | Emite una factura y descuenta stock. Cualquier cuenta con sesión. |
+| `PATCH` | `/api/invoices/<numero>` | Cambia el estado de una factura. `empleado` o `admin`. |
 | `GET` | `/uploads/<archivo>` | Sirve una foto subida. Público. |
 | `GET` | `/` | Sirve `frontend/dist/index.html` (503 si no está compilado). |
 
-> Salvo las rutas de `/api/auth`, `GET /api/products` y `/uploads/*`, todos los endpoints requieren una sesión activa y responden `401` si no la hay.
+> Salvo las rutas de `/api/auth`, `GET /api/products` y `/uploads/*`, todos los endpoints requieren una sesión activa y responden `401` si no la hay. Cuando la sesión existe pero el rol no alcanza, responden `403`.
+
+### GET /api/auth/estado
+
+```json
+{
+  "hay_usuarios": false,
+  "total_usuarios": 0,
+  "primer_usuario_admin": true
+}
+```
+
+- `primer_usuario_admin` es `true` mientras no exista ninguna cuenta; la próxima registrada será `admin`.
+- Es público y lo usan las pantallas de acceso y registro para mostrar el banner de primera cuenta.
+
+### GET /api/admin/usuarios
+
+Requiere rol `admin`. Devuelve la lista de cuentas con su rol, datos públicos, `fundador` (la primera cuenta) y `facturas` (cantidad emitida):
+
+```json
+[
+  {
+    "usuario": "maria.perez",
+    "nombres": "María",
+    "apellidos": "Pérez",
+    "residencia": "Centro Habana, La Habana",
+    "email": "maria@ejemplo.cu",
+    "creado": "2026-11-14T16:51:16+00:00",
+    "rol": "admin",
+    "fundador": true,
+    "facturas": 3
+  }
+]
+```
+
+### PATCH /api/admin/usuarios/<nombre>/rol
+
+```json
+{ "rol": "empleado" }
+```
+
+- `rol` debe ser `cliente`, `empleado` o `admin`; cualquier otro valor responde **400**.
+- Responde **404** si el usuario no existe.
+- No se puede degradar al último `admin`: responde **409**.
+- Solo un `admin` puede cambiar roles.
+
+### GET /api/contabilidad
+
+Requiere rol `admin`. Agrega las facturas del negocio y devuelve:
+
+- `resumen`: `total_facturado`, `total_cobrado`, `total_pendiente`, `porcentaje_cobrado`, `ticket_promedio`, `facturas_total`, `facturas_validas`, `facturas_canceladas`, `facturas_pendientes`, `clientes` y `productos_vendidos`.
+- `por_estado`: cantidad e importe por cada estado de factura.
+- `por_mes`: total y cantidad de facturas de los últimos 8 meses (`clave` y `etiqueta`).
+- `top_productos` y `top_clientes`: los cinco primeros por importe.
+- `ultimas_facturas`: las seis más recientes.
+- `generado`: marca temporal ISO de la respuesta.
+
+Las facturas canceladas no suman a los totales ni a las series de ventas.
 
 ### POST /api/products
 
@@ -343,11 +445,12 @@ Responde **400** si el archivo no es una imagen admitida y **413** si supera los
 
 - `costo_envio` debe ser un número mayor o igual a cero y no superar `1 000 000`.
 - El costo se aplica a las facturas nuevas con envío a domicilio.
+- Solo un `admin` puede actualizar la configuración; cualquier otra cuenta recibe **403**.
 - Responde **400** si el valor no es válido.
 
 ### GET /api/invoices
 
-Devuelve únicamente las facturas del usuario de la sesión, de la más antigua a la más reciente. Cada factura incluye los datos completos del producto y el estado de la entrega:
+Devuelve las facturas de la más antigua a la más reciente. Un `cliente` recibe solo las propias; `empleado` y `admin` reciben las de todas las cuentas. Cada factura incluye los datos completos del producto y el estado de la entrega:
 
 ```json
 [
@@ -432,7 +535,9 @@ Devuelve únicamente las facturas del usuario de la sesión, de la más antigua 
 
 - `estado` debe ser uno de `pendiente`, `en_envio`, `pagada` o `cancelada`.
 - `motivo_cancelacion` es opcional y solo se conserva cuando el estado es `cancelada`.
-- Solo se pueden modificar las facturas del usuario de la sesión; si no existe, responde **404**.
+- Solo `empleado` y `admin` pueden cambiar estados; un `cliente` recibe **403**.
+- El número de factura es por usuario y puede repetirse entre cuentas. Para desambiguar, envía también `usuario` en el cuerpo; si hay varias coincidencias y no se indica, responde **409**.
+- Si no existe una factura que coincida, responde **404**.
 - La cancelación no repone el stock automáticamente.
 
 ## 🧪 Scripts y calidad
@@ -500,6 +605,11 @@ Puede haber cambiado de nombre o haberse eliminado en otra pestaña. Recarga la 
 ## 📝 Notas adicionales
 
 - No hay base de datos: los usuarios, el inventario, las facturas y la configuración viven en archivos JSON, y la sesión en una cookie firmada.
+- Cada cuenta guarda un `rol` (`cliente`, `empleado` o `admin`). `guest` es solo el visitante sin sesión y no se persiste.
+- La primera cuenta registrada en un archivo de usuarios vacío se crea como `admin`; las siguientes, como `cliente`.
+- Si un archivo de usuarios antiguo no tiene roles, la primera cuenta del JSON se normaliza como `admin` y el resto como `cliente`.
+- El backend valida los permisos en cada petición; la interfaz solo oculta las acciones no permitidas.
+- La contabilidad y la administración de usuarios son exclusivas del rol `admin`.
 - El número de factura lo controla el servidor y se restaura desde la factura de mayor número de cada usuario al iniciar.
 - El stock se descuenta en el backend al emitir la factura; el frontend actualiza su copia de forma optimista.
 - El carrito es estado del cliente y se vacía después de emitir una factura.
