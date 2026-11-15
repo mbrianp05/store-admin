@@ -2,14 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   CalendarDays,
   ChevronDown,
-  Crown,
   LoaderCircle,
   MapPin,
   ReceiptText,
   Search,
-  ShieldCheck,
-  UserCog,
-  Users,
   X,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -19,9 +15,7 @@ import Pagination from '../components/Pagination'
 import { ROLES, ROL_INFO, rolDe } from '../lib/roles'
 import { normalizarTexto } from '../lib/text'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
@@ -54,38 +48,12 @@ function nombreVisible(usuario) {
   return nombre || `@${usuario.usuario}`
 }
 
-function StatCard({ icon: Icon, etiqueta, valor, tono }) {
-  return (
-    <Card className="gap-0 px-3 py-3">
-      <div className="flex items-center gap-2.5">
-        <span
-          className={cn(
-            'grid size-8 shrink-0 place-items-center rounded-lg border',
-            tono,
-          )}
-        >
-          <Icon className="size-3.5" />
-        </span>
-        <div>
-          <p className="text-[11px] text-muted-foreground">{etiqueta}</p>
-          <p className="text-lg font-semibold tabular-nums leading-tight">
-            {valor}
-          </p>
-        </div>
-      </div>
-    </Card>
-  )
-}
-
 function UsersSkeleton() {
   return (
-    <ul>
-      {Array.from({ length: 4 }).map((_, index) => (
-        <li
-          key={index}
-          className="flex items-center gap-3 border-t border-border/70 px-4 py-4 first:border-0"
-        >
-          <Skeleton className="size-10 rounded-full" />
+    <ul className="divide-y divide-border border-y border-border">
+      {Array.from({ length: 5 }).map((_, index) => (
+        <li key={index} className="flex items-center gap-3 py-4">
+          <Skeleton className="size-9 rounded-full" />
           <div className="flex-1 space-y-2">
             <Skeleton className="h-4 w-40" />
             <Skeleton className="h-3 w-28" />
@@ -149,6 +117,7 @@ export default function UsersPage() {
   }, [usuarios, busqueda])
 
   const unicoAdmin = conteo.admin <= 1
+  const totalCuentas = conteo.cliente + conteo.empleado + conteo.admin
 
   const totalPaginas = Math.max(
     1,
@@ -189,64 +158,59 @@ export default function UsersPage() {
 
   return (
     <div className="space-y-5">
-      <header className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-4">
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
-            Usuarios
-          </h1>
-          <p className="mt-1.5 max-w-2xl text-xs text-muted-foreground sm:text-sm">
-            Asigna el rol de cada persona y asegúrate de que siempre quede
-            alguien al mando.
-          </p>
-        </div>
-        <Badge
-          variant="outline"
-          className="gap-1.5 border-emerald-400/40 bg-emerald-400/10 px-3 py-1 text-emerald-300"
-        >
-          <ShieldCheck className="size-3.5" />
-          Solo administración
-        </Badge>
-      </header>
-
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          icon={Users}
-          etiqueta="Cuentas totales"
-          valor={conteo.cliente + conteo.empleado + conteo.admin}
-          tono="border-border bg-muted/40 text-foreground"
-        />
-        <StatCard
-          icon={UserCog}
-          etiqueta="Clientes"
-          valor={conteo.cliente}
-          tono={ROL_INFO.cliente.clase}
-        />
-        <StatCard
-          icon={UserCog}
-          etiqueta="Empleados"
-          valor={conteo.empleado}
-          tono={ROL_INFO.empleado.clase}
-        />
-        <StatCard
-          icon={Crown}
-          etiqueta="Administradores"
-          valor={conteo.admin}
-          tono={ROL_INFO.admin.clase}
-        />
-      </div>
-
-      <Card className="gap-0 overflow-hidden py-0">
-        <div className="flex flex-col gap-3 border-b border-border/70 px-4 py-3 sm:flex-row sm:items-end sm:justify-between">
+      <header className="border-b border-border pb-4">
+        <div className="flex flex-wrap items-end justify-between gap-2">
           <div>
-            <h2 className="text-sm font-semibold">Listado de cuentas</h2>
-            <p className="mt-1 text-xs text-muted-foreground" aria-live="polite">
-              {loading
-                ? 'Cargando usuarios…'
-                : hayBusqueda
-                  ? `${filtrados.length} de ${usuarios.length} coincidencias`
-                  : `${usuarios.length} ${usuarios.length === 1 ? 'cuenta registrada' : 'cuentas registradas'}`}
+            <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
+              Usuarios
+            </h1>
+            <p className="mt-1.5 max-w-2xl text-xs text-muted-foreground sm:text-sm">
+              Asigna el rol de cada persona y asegúrate de que siempre quede
+              alguien al mando.
             </p>
           </div>
+          <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+            Solo administración
+          </p>
+        </div>
+
+        <dl className="mt-4 flex flex-wrap items-baseline gap-x-7 gap-y-2">
+          <div className="flex items-baseline gap-1.5">
+            <dd className="text-lg font-semibold tabular-nums">
+              {totalCuentas}
+            </dd>
+            <dt className="text-xs text-muted-foreground">cuentas</dt>
+          </div>
+          <div className="flex items-baseline gap-1.5">
+            <dd className="text-lg font-semibold tabular-nums">
+              {conteo.cliente}
+            </dd>
+            <dt className="text-xs text-muted-foreground">clientes</dt>
+          </div>
+          <div className="flex items-baseline gap-1.5">
+            <dd className="text-lg font-semibold tabular-nums">
+              {conteo.empleado}
+            </dd>
+            <dt className="text-xs text-muted-foreground">empleados</dt>
+          </div>
+          <div className="flex items-baseline gap-1.5">
+            <dd className="text-lg font-semibold tabular-nums">
+              {conteo.admin}
+            </dd>
+            <dt className="text-xs text-muted-foreground">administradores</dt>
+          </div>
+        </dl>
+      </header>
+
+      <section className="space-y-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-muted-foreground" aria-live="polite">
+            {loading
+              ? 'Cargando usuarios…'
+              : hayBusqueda
+                ? `${filtrados.length} de ${usuarios.length} coincidencias`
+                : `${usuarios.length} ${usuarios.length === 1 ? 'cuenta registrada' : 'cuentas registradas'}`}
+          </p>
 
           <label className="relative block w-full sm:max-w-xs">
             <span className="sr-only">Filtrar usuarios por nombre</span>
@@ -292,30 +256,26 @@ export default function UsersPage() {
         )}
 
         {error ? (
-          <div className="px-4 py-6">
-            <Alert variant="destructive">
-              <AlertDescription className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <p>No se pudieron cargar los usuarios: {error}</p>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={cargar}
-                  className="self-start border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive sm:self-auto"
-                >
-                  Reintentar
-                </Button>
-              </AlertDescription>
-            </Alert>
-          </div>
+          <Alert variant="destructive">
+            <AlertDescription className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p>No se pudieron cargar los usuarios: {error}</p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={cargar}
+                className="self-start border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive sm:self-auto"
+              >
+                Reintentar
+              </Button>
+            </AlertDescription>
+          </Alert>
         ) : loading ? (
           <UsersSkeleton />
         ) : filtrados.length === 0 ? (
-          <div className="px-6 py-14 text-center">
-            <span className="mx-auto grid size-12 place-items-center rounded-xl border border-border bg-muted/40 text-muted-foreground">
-              <Search className="size-5" />
-            </span>
-            <h2 className="mt-4 text-base font-semibold">Sin coincidencias</h2>
+          <div className="py-14 text-center">
+            <Search className="mx-auto size-6 text-muted-foreground" />
+            <h2 className="mt-3 text-base font-semibold">Sin coincidencias</h2>
             <p className="mx-auto mt-1.5 max-w-xs text-sm leading-snug text-muted-foreground">
               No encontramos cuentas para «{busqueda.trim()}». Prueba con otro
               nombre o nombre de usuario.
@@ -334,7 +294,7 @@ export default function UsersPage() {
             </Button>
           </div>
         ) : (
-          <ul>
+          <ul className="divide-y divide-border border-y border-border">
             {visibles.map((usuario) => {
               const rol = rolDe(usuario)
               const info = ROL_INFO[rol]
@@ -345,7 +305,7 @@ export default function UsersPage() {
               return (
                 <li
                   key={usuario.usuario}
-                  className="flex flex-col gap-3 border-t border-border/70 px-4 py-3 first:border-0 sm:flex-row sm:items-center sm:justify-between"
+                  className="flex flex-col gap-3 py-3.5 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="flex min-w-0 items-center gap-3">
                     <span
@@ -358,23 +318,19 @@ export default function UsersPage() {
                     </span>
 
                     <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
+                      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
                         <p className="truncate text-sm font-medium text-foreground">
                           {nombreVisible(usuario)}
                         </p>
                         {usuario.fundador && (
-                          <Badge
-                            variant="outline"
-                            className="gap-1 border-highlight/40 bg-highlight/10 text-highlight"
-                          >
-                            <Crown className="size-2.5" />
+                          <span className="text-[10px] font-semibold uppercase tracking-wide text-highlight">
                             Fundador
-                          </Badge>
+                          </span>
                         )}
                         {esUnoMismo && (
-                          <Badge variant="muted" className="text-[10px]">
-                            Tú
-                          </Badge>
+                          <span className="text-[10px] text-muted-foreground">
+                            · tú
+                          </span>
                         )}
                       </div>
                       <p className="truncate text-xs text-muted-foreground">
@@ -433,7 +389,7 @@ export default function UsersPage() {
             })}
           </ul>
         )}
-      </Card>
+      </section>
 
       {unicoAdmin && conteo.admin === 1 && (
         <p className="text-xs text-muted-foreground">
