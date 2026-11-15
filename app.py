@@ -1240,6 +1240,14 @@ def update_invoice(numero):
                 }), 409
             factura = coincidencias[0]
 
+        if estado == 'en_envio' and not factura.envio['a_domicilio']:
+            return jsonify({
+                'error': (
+                    'Solo las facturas con envío a domicilio pueden marcarse '
+                    'como «En envío».'
+                ),
+            }), 400
+
         stock_cambiado = False
         if estado == 'cancelada' and factura.estado != 'cancelada':
             # Cancelar devuelve al inventario lo que la factura había descontado.
