@@ -158,17 +158,18 @@ El encabezado fijo muestra la marca **Venture** y la fecha del día. Las pestañ
 
 ### 🧑‍🤝‍🧑 Roles y permisos
 
-| Rol | Puede comprar y facturar | Gestiona productos | Cambia estados de facturas | Ve todas las facturas | Administra usuarios, contabilidad y configuración |
-| --- | --- | --- | --- | --- | --- |
-| `guest` (sin sesión) | No | No | No | No | No |
-| `cliente` | Sí | No | No | Solo las propias | No |
-| `empleado` | Sí | Sí | Sí | Sí | No |
-| `admin` | Sí | Sí | Sí | Sí | Sí |
+| Rol | Puede comprar y facturar | Gestiona productos | Cambia estados de facturas | Ve todas las facturas | Gestiona envíos y tasa | Administra usuarios y contabilidad |
+| --- | --- | --- | --- | --- | --- | --- |
+| `guest` (sin sesión) | No | No | No | No | No | No |
+| `cliente` | Sí | No | No | Solo las propias | No | No |
+| `empleado` | Sí | Sí | Sí | Sí | Sí | No |
+| `admin` | Sí | Sí | Sí | Sí | Sí | Sí |
 
 - El rol `guest` no se guarda: describe a cualquier visitante sin sesión.
 - Las cuentas nuevas se crean como `cliente`, salvo la primera, que es `admin`.
 - Un `empleado` o `admin` puede emitir facturas y también gestionar el negocio; no son roles excluyentes.
 - Solo un `admin` puede asignar roles desde **Usuarios** y abrir **Contabilidad**.
+- La tasa de envío se ajusta desde la página **Envíos**, disponible para `empleado` y `admin`.
 - El backend aplica los permisos con `403`; la interfaz oculta las acciones que el rol no permite.
 - No se puede quitar el rol al último administrador: la API responde `409`.
 
@@ -196,11 +197,15 @@ El encabezado fijo muestra la marca **Venture** y la fecha del día. Las pestañ
 ### 🧾 Facturas
 
 - **Listar**: historial ordenado de la más reciente a la más antigua. Un `cliente` ve solo sus facturas; `empleado` y `admin` ven las de todas las cuentas, con el usuario emisor indicado.
+- **Orden**: se usa la fecha de emisión y, dentro del mismo día, el orden real de creación; la numeración se reinicia por usuario, así que no define el orden global.
 - **Alternar alcance**: empleados y administradores pueden cambiar entre «Todas» y «Mías», porque también pueden comprar.
 - **Filtrar**: por producto, periodo, estado y subtotal mínimo.
-- **Paginación**: el historial muestra 8 facturas por página y los controles están en la parte superior de la lista.
+- **Paginación**: el historial muestra 9 facturas por página en una cuadrícula de 3×3, sin tabla; los controles están en la parte superior.
 - **Ver detalle**: número, fecha, estado, artículos, precio unitario, subtotal, envío y total.
+- **Abrir desde un envío**: las facturas listadas en **Envíos** son enlaces que abren su detalle aquí.
 - **Cambiar estado**: pendiente, en envío, pagada o cancelada; solo `empleado` y `admin` pueden hacerlo. La cancelación admite un motivo opcional.
+- **Estado visible para el cliente**: un `cliente` ve el estado actual de cada factura en modo solo lectura, sin poder modificarlo.
+- **Envío a domicilio**: la opción «En envío» solo aparece en facturas con entrega a domicilio; el backend responde **400** si se intenta aplicar a una factura de retiro.
 - **Stock**: cancelar una factura devuelve sus productos al inventario; reactivarla vuelve a descontarlos (responde **409** si ya no alcanza el stock).
 - **QR de entrega**: las facturas con envío a domicilio incluyen un código QR; al cancelar la factura, el QR se muestra anulado.
 - **Navegación responsive**: en pantallas pequeñas, el detalle incluye un botón para volver al listado.
@@ -210,8 +215,11 @@ El encabezado fijo muestra la marca **Venture** y la fecha del día. Las pestañ
 - **Facturas disponibles**: lista solo las facturas a domicilio pendientes que aún no pertenecen a un envío.
 - **Agrupar**: selecciona varias facturas y crea un envío único; todas pasan a estado `en_envio`.
 - **Seguimiento**: cada envío muestra código, fecha, creador, facturas, destinos y total.
-- **Completar o cancelar**: «Marcar entregado» cobra las facturas (`pagada`); «Cancelar envío» las devuelve a `pendiente`.
+- **Abrir facturas**: cada factura del envío enlaza a su detalle en **Facturas**, donde se consulta y cambia su estado.
+- **Cancelar**: «Cancelar envío» devuelve las facturas a `pendiente`.
+- **Estados del envío**: se derivan de sus facturas. Es «Completada» cuando todas están pagadas o canceladas, y «En progreso» mientras quede alguna sin cobrar; un envío cancelado mantiene «Cancelado».
 - **Paginación**: facturas disponibles y envíos se paginan de 8 en 8 con los controles arriba.
+- **Tasa de envío**: el costo se edita directamente en esta página y se aplica a las facturas nuevas con entrega a domicilio.
 
 ### 🧑‍💼 Usuarios (solo administración)
 
@@ -283,7 +291,6 @@ frontend/
       InvoiceQR.jsx            # Código QR de entrega
       Pagination.jsx           # Controles de paginación reutilizables
       AccountingCharts.jsx     # Gráficos Recharts del panel de contabilidad
-      SettingsDialog.jsx       # Configuración del costo de envío
       LocationAutocomplete.jsx # Autocompletado de municipios de Cuba
       PasswordStrength.jsx     # Medidor de fuerza de contraseña
       ui/                      # Componentes base (button, card, input, tabs, sheet...)
@@ -465,7 +472,7 @@ Responde **400** si el archivo no es una imagen admitida y **413** si supera los
 
 - `costo_envio` debe ser un número mayor o igual a cero y no superar `1 000 000`.
 - El costo se aplica a las facturas nuevas con envío a domicilio.
-- Solo un `admin` puede actualizar la configuración; cualquier otra cuenta recibe **403**.
+- `empleado` y `admin` pueden actualizar la configuración desde la página **Envíos**; un `cliente` recibe **403**.
 - Responde **400** si el valor no es válido.
 
 ### GET /api/invoices
