@@ -17,6 +17,7 @@ import {
 } from "./api";
 import CartPanel from "./components/CartPanel";
 import Masthead from "./components/Masthead";
+import { esAdmin } from "./lib/roles";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
@@ -247,6 +248,10 @@ export default function App() {
 
   const handleSaveConfig = useCallback(
     async (costoEnvio) => {
+      if (!esAdmin(user)) {
+        notify("Solo un administrador puede cambiar la tasa de envío.", "error");
+        return false;
+      }
       try {
         const updated = await updateConfig({ costo_envio: costoEnvio });
         setConfig(updated);
@@ -257,7 +262,7 @@ export default function App() {
         return false;
       }
     },
-    [notify],
+    [notify, user],
   );
 
   const handleCreateProduct = useCallback(

@@ -13,8 +13,10 @@ import { toast } from 'sonner'
 import { Link } from '@tanstack/react-router'
 import { createEnvio, getEnvios, updateEnvioEstado } from '../api'
 import { useAppState } from '../app-context'
+import { useAuth } from '../auth-context'
 import { formatCurrency } from '../lib/format'
 import { normalizarTexto } from '../lib/text'
+import { esAdmin } from '../lib/roles'
 import Pagination from '../components/Pagination'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -160,6 +162,8 @@ function EnviosSkeleton() {
 
 export default function EnviosPage() {
   const { config, onUpdateConfig, onRefreshInvoices } = useAppState()
+  const { user } = useAuth()
+  const puedeEditarTasa = esAdmin(user)
   const [datos, setDatos] = useState({
     envios: [],
     facturas_disponibles: [],
@@ -342,11 +346,22 @@ export default function EnviosPage() {
           </p>
         </div>
         <div className="flex flex-wrap items-end gap-2">
-          <CostoEnvioEditor
-            key={`costo-${config.costo_envio}`}
-            costo={Number(config.costo_envio) || 0}
-            onSave={onUpdateConfig}
-          />
+          {puedeEditarTasa ? (
+            <CostoEnvioEditor
+              key={`costo-${config.costo_envio}`}
+              costo={Number(config.costo_envio) || 0}
+              onSave={onUpdateConfig}
+            />
+          ) : (
+            <div className="text-right">
+              <span className="block text-[11px] font-medium text-muted-foreground">
+                Costo de envío
+              </span>
+              <span className="text-sm tabular-nums text-foreground">
+                {formatCurrency(Number(config.costo_envio) || 0)}
+              </span>
+            </div>
+          )}
           <Button
             type="button"
             variant="outline"
