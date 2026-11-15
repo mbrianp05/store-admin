@@ -928,7 +928,7 @@ def get_config():
 
 
 @app.route('/api/config', methods=['PUT'])
-@requiere_roles(ROL_ADMIN)
+@requiere_roles(*ROLES_GESTION)
 def update_config():
     global configuracion
     data = request.get_json(silent=True) or {}
