@@ -4,7 +4,6 @@ import {
   LogOut,
   Package,
   ReceiptText,
-  Settings,
   ShoppingCart,
   Truck,
   UserRound,
@@ -93,7 +92,6 @@ export default function Masthead({
   invoiceCount,
   cartCount = 0,
   onOpenCart,
-  onOpenSettings,
   user,
   onLogout,
 }) {
@@ -227,19 +225,6 @@ export default function Masthead({
                     </span>
                   )}
                 </Button>
-                {onOpenSettings && admin && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={onOpenSettings}
-                    aria-label="Configuración"
-                    title="Configuración"
-                    className="text-muted-foreground hover:bg-secondary hover:text-foreground"
-                  >
-                    <Settings className="size-[18px]" />
-                  </Button>
-                )}
                 {onLogout && (
                   <Button
                     type="button"

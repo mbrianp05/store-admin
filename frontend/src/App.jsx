@@ -17,7 +17,6 @@ import {
 } from "./api";
 import CartPanel from "./components/CartPanel";
 import Masthead from "./components/Masthead";
-import SettingsDialog from "./components/SettingsDialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
@@ -28,7 +27,6 @@ export default function App() {
   const [products, setProducts] = useState([]);
   const [invoices, setInvoices] = useState([]);
   const [config, setConfig] = useState({ costo_envio: 0 });
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const [cart, setCart] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -338,6 +336,7 @@ export default function App() {
   const appState = {
     products,
     invoices,
+    config,
     cart,
     search,
     loading,
@@ -351,6 +350,7 @@ export default function App() {
     onClearInvoiceSelection: () => setSelectedInvoice(null),
     onUpdateInvoiceState: handleUpdateInvoiceState,
     onRefreshInvoices: refreshInvoices,
+    onUpdateConfig: handleSaveConfig,
   };
 
   return (
@@ -360,7 +360,6 @@ export default function App() {
         invoiceCount={invoices.length}
         cartCount={cartCount}
         onOpenCart={() => setCartOpen(true)}
-        onOpenSettings={() => setSettingsOpen(true)}
         user={user}
         onLogout={logout}
       />
@@ -390,14 +389,6 @@ export default function App() {
           </AppStateContext.Provider>
         </main>
       </div>
-
-      <SettingsDialog
-        key={`config-${config.costo_envio}`}
-        open={settingsOpen}
-        onOpenChange={setSettingsOpen}
-        costoEnvio={Number(config.costo_envio) || 0}
-        onSave={handleSaveConfig}
-      />
 
       <Sheet open={cartOpen} onOpenChange={setCartOpen}>
         <SheetContent

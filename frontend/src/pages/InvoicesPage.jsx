@@ -1,3 +1,5 @@
+import { useEffect } from 'react'
+import { useNavigate, useSearch } from '@tanstack/react-router'
 import InvoicesView from '../components/InvoicesView'
 import { useAppState } from '../app-context'
 import { useAuth } from '../auth-context'
@@ -16,6 +18,19 @@ export default function InvoicesPage() {
     onClearInvoiceSelection,
     onUpdateInvoiceState,
   } = useAppState()
+  const search = useSearch({ strict: false })
+  const navigate = useNavigate()
+
+  // Abrir una factura desde un envío: /facturas?factura=<codigo>.
+  const codigoSolicitado = search?.factura
+  useEffect(() => {
+    if (!codigoSolicitado || loading) return
+    const factura = invoices.find(
+      (invoice) => invoice.codigo === codigoSolicitado,
+    )
+    if (factura) onSelectInvoice(factura)
+    navigate({ to: '/facturas', replace: true })
+  }, [codigoSolicitado, invoices, loading, navigate, onSelectInvoice])
 
   return (
     <InvoicesView
