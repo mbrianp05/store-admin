@@ -157,18 +157,18 @@ El encabezado fijo muestra la marca **Venture** y la fecha del día. Las pestañ
 
 ### 🧑‍🤝‍🧑 Roles y permisos
 
-| Rol | Puede comprar y facturar | Gestiona productos | Cambia estados de facturas | Ve todas las facturas | Gestiona envíos y tasa | Administra usuarios y contabilidad |
-| --- | --- | --- | --- | --- | --- | --- |
-| `guest` (sin sesión) | No | No | No | No | No | No |
-| `cliente` | Sí | No | No | Solo las propias | No | No |
-| `empleado` | Sí | Sí | Sí | Sí | Sí | No |
-| `admin` | Sí | Sí | Sí | Sí | Sí | Sí |
+| Rol | Puede comprar y facturar | Gestiona productos | Cambia estados de facturas | Ve todas las facturas | Gestiona envíos | Ajusta la tasa de envío | Administra usuarios y contabilidad |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `guest` (sin sesión) | No | No | No | No | No | No | No |
+| `cliente` | Sí | No | No | Solo las propias | No | No | No |
+| `empleado` | Sí | Sí | Sí | Sí | Sí | No | No |
+| `admin` | Sí | Sí | Sí | Sí | Sí | Sí | Sí |
 
 - El rol `guest` no se guarda: describe a cualquier visitante sin sesión.
 - Las cuentas nuevas se crean como `cliente`, salvo la primera, que es `admin`.
 - Un `empleado` o `admin` puede emitir facturas y también gestionar el negocio; no son roles excluyentes.
 - Solo un `admin` puede asignar roles desde **Usuarios** y abrir **Contabilidad**.
-- La tasa de envío se ajusta desde la página **Envíos**, disponible para `empleado` y `admin`.
+- La tasa de envío solo la ajusta un `admin` desde la página **Envíos**.
 - El backend aplica los permisos con `403`; la interfaz oculta las acciones que el rol no permite.
 - No se puede quitar el rol al último administrador: la API responde `409`.
 
@@ -218,7 +218,7 @@ El encabezado fijo muestra la marca **Venture** y la fecha del día. Las pestañ
 - **Cancelar**: «Cancelar envío» devuelve las facturas a `pendiente`.
 - **Estados del envío**: se derivan de sus facturas. Es «Completada» cuando todas están pagadas o canceladas, y «En progreso» mientras quede alguna sin cobrar; un envío cancelado mantiene «Cancelado».
 - **Paginación**: facturas disponibles y envíos se paginan de 8 en 8 con los controles arriba.
-- **Tasa de envío**: el costo se edita directamente en esta página y se aplica a las facturas nuevas con entrega a domicilio.
+- **Tasa de envío**: solo un `admin` puede editarla desde esta página; se aplica a las facturas nuevas con entrega a domicilio.
 
 ### 🧑‍💼 Usuarios (solo administración)
 
@@ -467,7 +467,7 @@ Responde **400** si el archivo no es una imagen admitida y **413** si supera los
 
 - `costo_envio` debe ser un número mayor o igual a cero y no superar `1 000 000`.
 - El costo se aplica a las facturas nuevas con envío a domicilio.
-- `empleado` y `admin` pueden actualizar la configuración desde la página **Envíos**; un `cliente` recibe **403**.
+- Solo un `admin` puede actualizar la configuración desde la página **Envíos**; un `empleado` o `cliente` recibe **403**.
 - Responde **400** si el valor no es válido.
 
 ### GET /api/invoices
