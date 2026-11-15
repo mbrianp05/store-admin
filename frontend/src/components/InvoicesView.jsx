@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react'
 import {
   ArrowLeft,
   Check,
-  ChevronRight,
   MapPin,
   ReceiptText,
   Search,
@@ -53,15 +52,6 @@ function claveFactura(invoice) {
   return `${invoice.usuario || ''}-${invoice.numero}`
 }
 
-function mismaFactura(a, b) {
-  return Boolean(
-    a &&
-      b &&
-      a.numero === b.numero &&
-      String(a.usuario || '') === String(b.usuario || ''),
-  )
-}
-
 function EstadoBadge({ estado }) {
   const info = estadoInfo(estado)
   return (
@@ -76,10 +66,14 @@ function EstadoBadge({ estado }) {
   )
 }
 
-function EstadoSelector({ estado, onChange }) {
+function EstadoSelector({ estado, onChange, aDomicilio = false }) {
   const [guardando, setGuardando] = useState(null)
   const [cancelando, setCancelando] = useState(false)
   const [motivo, setMotivo] = useState('')
+
+  const opciones = aDomicilio
+    ? ESTADOS
+    : ESTADOS.filter((opcion) => opcion.valor !== 'en_envio')
 
   async function elegir(valor) {
     if (valor === estado || guardando) return
@@ -105,7 +99,7 @@ function EstadoSelector({ estado, onChange }) {
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap gap-1.5" role="group" aria-label="Estado de la factura">
-        {ESTADOS.map((opcion) => {
+        {opciones.map((opcion) => {
           const activo = opcion.valor === estado
           return (
             <button
@@ -172,62 +166,57 @@ function EstadoSelector({ estado, onChange }) {
 
 function InvoiceListSkeleton() {
   return (
-    <ul>
-      {Array.from({ length: 4 }).map((_, index) => (
-        <li
-          key={index}
-          className="flex items-center gap-3 border-t border-border/70 px-4 py-4 first:border-0"
-        >
-          <Skeleton className="h-4 w-8" />
-          <div className="flex-1">
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="mt-2 h-3 w-16" />
-          </div>
-          <Skeleton className="h-4 w-16" />
-        </li>
+    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      {Array.from({ length: 9 }).map((_, index) => (
+        <Skeleton key={index} className="h-[126px] rounded-xl" />
       ))}
-    </ul>
+    </div>
   )
 }
 
 function EntregaInfo({ envio, costo, cancelada = false }) {
-  if (envio?.a_domicilio) {
-    return (
-      <div className="rounded-lg border border-highlight/25 bg-highlight/[0.07] p-3">
-        <div className="flex items-center gap-2 text-highlight">
-          <Truck className="size-4" />
-          <p className="text-xs font-semibold uppercase tracking-wide">Envío a domicilio</p>
-        </div>
-        <p className="mt-2 flex items-start gap-1.5 text-sm font-medium text-foreground">
-          <MapPin className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
-          <span>{envio.direccion || envio.ubicacion || 'Dirección no indicada'}</span>
+  const aDomicilio = Boolean(envio?.a_domicilio)
+
+  return (
+    <div className="flex items-start gap-3">
+      <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-full border border-border text-muted-foreground">
+        {aDomicilio ? (
+          <Truck className="size-3.5" />
+        ) : (
+          <ReceiptText className="size-3.5" />
+        )}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+          Entrega
         </p>
-        <p className="mt-2 flex items-baseline justify-between border-t border-highlight/20 pt-2 text-xs text-muted-foreground">
-          <span>Costo de envío</span>
-          <span
+        <p className="mt-0.5 text-sm font-medium text-foreground">
+          {aDomicilio ? 'Envío a domicilio' : 'Retiro en mostrador'}
+        </p>
+        <p className="mt-0.5 flex items-start gap-1 text-xs leading-snug text-muted-foreground">
+          {aDomicilio && (
+            <MapPin className="mt-0.5 size-3 shrink-0" />
+          )}
+          <span>
+            {aDomicilio
+              ? envio.direccion || envio.ubicacion || 'Dirección no indicada'
+              : 'El cliente retira el pedido en el local.'}
+          </span>
+        </p>
+      </div>
+      {aDomicilio && (
+        <div className="shrink-0 text-right">
+          <p className="text-[11px] text-muted-foreground">Costo</p>
+          <p
             className={cn(
-              'font-semibold tabular-nums text-foreground',
+              'text-sm font-semibold tabular-nums text-foreground',
               cancelada && 'text-muted-foreground line-through opacity-70',
             )}
           >
             {formatCurrency(costo)}
-          </span>
-        </p>
-      </div>
-    )
-  }
-
-  return (
-    <div className="flex items-start gap-2.5 text-sm">
-      <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-md border border-border bg-muted/40 text-foreground">
-        <ReceiptText className="size-3.5" />
-      </span>
-      <div>
-        <p className="font-medium text-foreground">Retiro en mostrador</p>
-        <p className="mt-0.5 text-xs text-muted-foreground">
-          El cliente retira el pedido en el local.
-        </p>
-      </div>
+          </p>
+        </div>
+      )}
     </div>
   )
 }
@@ -247,7 +236,7 @@ function InvoiceDetail({ invoice, onBack, onUpdateState, canUpdateState }) {
           variant="ghost"
           size="sm"
           onClick={onBack}
-          className="-ml-2 mb-4 text-muted-foreground lg:hidden"
+          className="-ml-2 mb-4 text-muted-foreground"
         >
           <ArrowLeft className="size-4" />
           Volver a facturas
@@ -322,53 +311,48 @@ function InvoiceDetail({ invoice, onBack, onUpdateState, canUpdateState }) {
         </table>
       </div>
 
-      <div className="grid gap-5 border-t border-border px-5 py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:px-7">
-        <div className="space-y-4">
+      <div className="grid gap-6 border-t border-border px-5 py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:px-7">
+        <div className="space-y-5">
           {invoice.estado === 'cancelada' && (
-            <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-destructive">
+            <div className="border-l-2 border-destructive/60 pl-3">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-destructive">
                 Factura cancelada
               </p>
-              <p className="mt-1 text-sm text-foreground">
+              <p className="mt-0.5 text-sm text-foreground">
                 {invoice.motivo_cancelacion || 'Sin motivo especificado'}
               </p>
             </div>
           )}
 
-          {invoice.envio?.a_domicilio && (
-            <EntregaInfo
-              envio={invoice.envio}
-              costo={invoice.costo_envio}
-              cancelada={cancelada}
-            />
-          )}
+          <EntregaInfo
+            envio={invoice.envio}
+            costo={invoice.costo_envio}
+            cancelada={cancelada}
+          />
 
           <div>
-            <h3 className="text-xs font-medium text-muted-foreground">Estado del pedido</h3>
+            <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+              Estado del pedido
+            </p>
             {canUpdateState ? (
               <div className="mt-2">
                 <EstadoSelector
                   estado={invoice.estado}
+                  aDomicilio={Boolean(invoice.envio?.a_domicilio)}
                   onChange={(estado, motivo) =>
                     onUpdateState(invoice.numero, estado, motivo, invoice.usuario)
                   }
                 />
               </div>
             ) : (
-              <p className="mt-2 rounded-lg border border-border bg-muted/30 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
-                Un empleado o administrador se encarga de actualizar el estado de
-                esta factura.
-              </p>
+              <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                <EstadoBadge estado={invoice.estado} />
+                <span className="text-xs text-muted-foreground">
+                  Solo lectura · un empleado o administrador puede cambiarlo
+                </span>
+              </div>
             )}
           </div>
-
-          {!invoice.envio?.a_domicilio && (
-            <EntregaInfo
-              envio={invoice.envio}
-              costo={invoice.costo_envio}
-              cancelada={cancelada}
-            />
-          )}
         </div>
 
         {invoice.envio?.a_domicilio && (
@@ -379,20 +363,20 @@ function InvoiceDetail({ invoice, onBack, onUpdateState, canUpdateState }) {
               anulado={cancelada}
             />
             {cancelada && (
-              <span className="rounded-full border border-zinc-600/60 bg-zinc-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                 QR anulado
               </span>
             )}
-            <p className="max-w-[14rem] text-center text-[11px] leading-snug text-muted-foreground">
+            <p className="max-w-[13rem] text-center text-[11px] leading-snug text-muted-foreground">
               {cancelada
-                ? 'La factura está cancelada: el QR quedó roto y ya no sirve para verificar la entrega.'
-                : 'Comparte este QR con quien entrega el producto para verificar la entrega.'}
+                ? 'La factura está cancelada: el QR ya no sirve para verificar la entrega.'
+                : 'Comparte este QR con quien entrega el producto.'}
             </p>
           </div>
         )}
       </div>
 
-      <footer className="space-y-1.5 border-t border-border bg-muted/30 px-5 py-4 sm:px-7">
+      <footer className="space-y-1.5 border-t border-border px-5 py-4 sm:px-7">
         <div className="flex items-baseline justify-between gap-4 text-sm">
           <span className="text-muted-foreground">Productos</span>
           <span
@@ -441,7 +425,7 @@ function InvoiceDetail({ invoice, onBack, onUpdateState, canUpdateState }) {
 }
 
 const PERIODO_VACIO = { desde: null, hasta: null }
-const FACTURAS_POR_PAGINA = 8
+const FACTURAS_POR_PAGINA = 9
 
 function FiltrosFacturas({
   busqueda,
@@ -454,7 +438,7 @@ function FiltrosFacturas({
   onLimpiar,
 }) {
   return (
-    <Card className="gap-4 px-4 py-4 sm:px-5">
+    <section className="border-b border-border pb-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-sm font-semibold">Filtrar facturas</h2>
         {activos && (
@@ -522,7 +506,7 @@ function FiltrosFacturas({
           </div>
         </div>
       </div>
-    </Card>
+    </section>
   )
 }
 
@@ -558,6 +542,14 @@ export default function InvoicesView({
     Boolean(periodo.desde || periodo.hasta) ||
     subtotalMin.trim() !== ''
 
+  const ordenCreacion = useMemo(() => {
+    const mapa = new Map()
+    invoices.forEach((invoice, indice) => {
+      mapa.set(claveFactura(invoice), indice)
+    })
+    return mapa
+  }, [invoices])
+
   const sorted = useMemo(() => {
     const termino = normalizarTexto(busqueda)
     const minimo = subtotalMin.trim() === '' ? null : Number(subtotalMin)
@@ -582,8 +574,17 @@ export default function InvoicesView({
 
         return true
       })
-      .sort((a, b) => b.numero - a.numero)
-  }, [facturasBase, busqueda, periodo, subtotalMin])
+      .sort((a, b) => {
+        const fechaA = String(a.fecha || '').slice(0, 10)
+        const fechaB = String(b.fecha || '').slice(0, 10)
+        if (fechaA !== fechaB) return fechaB.localeCompare(fechaA)
+        // La numeración es por usuario: dentro del mismo día manda el orden
+        // de creación real, no el número de factura.
+        const posicionA = ordenCreacion.get(claveFactura(a)) ?? -1
+        const posicionB = ordenCreacion.get(claveFactura(b)) ?? -1
+        return posicionB - posicionA
+      })
+  }, [facturasBase, busqueda, periodo, subtotalMin, ordenCreacion])
 
   const totalFiltrado = sorted.reduce(
     (total, invoice) =>
@@ -695,176 +696,140 @@ export default function InvoicesView({
         onLimpiar={limpiarFiltros}
       />
 
-      <div className="grid gap-6 lg:grid-cols-[19rem_minmax(0,1fr)] xl:grid-cols-[20rem_minmax(0,1fr)]">
-        <section
-          className={selectedInvoice ? 'hidden lg:block' : ''}
-          aria-label="Facturas emitidas"
-        >
-          <Card className="gap-0 overflow-hidden py-0">
-            {!loading && sorted.length > 0 && (
-              <div className="flex flex-wrap items-end justify-between gap-x-3 gap-y-2 border-b border-border/70 px-4 py-3">
-                <div className="min-w-0">
-                  <p className="text-xs text-muted-foreground">
-                    {filtrosActivos
-                      ? `${sorted.length} de ${facturasBase.length}`
-                      : sorted.length}{' '}
-                    {sorted.length === 1 ? 'factura' : 'facturas'}
-                  </p>
-                  {canceladasFiltradas > 0 && (
-                    <p className="mt-0.5 text-[10px] text-muted-foreground">
-                      No incluye {canceladasFiltradas}{' '}
-                      {canceladasFiltradas === 1 ? 'cancelada' : 'canceladas'}.
-                    </p>
-                  )}
-                </div>
-                <div className="shrink-0 text-right">
-                  <p className="text-[10px] text-muted-foreground">
-                    {filtrosActivos ? 'Total filtrado' : 'Total facturado'}
-                  </p>
-                  <p className="text-lg font-semibold leading-tight tracking-tight tabular-nums">
-                    {formatCurrency(totalFiltrado)}
-                  </p>
-                </div>
-              </div>
-            )}
-            {loading ? (
-              <InvoiceListSkeleton />
-            ) : sorted.length === 0 ? (
-              <div className="px-6 py-14 text-center">
-                <span className="mx-auto grid size-12 place-items-center rounded-xl border border-border bg-muted/40 text-muted-foreground">
-                  {facturasBase.length === 0 ? (
-                    <ReceiptText className="size-5" />
-                  ) : (
-                    <Search className="size-5" />
-                  )}
-                </span>
-                <h2 className="mt-4 text-base font-semibold">
-                  {facturasBase.length === 0
-                    ? 'No hay facturas'
-                    : 'Ninguna factura coincide'}
-                </h2>
-                <p className="mx-auto mt-1.5 max-w-xs text-sm leading-snug text-muted-foreground">
-                  {facturasBase.length === 0
-                    ? alcance === 'mias'
-                      ? 'Cuando emitas una factura desde el carrito la verás aquí.'
-                      : 'Agrega productos al carrito y emite la primera factura desde el panel del carrito.'
-                    : 'Prueba con otro producto, otro periodo o un subtotal mínimo menor.'}
+      {selectedInvoice ? (
+        <InvoiceDetail
+          invoice={selectedInvoice}
+          onBack={onClearSelection}
+          onUpdateState={onUpdateState}
+          canUpdateState={canUpdateState}
+        />
+      ) : (
+        <section aria-label="Facturas emitidas" className="space-y-4">
+          {!loading && sorted.length > 0 && (
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground">
+                  {filtrosActivos
+                    ? `${sorted.length} de ${facturasBase.length}`
+                    : sorted.length}{' '}
+                  {sorted.length === 1 ? 'factura' : 'facturas'}
                 </p>
-                {facturasBase.length > 0 && filtrosActivos && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={limpiarFiltros}
-                    className="mt-4"
-                  >
-                    Limpiar filtros
-                  </Button>
+                {canceladasFiltradas > 0 && (
+                  <p className="mt-0.5 text-[10px] text-muted-foreground">
+                    No incluye {canceladasFiltradas}{' '}
+                    {canceladasFiltradas === 1 ? 'cancelada' : 'canceladas'}.
+                  </p>
                 )}
               </div>
-            ) : (
-              <>
-                <Pagination
-                  pagina={paginaActual}
-                  totalPaginas={totalPaginas}
-                  total={sorted.length}
-                  desde={inicioPagina + 1}
-                  hasta={inicioPagina + visibles.length}
-                  onCambio={setPagina}
-                  etiqueta="facturas"
-                  className="border-t-0 border-b"
-                />
-                <ul className="space-y-1 p-2">
+              <div className="shrink-0 text-right">
+                <p className="text-[10px] text-muted-foreground">
+                  {filtrosActivos ? 'Total filtrado' : 'Total facturado'}
+                </p>
+                <p className="text-lg font-semibold leading-tight tracking-tight tabular-nums">
+                  {formatCurrency(totalFiltrado)}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {loading ? (
+            <InvoiceListSkeleton />
+          ) : sorted.length === 0 ? (
+            <div className="py-14 text-center">
+              {facturasBase.length === 0 ? (
+                <ReceiptText className="mx-auto size-6 text-muted-foreground" />
+              ) : (
+                <Search className="mx-auto size-6 text-muted-foreground" />
+              )}
+              <h2 className="mt-3 text-base font-semibold">
+                {facturasBase.length === 0
+                  ? 'No hay facturas'
+                  : 'Ninguna factura coincide'}
+              </h2>
+              <p className="mx-auto mt-1.5 max-w-xs text-sm leading-snug text-muted-foreground">
+                {facturasBase.length === 0
+                  ? alcance === 'mias'
+                    ? 'Cuando emitas una factura desde el carrito la verás aquí.'
+                    : 'Agrega productos al carrito y emite la primera factura desde el panel del carrito.'
+                  : 'Prueba con otro producto, otro periodo o un subtotal mínimo menor.'}
+              </p>
+              {facturasBase.length > 0 && filtrosActivos && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={limpiarFiltros}
+                  className="mt-4"
+                >
+                  Limpiar filtros
+                </Button>
+              )}
+            </div>
+          ) : (
+            <>
+              <Pagination
+                pagina={paginaActual}
+                totalPaginas={totalPaginas}
+                total={sorted.length}
+                desde={inicioPagina + 1}
+                hasta={inicioPagina + visibles.length}
+                onCambio={setPagina}
+                etiqueta="facturas"
+                className="border-t-0 border-b"
+              />
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {visibles.map((invoice) => {
-                  const isSelected = mismaFactura(selectedInvoice, invoice)
+                  const cancelada = invoice.estado === 'cancelada'
                   const itemCount = invoice.items.reduce(
                     (total, item) => total + item.cantidad,
                     0,
                   )
                   return (
-                    <li key={claveFactura(invoice)}>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        onClick={() => onSelect(invoice)}
-                        aria-current={isSelected ? 'true' : undefined}
-                        className={cn(
-                          'h-auto w-full justify-start gap-3 whitespace-normal rounded-xl px-3 py-3 text-left',
-                          isSelected
-                            ? 'bg-muted ring-1 ring-primary/30 hover:bg-muted'
-                            : 'hover:bg-muted/50',
-                        )}
-                      >
-                        <span className="w-9 shrink-0 text-sm font-semibold tabular-nums text-foreground">
+                    <button
+                      key={claveFactura(invoice)}
+                      type="button"
+                      onClick={() => onSelect(invoice)}
+                      className="group flex h-full flex-col gap-3 rounded-xl border border-border bg-card p-4 text-left transition-colors hover:border-foreground/25 hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <span className="flex items-start justify-between gap-2">
+                        <span className="text-lg font-semibold leading-none tabular-nums tracking-tight">
                           #{invoice.numero}
                         </span>
-                        <span className="min-w-0 flex-1">
-                          <span className="block text-sm font-medium text-foreground">
-                            {formatDate(invoice.fecha)}
+                        <EstadoBadge estado={invoice.estado} />
+                      </span>
+
+                      <span className="block min-w-0 text-xs leading-relaxed text-muted-foreground">
+                        <span className="block">{formatDate(invoice.fecha)}</span>
+                        {showOwner && invoice.usuario && (
+                          <span className="block truncate">
+                            @{invoice.usuario}
                           </span>
-                          <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
-                            <EstadoBadge estado={invoice.estado} />
-                            <span className="text-[11px] text-muted-foreground">
-                              {itemCount} {itemCount === 1 ? 'artículo' : 'artículos'}
-                            </span>
-                            {showOwner && invoice.usuario && (
-                              <span className="text-[11px] text-muted-foreground">
-                                @{invoice.usuario}
-                              </span>
-                            )}
-                          </span>
+                        )}
+                      </span>
+
+                      <span className="mt-auto flex items-end justify-between gap-2 border-t border-border/60 pt-3">
+                        <span className="text-[11px] text-muted-foreground">
+                          {itemCount}{' '}
+                          {itemCount === 1 ? 'artículo' : 'artículos'}
                         </span>
                         <span
                           className={cn(
-                            'whitespace-nowrap text-sm font-semibold tabular-nums text-foreground',
-                            invoice.estado === 'cancelada' &&
+                            'text-sm font-semibold tabular-nums text-foreground',
+                            cancelada &&
                               'text-muted-foreground line-through opacity-70',
                           )}
                         >
                           {formatCurrency(invoice.total)}
                         </span>
-                        <ChevronRight
-                          className={cn(
-                            'size-4 shrink-0',
-                            isSelected ? 'text-primary' : 'text-muted-foreground',
-                          )}
-                        />
-                      </Button>
-                    </li>
+                      </span>
+                    </button>
                   )
                 })}
-              </ul>
-              </>
-            )}
-          </Card>
-        </section>
-
-        <section
-          className={selectedInvoice ? '' : 'hidden lg:block'}
-          aria-label="Detalle de factura"
-        >
-          {selectedInvoice ? (
-            <InvoiceDetail
-              invoice={selectedInvoice}
-              onBack={onClearSelection}
-              onUpdateState={onUpdateState}
-              canUpdateState={canUpdateState}
-            />
-          ) : (
-            <Card className="grid min-h-64 place-items-center gap-0 border-dashed bg-card/50 px-6 py-12 text-center">
-              <div>
-                <span className="mx-auto grid size-12 place-items-center rounded-xl border border-border bg-card text-muted-foreground">
-                  <ReceiptText className="size-5" />
-                </span>
-                <h2 className="mt-4 text-base font-semibold">Elige una factura</h2>
-                <p className="mx-auto mt-1.5 max-w-xs text-sm leading-snug text-muted-foreground">
-                  Selecciona una factura de la lista para ver sus artículos y su total.
-                </p>
               </div>
-            </Card>
+            </>
           )}
         </section>
-      </div>
+      )}
     </div>
   )
 }
