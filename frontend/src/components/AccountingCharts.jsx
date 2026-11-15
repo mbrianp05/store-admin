@@ -187,6 +187,16 @@ export function StatusDonut({ datos, className }) {
         ) : (
           <div className="flex items-center gap-3">
             <div className="relative h-40 w-40 shrink-0">
+              <div className="pointer-events-none absolute inset-0 grid place-items-center text-center">
+                <div>
+                  <p className="text-2xl font-semibold leading-none tabular-nums">
+                    {total}
+                  </p>
+                  <p className="mt-1 text-[9px] uppercase tracking-wide text-muted-foreground">
+                    facturas
+                  </p>
+                </div>
+              </div>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -203,6 +213,7 @@ export function StatusDonut({ datos, className }) {
                     ))}
                   </Pie>
                   <Tooltip
+                    wrapperStyle={{ zIndex: 30 }}
                     content={
                       <ChartTooltip
                         titulo={(dato) => dato.etiqueta}
@@ -216,16 +227,6 @@ export function StatusDonut({ datos, className }) {
                   />
                 </PieChart>
               </ResponsiveContainer>
-              <div className="pointer-events-none absolute inset-0 grid place-items-center text-center">
-                <div>
-                  <p className="text-2xl font-semibold leading-none tabular-nums">
-                    {total}
-                  </p>
-                  <p className="mt-1 text-[9px] uppercase tracking-wide text-muted-foreground">
-                    facturas
-                  </p>
-                </div>
-              </div>
             </div>
 
             <ul className="min-w-0 flex-1 space-y-2">
