@@ -147,9 +147,8 @@ El encabezado fijo muestra la marca **Venture** y la fecha del día. Las pestañ
 
 ### 🔐 Autenticación
 
-- **Registro**: nombres, apellidos, usuario, residencia y contraseña; el correo electrónico es opcional.
+- **Registro**: nombres, apellidos, usuario, correo electrónico (opcional) y contraseña.
 - **Primera cuenta**: si todavía no hay usuarios, la primera persona que se registre obtiene el rol `admin`. La pantalla de acceso lo avisa con un banner («La primera cuenta será la administradora»).
-- **Residencia**: debe ser un municipio de Cuba, elegido desde un campo con autocompletado.
 - **Contraseña**: mínimo 8 caracteres y fortaleza «Aceptable» o superior según zxcvbn.
 - **Inicio de sesión**: con usuario y contraseña; la sesión se guarda en una cookie firmada.
 - **Acceso**: sin sesión, las rutas privadas redirigen a `/login` y la API responde `401`.
@@ -223,7 +222,7 @@ El encabezado fijo muestra la marca **Venture** y la fecha del día. Las pestañ
 
 ### 🧑‍💼 Usuarios (solo administración)
 
-- **Listar**: todas las cuentas con rol, residencia, correo, fecha de registro y cantidad de facturas.
+- **Listar**: todas las cuentas con rol, correo, fecha de registro y cantidad de facturas.
 - **Paginación**: 8 cuentas por página con los controles en la parte superior.
 - **Filtrar**: por nombre, usuario o correo.
 - **Cambiar rol**: cliente, empleado o administrador; el cambio se aplica de inmediato.
@@ -242,7 +241,6 @@ El encabezado fijo muestra la marca **Venture** y la fecha del día. Las pestañ
 ```text
 app.py                         # API Flask y servidor de frontend/dist
 autenticacion.py               # Registro, contraseñas, roles y persistencia de usuarios
-ubicaciones.py                 # Municipios de Cuba para el autocompletado
 limitador.py                   # Rate limit en memoria para el login
 models/
   __init__.py                  # Reexporta las clases del dominio
@@ -291,7 +289,6 @@ frontend/
       InvoiceQR.jsx            # Código QR de entrega
       Pagination.jsx           # Controles de paginación reutilizables
       AccountingCharts.jsx     # Gráficos Recharts del panel de contabilidad
-      LocationAutocomplete.jsx # Autocompletado de municipios de Cuba
       PasswordStrength.jsx     # Medidor de fuerza de contraseña
       ui/                      # Componentes base (button, card, input, tabs, sheet...)
     pages/
@@ -300,7 +297,7 @@ frontend/
       ProductsPage.jsx
       ProductDetailPage.jsx
       InvoicesPage.jsx
-      ProfilePage.jsx          # Perfil: usuario, residencia, correo y contraseña
+      ProfilePage.jsx          # Perfil: usuario, correo y contraseña
       UsersPage.jsx            # Administración de cuentas y roles
       AccountingPage.jsx       # Panel de contabilidad
       EnviosPage.jsx           # Agrupación de facturas a domicilio en envíos
@@ -331,9 +328,8 @@ README.md
 | `POST` | `/api/auth/logout` | Cierra la sesión. |
 | `GET` | `/api/auth/me` | Devuelve el usuario de la sesión actual, incluido su rol. |
 | `GET` | `/api/auth/estado` | Indica si existen cuentas y si la próxima registrada será `admin`. Público. |
-| `PATCH` | `/api/auth/perfil` | Actualiza usuario, residencia y correo del usuario de la sesión. |
+| `PATCH` | `/api/auth/perfil` | Actualiza usuario y correo del usuario de la sesión. |
 | `POST` | `/api/auth/password` | Cambia la contraseña (requiere la contraseña actual). |
-| `GET` | `/api/auth/ubicaciones` | Lista los municipios de Cuba. |
 | `GET` | `/api/admin/usuarios` | Lista las cuentas con su rol y cantidad de facturas. Solo `admin`. |
 | `PATCH` | `/api/admin/usuarios/<nombre>/rol` | Cambia el rol de una cuenta. Solo `admin`. |
 | `GET` | `/api/products` | Lista todos los productos. Público. |
@@ -378,7 +374,6 @@ Requiere rol `admin`. Devuelve la lista de cuentas con su rol, datos públicos, 
     "usuario": "maria.perez",
     "nombres": "María",
     "apellidos": "Pérez",
-    "residencia": "Centro Habana, La Habana",
     "email": "maria@ejemplo.cu",
     "creado": "2026-11-14T16:51:16+00:00",
     "rol": "admin",
@@ -716,7 +711,6 @@ Puede haber cambiado de nombre o haberse eliminado en otra pestaña. Recarga la 
 - Las contraseñas se almacenan con hash `scrypt`.
 - La sesión usa una cookie firmada con `SECRET_KEY`.
 - En producción sobre HTTPS, define `SESSION_COOKIE_SECURE=1` para que la cookie solo viaje por conexiones seguras.
-- La residencia se valida contra la lista de municipios de Cuba de `ubicaciones.py`.
 - El rate limit del login vive en memoria (`limitador.py`); si se reinicia el servidor se reinician los contadores.
 
 ## 🚀 Ejemplo de uso
