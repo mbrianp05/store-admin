@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   AtSign,
   CalendarDays,
@@ -7,7 +7,6 @@ import {
   KeyRound,
   LoaderCircle,
   Mail,
-  MapPin,
   ReceiptText,
   Save,
   ShieldCheck,
@@ -17,10 +16,6 @@ import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { useAppState } from '../app-context'
 import { useAuth } from '../auth-context'
-import { getUbicaciones } from '../api'
-import LocationAutocomplete, {
-  etiquetaUbicacion,
-} from '../components/LocationAutocomplete'
 import PasswordStrength from '../components/PasswordStrength'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -30,7 +25,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { evaluarPassword, SCORE_MINIMO } from '@/lib/password'
 import { ROL_INFO, rolDe } from '@/lib/roles'
-import { normalizarTexto } from '@/lib/text'
 import { cn } from '@/lib/utils'
 
 const USUARIO_PATTERN = /^[A-Za-z0-9._-]{3,30}$/
@@ -119,7 +113,6 @@ export default function ProfilePage() {
 
   const [datos, setDatos] = useState(() => ({
     usuario: user?.usuario ?? '',
-    residencia: user?.residencia ?? '',
     email: user?.email ?? '',
   }))
   const [errores, setErrores] = useState({})
@@ -135,37 +128,6 @@ export default function ProfilePage() {
   const [errorPassword, setErrorPassword] = useState('')
   const [cambiandoPassword, setCambiandoPassword] = useState(false)
 
-  const [ubicaciones, setUbicaciones] = useState([])
-  const [cargandoUbicaciones, setCargandoUbicaciones] = useState(true)
-  const [errorUbicaciones, setErrorUbicaciones] = useState('')
-
-  useEffect(() => {
-    let activo = true
-
-    getUbicaciones()
-      .then((lista) => {
-        if (activo) setUbicaciones(lista)
-      })
-      .catch((ubicacionesError) => {
-        if (activo) setErrorUbicaciones(ubicacionesError.message)
-      })
-      .finally(() => {
-        if (activo) setCargandoUbicaciones(false)
-      })
-
-    return () => {
-      activo = false
-    }
-  }, [])
-
-  const residenciaCanonica = useMemo(() => {
-    const buscada = normalizarTexto(datos.residencia)
-    const encontrada = ubicaciones.find(
-      (ubicacion) => normalizarTexto(etiquetaUbicacion(ubicacion)) === buscada,
-    )
-    return encontrada ? etiquetaUbicacion(encontrada) : null
-  }, [datos.residencia, ubicaciones])
-
   const scorePassword = useMemo(
     () => evaluarPassword(password.nueva)?.score ?? 0,
     [password.nueva],
@@ -178,7 +140,6 @@ export default function ProfilePage() {
   const rolInfo = ROL_INFO[rol]
   const hayCambios =
     datos.usuario.trim() !== user.usuario ||
-    datos.residencia.trim() !== user.residencia ||
     datos.email.trim() !== (user.email || '')
 
   function actualizarCampo(campo, valor) {
@@ -213,12 +174,6 @@ export default function ProfilePage() {
         'Entre 3 y 30 caracteres: letras, números, puntos, guiones o guiones bajos.'
     }
 
-    if (!datos.residencia.trim()) {
-      nuevos.residencia = 'Indica dónde vives.'
-    } else if (!residenciaCanonica) {
-      nuevos.residencia = 'Elige un municipio de Cuba de la lista.'
-    }
-
     if (email && !EMAIL_PATTERN.test(email)) {
       nuevos.email = 'Ingresa un correo electrónico válido.'
     }
@@ -241,12 +196,10 @@ export default function ProfilePage() {
     try {
       const sesion = await updateProfile({
         usuario: datos.usuario.trim(),
-        residencia: residenciaCanonica,
         email: datos.email.trim(),
       })
       setDatos({
         usuario: sesion.usuario,
-        residencia: sesion.residencia,
         email: sesion.email || '',
       })
       setErrores({})
@@ -354,16 +307,6 @@ export default function ProfilePage() {
 
           <dl className="grid gap-4 px-6 py-5 text-sm">
             <div className="flex items-start gap-3">
-              <MapPin className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-              <div className="min-w-0">
-                <dt className="text-xs text-muted-foreground">Residencia</dt>
-                <dd className="mt-0.5 break-words text-foreground">
-                  {user.residencia || 'Sin definir'}
-                </dd>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3">
               <Mail className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
               <div className="min-w-0">
                 <dt className="text-xs text-muted-foreground">Correo</dt>
@@ -405,8 +348,8 @@ export default function ProfilePage() {
                 <div>
                   <CardTitle className="text-base">Datos de la cuenta</CardTitle>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Tu usuario identifica tus facturas; la residencia y el correo son
-                    datos de contacto.
+                    Tu usuario identifica tus facturas; el correo es un dato de
+                    contacto.
                   </p>
                 </div>
               </div>
@@ -442,31 +385,6 @@ export default function ProfilePage() {
                   </p>
                 </Campo>
 
-                <Campo
-                  id="perfil-residencia"
-                  label="¿Dónde vives?"
-                  error={errores.residencia}
-                  hint={
-                    <p className="text-xs text-muted-foreground">
-                      {cargandoUbicaciones
-                        ? 'Cargando municipios de Cuba…'
-                        : errorUbicaciones
-                          ? `No se pudieron cargar los municipios: ${errorUbicaciones}`
-                          : 'Empieza a escribir y elige un municipio de la lista.'}
-                    </p>
-                  }
-                >
-                  <LocationAutocomplete
-                    id="perfil-residencia"
-                    value={datos.residencia}
-                    onChange={(valor) => actualizarCampo('residencia', valor)}
-                    ubicaciones={ubicaciones}
-                    error={errores.residencia}
-                    disabled={cargandoUbicaciones || Boolean(errorUbicaciones)}
-                    dropUp
-                  />
-                </Campo>
-
                 <Campo id="perfil-email" label="Correo electrónico (opcional)" error={errores.email}>
                   <div className="relative">
                     <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -494,9 +412,7 @@ export default function ProfilePage() {
                   </p>
                   <Button
                     type="submit"
-                    disabled={
-                      guardando || !hayCambios || cargandoUbicaciones || !residenciaCanonica
-                    }
+                    disabled={guardando || !hayCambios}
                   >
                     {guardando ? (
                       <LoaderCircle className="size-4 animate-spin" />

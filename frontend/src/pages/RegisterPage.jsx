@@ -9,19 +9,15 @@ import {
 import { Link, Navigate, useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { useAuth } from '../auth-context'
-import { getAuthEstado, getUbicaciones } from '../api'
+import { getAuthEstado } from '../api'
 import AppLoader from '../components/AppLoader'
 import AuthShell from '../components/AuthShell'
-import LocationAutocomplete, {
-  etiquetaUbicacion,
-} from '../components/LocationAutocomplete'
 import PasswordStrength from '../components/PasswordStrength'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { evaluarPassword, SCORE_MINIMO } from '@/lib/password'
-import { normalizarTexto } from '@/lib/text'
 import { cn } from '@/lib/utils'
 
 const USUARIO_PATTERN = /^[A-Za-z0-9._-]{3,30}$/
@@ -31,7 +27,6 @@ const DATOS_INICIALES = {
   nombres: '',
   apellidos: '',
   usuario: '',
-  residencia: '',
   email: '',
   password: '',
   repetir: '',
@@ -58,9 +53,6 @@ export default function RegisterPage() {
   const [datos, setDatos] = useState(DATOS_INICIALES)
   const [errores, setErrores] = useState({})
   const [errorGeneral, setErrorGeneral] = useState('')
-  const [ubicaciones, setUbicaciones] = useState([])
-  const [cargandoUbicaciones, setCargandoUbicaciones] = useState(true)
-  const [errorUbicaciones, setErrorUbicaciones] = useState('')
   const [verPassword, setVerPassword] = useState(false)
   const [enviando, setEnviando] = useState(false)
   const [primerUsuario, setPrimerUsuario] = useState(false)
@@ -81,37 +73,10 @@ export default function RegisterPage() {
     }
   }, [])
 
-  useEffect(() => {
-    let activo = true
-
-    getUbicaciones()
-      .then((lista) => {
-        if (activo) setUbicaciones(lista)
-      })
-      .catch((ubicacionesError) => {
-        if (activo) setErrorUbicaciones(ubicacionesError.message)
-      })
-      .finally(() => {
-        if (activo) setCargandoUbicaciones(false)
-      })
-
-    return () => {
-      activo = false
-    }
-  }, [])
-
   const scorePassword = useMemo(
     () => evaluarPassword(datos.password)?.score ?? 0,
     [datos.password],
   )
-
-  const residenciaCanonica = useMemo(() => {
-    const buscada = normalizarTexto(datos.residencia)
-    const encontrada = ubicaciones.find(
-      (ubicacion) => normalizarTexto(etiquetaUbicacion(ubicacion)) === buscada,
-    )
-    return encontrada ? etiquetaUbicacion(encontrada) : null
-  }, [datos.residencia, ubicaciones])
 
   if (loading) {
     return <AppLoader mensaje="Verificando tu sesión…" />
@@ -146,12 +111,6 @@ export default function RegisterPage() {
     } else if (!USUARIO_PATTERN.test(usuario)) {
       nuevos.usuario =
         'Entre 3 y 30 caracteres: letras, números, puntos, guiones o guiones bajos.'
-    }
-
-    if (!datos.residencia.trim()) {
-      nuevos.residencia = 'Indica dónde vives.'
-    } else if (!residenciaCanonica) {
-      nuevos.residencia = 'Elige un municipio de Cuba de la lista.'
     }
 
     if (email && !EMAIL_PATTERN.test(email)) {
@@ -190,7 +149,6 @@ export default function RegisterPage() {
         nombres: datos.nombres.trim(),
         apellidos: datos.apellidos.trim(),
         usuario: datos.usuario.trim(),
-        residencia: residenciaCanonica,
         email: datos.email.trim(),
         password: datos.password,
       })
@@ -209,7 +167,7 @@ export default function RegisterPage() {
   return (
     <AuthShell
       title="Crea tu cuenta"
-      description="Solo se aceptan personas que vivan en Cuba."
+      description="Crea tu cuenta para comprar y gestionar tus facturas."
       footer={
         <>
           ¿Ya tienes cuenta?{' '}
@@ -295,30 +253,6 @@ export default function RegisterPage() {
           />
         </Campo>
 
-        <Campo
-          id="residencia"
-          label="¿Dónde vives?"
-          error={errores.residencia}
-          hint={
-            <p className="text-xs text-muted-foreground">
-              {cargandoUbicaciones
-                ? 'Cargando municipios de Cuba…'
-                : errorUbicaciones
-                  ? `No se pudieron cargar los municipios: ${errorUbicaciones}`
-                  : 'Empieza a escribir y elige un municipio de la lista.'}
-            </p>
-          }
-        >
-          <LocationAutocomplete
-            id="residencia"
-            value={datos.residencia}
-            onChange={(valor) => actualizar('residencia', valor)}
-            ubicaciones={ubicaciones}
-            error={errores.residencia}
-            disabled={cargandoUbicaciones || Boolean(errorUbicaciones)}
-          />
-        </Campo>
-
         <Campo id="email" label="Correo electrónico (opcional)" error={errores.email}>
           <Input
             id="email"
@@ -383,7 +317,7 @@ export default function RegisterPage() {
 
         <Button
           type="submit"
-          disabled={enviando || cargandoUbicaciones}
+          disabled={enviando}
           className="mt-1"
         >
           {enviando ? (

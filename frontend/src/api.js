@@ -202,7 +202,3 @@ export function changePassword(passwordActual, passwordNueva) {
     }),
   })
 }
-
-export function getUbicaciones() {
-  return request('/auth/ubicaciones')
-}

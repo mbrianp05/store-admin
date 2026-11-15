@@ -3,7 +3,6 @@ import {
   CalendarDays,
   ChevronDown,
   LoaderCircle,
-  MapPin,
   ReceiptText,
   Search,
   X,
@@ -109,7 +108,6 @@ export default function UsersPage() {
           usuario.apellidos,
           usuario.usuario,
           usuario.email,
-          usuario.residencia,
         ].join(' '),
       )
       return texto.includes(termino)
@@ -338,10 +336,6 @@ export default function UsersPage() {
                         {usuario.email ? ` · ${usuario.email}` : ''}
                       </p>
                       <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-                        <span className="inline-flex items-center gap-1">
-                          <MapPin className="size-3" />
-                          {usuario.residencia || 'Sin residencia'}
-                        </span>
                         <span className="inline-flex items-center gap-1">
                           <CalendarDays className="size-3" />
                           {formatearFecha(usuario.creado)}

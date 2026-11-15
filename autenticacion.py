@@ -8,8 +8,6 @@ from datetime import datetime, timezone
 from werkzeug.security import check_password_hash, generate_password_hash
 from zxcvbn import zxcvbn
 
-from ubicaciones import buscar_residencia
-
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 USUARIOS_PATH = os.path.join(DATA_DIR, "usuarios.json")
@@ -108,7 +106,6 @@ def usuario_publico(usuario):
         "usuario": usuario.get("usuario", ""),
         "nombres": usuario.get("nombres", ""),
         "apellidos": usuario.get("apellidos", ""),
-        "residencia": usuario.get("residencia", ""),
         "email": usuario.get("email", ""),
         "creado": usuario.get("creado", ""),
         "rol": normalizar_rol(usuario.get("rol")),
@@ -119,7 +116,6 @@ def crear_usuario(
     nombres,
     apellidos,
     usuario,
-    residencia,
     email,
     password,
     rol=ROL_POR_DEFECTO,
@@ -128,7 +124,6 @@ def crear_usuario(
         "usuario": usuario,
         "nombres": nombres,
         "apellidos": apellidos,
-        "residencia": residencia,
         "email": email,
         "password_hash": generate_password_hash(password),
         "creado": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -192,11 +187,10 @@ def evaluar_password(password, datos_personales=()):
 
 
 def validar_perfil(datos, usuarios, cuenta):
-    """Valida los datos editables del perfil: usuario, residencia y correo."""
+    """Valida los datos editables del perfil: usuario y correo."""
     datos = datos if isinstance(datos, dict) else {}
 
     usuario = str(datos.get("usuario") or "").strip()
-    residencia = str(datos.get("residencia") or "").strip()
     email = str(datos.get("email") or "").strip()
     actual = str(cuenta.get("usuario") or "").strip()
 
@@ -212,22 +206,12 @@ def validar_perfil(datos, usuarios, cuenta):
     elif usuario.casefold() != actual.casefold() and buscar_usuario(usuarios, usuario):
         errores["usuario"] = "Ese usuario ya está en uso."
 
-    if not residencia:
-        errores["residencia"] = "Indica dónde vives."
-    else:
-        residencia_canonica = buscar_residencia(residencia)
-        if not residencia_canonica:
-            errores["residencia"] = "Elige un municipio de Cuba de la lista."
-        else:
-            residencia = residencia_canonica
-
     if email:
         if len(email) > 254 or not EMAIL_PATTERN.match(email):
             errores["email"] = "Ingresa un correo electrónico válido."
 
     valores = {
         "usuario": usuario,
-        "residencia": residencia,
         "email": email,
     }
     return valores, errores
@@ -252,7 +236,6 @@ def validar_cambio_password(datos, cuenta):
             cuenta.get("usuario"),
             cuenta.get("nombres"),
             cuenta.get("apellidos"),
-            cuenta.get("residencia"),
             cuenta.get("email"),
         ],
     )
@@ -275,7 +258,6 @@ def validar_registro(datos, usuarios):
     nombres = str(datos.get("nombres") or "").strip()
     apellidos = str(datos.get("apellidos") or "").strip()
     usuario = str(datos.get("usuario") or "").strip()
-    residencia = str(datos.get("residencia") or "").strip()
     email = str(datos.get("email") or "").strip()
     password = datos.get("password")
 
@@ -301,20 +283,13 @@ def validar_registro(datos, usuarios):
     elif buscar_usuario(usuarios, usuario):
         errores["usuario"] = "Ese usuario ya está en uso."
 
-    if not residencia:
-        errores["residencia"] = "Indica dónde vives."
-    else:
-        residencia = buscar_residencia(residencia)
-        if not residencia:
-            errores["residencia"] = "Elige un municipio de Cuba de la lista."
-
     if email:
         if len(email) > 254 or not EMAIL_PATTERN.match(email):
             errores["email"] = "Ingresa un correo electrónico válido."
 
     evaluacion = evaluar_password(
         password,
-        datos_personales=[usuario, nombres, apellidos, residencia, email],
+        datos_personales=[usuario, nombres, apellidos, email],
     )
     if not evaluacion["valida"]:
         errores["password"] = evaluacion["mensaje"]
@@ -323,7 +298,6 @@ def validar_registro(datos, usuarios):
         "nombres": nombres,
         "apellidos": apellidos,
         "usuario": usuario,
-        "residencia": residencia,
         "email": email,
         "password": password,
     }

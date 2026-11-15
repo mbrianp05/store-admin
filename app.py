@@ -36,7 +36,6 @@ from models import (
     estado_inicial,
     normalizar_envio,
 )
-from ubicaciones import MUNICIPIOS
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, 'data')
@@ -479,7 +478,6 @@ RUTAS_PUBLICAS = {
     '/api/auth/logout',
     '/api/auth/me',
     '/api/auth/estado',
-    '/api/auth/ubicaciones',
 }
 
 # El catálogo y las fotos son de consulta pública: un visitante puede ver los
@@ -541,11 +539,6 @@ def api_internal_error(error):
     return jsonify({'error': 'Error interno del servidor.'}), 500
 
 # ===== AUTENTICACIÓN =====
-@app.route('/api/auth/ubicaciones', methods=['GET'])
-def auth_ubicaciones():
-    return jsonify(MUNICIPIOS)
-
-
 @app.route('/api/auth/estado', methods=['GET'])
 def auth_estado():
     """Informa si ya existe alguna cuenta; la primera registrada será admin."""
@@ -571,7 +564,6 @@ def auth_register():
         nombres=valores['nombres'],
         apellidos=valores['apellidos'],
         usuario=valores['usuario'],
-        residencia=valores['residencia'],
         email=valores['email'],
         password=valores['password'],
         # La primera cuenta de la página es, por definición, la administradora.
@@ -655,7 +647,6 @@ def auth_update_profile():
     anterior = cuenta['usuario']
     with STOCK_LOCK:
         cuenta['usuario'] = valores['usuario']
-        cuenta['residencia'] = valores['residencia']
         cuenta['email'] = valores['email']
         guardar_usuarios(usuarios)
 
