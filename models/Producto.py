@@ -1,4 +1,24 @@
-from datetime import date
+"""Productos, categorías, fotos y descuentos."""
+
+from datetime import date, datetime
+from decimal import Decimal
+
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    Date,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    String,
+    Text,
+    func,
+)
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from database import Base
 
 
 def _fecha_iso(valor):
@@ -11,94 +31,138 @@ def _fecha_iso(valor):
         return None
 
 
-class Producto:
-    def __init__(
-        self,
-        nombre,
-        precio,
-        unidad_medida="unidad",
-        descripcion="",
-        foto=None,
-        fotos=None,
-        stock=0,
-        categoria="",
-        descuento=None,
-        reposicion_pendiente=False,
-    ):
-        self.nombre = nombre
-        self.precio = precio
-        self.unidad_medida = unidad_medida  # texto libre: "unidad", "metro", "par"...
-        self.descripcion = descripcion
-        self.categoria = str(categoria or "").strip()
-        if fotos is None:
-            fotos = [foto] if foto else []
-        self.fotos = list(fotos)  # la primera es la portada
-        try:
-            self.stock = max(0, int(stock))
-        except (TypeError, ValueError):
-            self.stock = 0
-        self.descuento = self.normalizar_descuento(descuento)
-        # Solo tiene sentido avisar de una reposición mientras no haya stock.
-        self.reposicion_pendiente = bool(reposicion_pendiente) and self.stock <= 0
+class Categoria(Base):
+    __tablename__ = "categorias"
 
-    @staticmethod
-    def normalizar_descuento(descuento):
-        """Valida y normaliza un descuento con porcentaje y periodo."""
-        if not isinstance(descuento, dict):
-            return None
+    id: Mapped[int] = mapped_column(primary_key=True)
+    nombre: Mapped[str] = mapped_column(String(60), nullable=False)
 
-        try:
-            porcentaje = float(descuento.get("porcentaje"))
-        except (TypeError, ValueError):
-            return None
 
-        desde = _fecha_iso(descuento.get("desde"))
-        hasta = _fecha_iso(descuento.get("hasta"))
-        if not (0 < porcentaje < 100) or not desde or not hasta or desde > hasta:
-            return None
+Index(
+    "uq_categorias_nombre_lower",
+    func.lower(Categoria.nombre),
+    unique=True,
+)
 
-        return {
-            "porcentaje": round(porcentaje, 2),
-            "desde": desde,
-            "hasta": hasta,
-        }
+
+class Producto(Base):
+    __tablename__ = "productos"
+    __table_args__ = (
+        CheckConstraint("precio > 0", name="ck_productos_precio_positivo"),
+        CheckConstraint("stock >= 0", name="ck_productos_stock_no_negativo"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    nombre: Mapped[str] = mapped_column(String(120), nullable=False)
+    precio: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
+    unidad_medida: Mapped[str] = mapped_column(
+        String(30), nullable=False, default="unidad"
+    )
+    descripcion: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    stock: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    reposicion_pendiente: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False
+    )
+    categoria_id: Mapped[int | None] = mapped_column(
+        ForeignKey("categorias.id", ondelete="SET NULL"), nullable=True
+    )
+    creado: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+
+    categoria: Mapped[Categoria | None] = relationship(lazy="selectin")
+    fotos: Mapped[list["ProductoFoto"]] = relationship(
+        back_populates="producto",
+        cascade="all, delete-orphan",
+        order_by="ProductoFoto.orden",
+        lazy="selectin",
+    )
+    descuento: Mapped["Descuento | None"] = relationship(
+        back_populates="producto",
+        cascade="all, delete-orphan",
+        uselist=False,
+        lazy="selectin",
+    )
 
     def descuento_vigente(self, fecha=None):
         """Devuelve el descuento si la fecha cae dentro de su periodo."""
-        if not self.descuento:
+        descuento = self.descuento
+        if not descuento:
             return None
         referencia = _fecha_iso(fecha) or date.today().isoformat()
-        if self.descuento["desde"] <= referencia <= self.descuento["hasta"]:
-            return self.descuento
+        desde = descuento.desde.isoformat()
+        hasta = descuento.hasta.isoformat()
+        if desde <= referencia <= hasta:
+            return {
+                "porcentaje": float(descuento.porcentaje),
+                "desde": desde,
+                "hasta": hasta,
+            }
         return None
 
     def precio_vigente(self, fecha=None):
         """Precio con descuento aplicado cuando corresponde."""
         vigente = self.descuento_vigente(fecha)
+        precio = float(self.precio)
         if not vigente:
-            return self.precio
-        return round(self.precio * (100 - vigente["porcentaje"]) / 100, 2)
+            return precio
+        return round(precio * (100 - vigente["porcentaje"]) / 100, 2)
 
-    def actualizar_info(
-        self,
-        precio=None,
-        descripcion=None,
-        fotos=None,
-        stock=None,
-        reposicion_pendiente=None,
-    ):
-        if precio is not None:
-            self.precio = precio
-        if descripcion is not None:
-            self.descripcion = descripcion
-        if fotos is not None:
-            self.fotos = list(fotos)
-        if stock is not None:
-            try:
-                self.stock = max(0, int(stock))
-            except (TypeError, ValueError):
-                pass
-        if reposicion_pendiente is not None:
-            self.reposicion_pendiente = bool(reposicion_pendiente)
-        if self.stock > 0:
-            self.reposicion_pendiente = False
+    def to_dict(self):
+        descuento = None
+        if self.descuento:
+            descuento = {
+                "porcentaje": float(self.descuento.porcentaje),
+                "desde": self.descuento.desde.isoformat(),
+                "hasta": self.descuento.hasta.isoformat(),
+            }
+        return {
+            "nombre": self.nombre,
+            "precio": float(self.precio),
+            "unidad_medida": self.unidad_medida,
+            "descripcion": self.descripcion,
+            "categoria": self.categoria.nombre if self.categoria else "",
+            "fotos": [foto.url for foto in self.fotos],
+            "stock": int(self.stock),
+            "descuento": descuento,
+            "reposicion_pendiente": bool(self.reposicion_pendiente)
+            and int(self.stock) <= 0,
+        }
+
+
+class ProductoFoto(Base):
+    __tablename__ = "producto_fotos"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    producto_id: Mapped[int] = mapped_column(
+        ForeignKey("productos.id", ondelete="CASCADE"), nullable=False
+    )
+    url: Mapped[str] = mapped_column(String(500), nullable=False)
+    orden: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+    producto: Mapped[Producto] = relationship(back_populates="fotos")
+
+
+class Descuento(Base):
+    __tablename__ = "producto_descuentos"
+    __table_args__ = (
+        CheckConstraint(
+            "porcentaje > 0 AND porcentaje < 100",
+            name="ck_descuentos_porcentaje",
+        ),
+        CheckConstraint("hasta >= desde", name="ck_descuentos_fechas"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    producto_id: Mapped[int] = mapped_column(
+        ForeignKey("productos.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+    )
+    porcentaje: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False)
+    desde: Mapped[date] = mapped_column(Date, nullable=False)
+    hasta: Mapped[date] = mapped_column(Date, nullable=False)
+
+    producto: Mapped[Producto] = relationship(back_populates="descuento")
