@@ -1,62 +1,43 @@
-import json
 import os
 import secrets
-import threading
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, timedelta
 from functools import wraps
 from uuid import uuid4
 
-from flask import Flask, jsonify, request, send_from_directory, session
+from flask import Flask, g, jsonify, request, send_from_directory, session
 from flask_cors import CORS
 
 from autenticacion import (
     ROL_ADMIN,
-    ROL_POR_DEFECTO,
     ROLES,
-    actualizar_password,
-    buscar_usuario,
-    cargar_usuarios,
-    crear_usuario,
-    guardar_usuarios,
-    normalizar_rol,
     usuario_publico,
     validar_cambio_password,
     validar_perfil,
     validar_registro,
     verificar_password,
 )
+from database import ejecutar, inicializar_base
 from limitador import LimitadorIntentos
-from models import (
-    ESTADOS_FACTURA,
-    Carrito,
-    Factura,
-    GestorFacturas,
-    Inventario,
-    Producto,
-    estado_inicial,
-    normalizar_envio,
-)
+from models import ESTADOS_FACTURA, normalizar_envio
+import servicios
+from servicios import ErrorServicio
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(BASE_DIR, 'data')
-UPLOAD_DIR = os.path.join(DATA_DIR, 'uploads')
-INVENTARIO_PATH = os.path.join(DATA_DIR, 'inventario.json')
-FACTURAS_PATH = os.path.join(DATA_DIR, 'facturas.json')
-ENVIOS_PATH = os.path.join(DATA_DIR, 'envios.json')
-CONFIG_PATH = os.path.join(DATA_DIR, 'config.json')
-FRONTEND_DIST = os.path.join(BASE_DIR, 'frontend', 'dist')
-EXTENSIONES_FOTO = {'.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif'}
+DATA_DIR = os.path.join(BASE_DIR, "data")
+UPLOAD_DIR = os.path.join(DATA_DIR, "uploads")
+FRONTEND_DIST = os.path.join(BASE_DIR, "frontend", "dist")
+EXTENSIONES_FOTO = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".avif"}
 
 
 def cargar_secret_key():
     """Usa SECRET_KEY si está definida; si no, guarda una clave local estable."""
-    clave = os.environ.get('SECRET_KEY')
+    clave = os.environ.get("SECRET_KEY")
     if clave:
         return clave
 
-    ruta = os.path.join(DATA_DIR, 'secret_key')
+    ruta = os.path.join(DATA_DIR, "secret_key")
     try:
-        with open(ruta, 'r', encoding='utf-8') as archivo:
+        with open(ruta, "r", encoding="utf-8") as archivo:
             clave = archivo.read().strip()
         if clave:
             return clave
@@ -65,32 +46,35 @@ def cargar_secret_key():
 
     os.makedirs(DATA_DIR, exist_ok=True)
     clave = secrets.token_hex(32)
-    with open(ruta, 'w', encoding='utf-8') as archivo:
+    with open(ruta, "w", encoding="utf-8") as archivo:
         archivo.write(clave)
     return clave
 
 
-app = Flask(__name__, static_folder=FRONTEND_DIST, static_url_path='')
-app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10 MB por foto
-app.config['PROPAGATE_EXCEPTIONS'] = False
-app.config['SECRET_KEY'] = cargar_secret_key()
-app.config['SESSION_COOKIE_HTTPONLY'] = True
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-app.config['SESSION_COOKIE_SECURE'] = os.environ.get('SESSION_COOKIE_SECURE') == '1'
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
+app = Flask(__name__, static_folder=FRONTEND_DIST, static_url_path="")
+app.config["MAX_CONTENT_LENGTH"] = 10 * 1024 * 1024  # 10 MB por foto
+app.config["PROPAGATE_EXCEPTIONS"] = False
+app.config["SECRET_KEY"] = cargar_secret_key()
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["SESSION_COOKIE_SECURE"] = os.environ.get("SESSION_COOKIE_SECURE") == "1"
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=7)
 app.json.ensure_ascii = False
 CORS(app)
 
-# Inicializar datos
-inventario = Inventario()
-gestor_facturas = GestorFacturas()
-envios = []
-usuarios = cargar_usuarios()
-configuracion = {'costo_envio': 0.0}
 
-# Serializa la verificación de stock con la emisión de facturas para evitar
-# que dos accesos concurrentes vendan las mismas unidades.
-STOCK_LOCK = threading.RLock()
+def iniciar_base_de_datos():
+    """Crea las tablas y los datos mínimos antes de atender peticiones."""
+    try:
+        ejecutar(inicializar_base())
+    except Exception as error:
+        raise RuntimeError(
+            "No se pudo inicializar PostgreSQL. Revisa DATABASE_URL y que el "
+            f"servidor esté disponible. Detalle: {error}"
+        ) from error
+
+
+iniciar_base_de_datos()
 
 
 def entero_entorno(nombre, defecto):
@@ -101,24 +85,24 @@ def entero_entorno(nombre, defecto):
 
 
 LIMITE_LOGIN_USUARIO = LimitadorIntentos(
-    max_intentos=entero_entorno('LOGIN_MAX_INTENTOS', 5),
-    ventana=entero_entorno('LOGIN_VENTANA_SEGUNDOS', 900),
-    bloqueo=entero_entorno('LOGIN_BLOQUEO_SEGUNDOS', 900),
+    max_intentos=entero_entorno("LOGIN_MAX_INTENTOS", 5),
+    ventana=entero_entorno("LOGIN_VENTANA_SEGUNDOS", 900),
+    bloqueo=entero_entorno("LOGIN_BLOQUEO_SEGUNDOS", 900),
 )
 LIMITE_LOGIN_IP = LimitadorIntentos(
-    max_intentos=entero_entorno('LOGIN_MAX_INTENTOS_IP', 10),
-    ventana=entero_entorno('LOGIN_VENTANA_SEGUNDOS', 900),
-    bloqueo=entero_entorno('LOGIN_BLOQUEO_SEGUNDOS', 900),
+    max_intentos=entero_entorno("LOGIN_MAX_INTENTOS_IP", 10),
+    ventana=entero_entorno("LOGIN_VENTANA_SEGUNDOS", 900),
+    bloqueo=entero_entorno("LOGIN_BLOQUEO_SEGUNDOS", 900),
 )
 
 
 def ip_cliente():
     # No se usa X-Forwarded-For: sin un proxy de confianza sería falsificable.
-    return request.remote_addr or 'desconocida'
+    return request.remote_addr or "desconocida"
 
 
 def clave_login_usuario(ip, nombre_usuario):
-    return f'{ip}:{nombre_usuario.casefold()[:100]}'
+    return f"{ip}:{nombre_usuario.casefold()[:100]}"
 
 
 def espera_login(ip, nombre_usuario):
@@ -149,20 +133,27 @@ ROLES_GESTION = ("empleado", ROL_ADMIN)
 
 def usuario_sesion():
     """Devuelve la cuenta de la sesión actual o None si ya no es válida."""
+    if "cuenta" in g:
+        return g.cuenta
+
     nombre_usuario = session.get("usuario")
     if not nombre_usuario:
+        g.cuenta = None
         return None
 
-    cuenta = buscar_usuario(usuarios, nombre_usuario)
+    cuenta = ejecutar(servicios.obtener_usuario(nombre_usuario))
     if not cuenta:
         session.clear()
+        g.cuenta = None
         return None
+
+    g.cuenta = cuenta
     return cuenta
 
 
 def rol_sesion():
     cuenta = usuario_sesion()
-    return normalizar_rol(cuenta.get("rol")) if cuenta else None
+    return cuenta.get("rol") if cuenta else None
 
 
 def requiere_roles(*roles):
@@ -174,7 +165,7 @@ def requiere_roles(*roles):
             cuenta = usuario_sesion()
             if not cuenta:
                 return jsonify({"error": "Necesitas iniciar sesión."}), 401
-            if normalizar_rol(cuenta.get("rol")) not in roles:
+            if cuenta.get("rol") not in roles:
                 return jsonify({
                     "error": "No tienes permisos para realizar esta acción.",
                 }), 403
@@ -186,1195 +177,596 @@ def requiere_roles(*roles):
 
 
 def normalizar_categoria(valor):
-    return str(valor or '').strip()[:60]
+    return str(valor or "").strip()[:60]
 
 
 def parsear_descuento(valor):
     """Valida el descuento recibido y devuelve (descuento, error)."""
-    if valor in (None, '', {}):
+    if valor in (None, "", {}):
         return None, None
     if not isinstance(valor, dict):
-        return None, 'El descuento debe incluir un porcentaje y un periodo.'
+        return None, "El descuento debe incluir un porcentaje y un periodo."
 
     try:
-        porcentaje = float(valor.get('porcentaje'))
+        porcentaje = float(valor.get("porcentaje"))
     except (TypeError, ValueError):
-        return None, 'El porcentaje de descuento debe ser un número.'
+        return None, "El porcentaje de descuento debe ser un número."
     if not 0 < porcentaje < 100:
-        return None, 'El porcentaje de descuento debe estar entre 0 y 100.'
+        return None, "El porcentaje de descuento debe estar entre 0 y 100."
 
     fechas = []
-    for campo, etiqueta in (('desde', 'inicio'), ('hasta', 'fin')):
+    for campo, etiqueta in (("desde", "inicio"), ("hasta", "fin")):
         try:
             fechas.append(date.fromisoformat(str(valor.get(campo))[:10]))
         except (TypeError, ValueError):
-            return None, f'La fecha de {etiqueta} del descuento no es válida.'
+            return None, f"La fecha de {etiqueta} del descuento no es válida."
     if fechas[0] > fechas[1]:
-        return None, 'La fecha de fin debe ser igual o posterior al inicio.'
+        return None, "La fecha de fin debe ser igual o posterior al inicio."
 
     return {
-        'porcentaje': round(porcentaje, 2),
-        'desde': fechas[0].isoformat(),
-        'hasta': fechas[1].isoformat(),
+        "porcentaje": round(porcentaje, 2),
+        "desde": fechas[0].isoformat(),
+        "hasta": fechas[1].isoformat(),
     }, None
 
 
 def parsear_envio(valor):
     """Valida los datos de entrega y devuelve (envio, error)."""
-    if valor in (None, '', {}):
+    if valor in (None, "", {}):
         return normalizar_envio(None), None
     if not isinstance(valor, dict):
-        return None, 'Los datos de envío no son válidos.'
+        return None, "Los datos de envío no son válidos."
 
-    if not valor.get('a_domicilio'):
-        return normalizar_envio({'a_domicilio': False}), None
+    if not valor.get("a_domicilio"):
+        return normalizar_envio({"a_domicilio": False}), None
 
-    direccion = str(valor.get('direccion') or '').strip()
+    direccion = str(valor.get("direccion") or "").strip()
     if not direccion:
-        return None, 'Escribe la dirección de entrega.'
+        return None, "Escribe la dirección de entrega."
 
     return {
-        'a_domicilio': True,
-        'ubicacion': '',
-        'direccion': direccion[:200],
+        "a_domicilio": True,
+        "ubicacion": "",
+        "direccion": direccion[:200],
     }, None
 
 
-def cargar_config():
-    try:
-        with open(CONFIG_PATH, 'r', encoding='utf-8') as archivo:
-            datos = json.load(archivo)
-    except (FileNotFoundError, json.JSONDecodeError):
-        return {'costo_envio': 0.0}
-
-    try:
-        costo = float(datos.get('costo_envio', 0))
-    except (TypeError, ValueError):
-        costo = 0
-    return {'costo_envio': round(max(0.0, costo), 2)}
-
-
-def guardar_config(config):
-    os.makedirs(DATA_DIR, exist_ok=True)
-    ruta_temporal = f'{CONFIG_PATH}.tmp'
-    with open(ruta_temporal, 'w', encoding='utf-8') as archivo:
-        json.dump(config, archivo, ensure_ascii=False, indent=2)
-    os.replace(ruta_temporal, CONFIG_PATH)
-
-
-def cargar_datos():
-    global configuracion
-    os.makedirs(DATA_DIR, exist_ok=True)
-    configuracion = cargar_config()
-
-    # Cargar inventario
-    try:
-        with open(INVENTARIO_PATH, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            for p in data:
-                inventario.addProducto(Producto(**p))
-    except FileNotFoundError:
-        # Datos de ejemplo
-        inventario.addProducto(Producto("Collar de perlas", 10.0, "unidad"))
-        inventario.addProducto(Producto("Hilo de nylon", 2.0, "metro"))
-        inventario.addProducto(Producto("Cuentas de cristal", 5.0, "unidad"))
-        inventario.addProducto(Producto("Alambre de plata", 3.5, "metro"))
-        guardar_inventario()
-
-    # Cargar facturas
-    try:
-        with open(FACTURAS_PATH, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            for fd in data:
-                items = [(Producto(**p), c) for p, c in fd["items"]]
-                carrito_temp = type("CarritoTemp", (), {"items": items})()
-                factura = Factura(
-                    fd["numero"],
-                    carrito_temp,
-                    estado=fd.get("estado"),
-                    envio=fd.get("envio"),
-                    usuario=fd.get("usuario", ""),
-                    codigo=fd.get("codigo"),
-                    costo_envio=fd.get("costo_envio", 0),
-                    motivo_cancelacion=fd.get("motivo_cancelacion", ""),
-                )
-                factura.fecha = fd["fecha"]
-                factura.subtotal = fd.get("subtotal", factura.subtotal)
-                factura.total = fd["total"]
-                gestor_facturas.facturas.append(factura)
-
-            renumerar_facturas_por_usuario()
-
-            # Persiste los campos nuevos (estado, código QR) de facturas viejas.
-            if data:
-                guardar_facturas()
-    except FileNotFoundError:
-        pass
-
-    # Cargar envíos (agrupaciones de facturas a domicilio)
-    try:
-        with open(ENVIOS_PATH, "r", encoding="utf-8") as f:
-            envios.extend(json.load(f))
-    except FileNotFoundError:
-        pass
-
-
-def renombrar_facturas_usuario(anterior, nuevo):
-    """Conserva las facturas del usuario cuando cambia su nombre de usuario."""
-    cambiadas = False
-    for factura in gestor_facturas.facturas:
-        if factura.usuario.casefold() == anterior.casefold():
-            factura.usuario = nuevo
-            cambiadas = True
-    if cambiadas:
-        guardar_facturas()
-
-
-def renumerar_facturas_por_usuario():
-    """Cada usuario tiene su propia secuencia de facturas: 1, 2, 3…"""
-    por_usuario = {}
-    for factura in gestor_facturas.facturas:
-        clave = factura.usuario.casefold()
-        por_usuario.setdefault(clave, []).append(factura)
-
-    for facturas_usuario in por_usuario.values():
-        facturas_usuario.sort(key=lambda f: (str(f.fecha), f.numero))
-        for indice, factura in enumerate(facturas_usuario, start=1):
-            factura.numero = indice
-
-
-def siguiente_numero_factura(usuario):
-    numeros = [
-        f.numero
-        for f in gestor_facturas.facturas
-        if f.usuario.casefold() == usuario.casefold()
-    ]
-    return max(numeros, default=0) + 1
-
-def guardar_inventario():
-    os.makedirs(DATA_DIR, exist_ok=True)
-    with open(INVENTARIO_PATH, "w", encoding="utf-8") as f:
-        json.dump([p.__dict__ for p in inventario.productos], f, default=str, ensure_ascii=False)
-
-def guardar_facturas():
-    data = []
-    for f in gestor_facturas.facturas:
-        items = [(p.__dict__, c) for p, c in f.items]
-        factura_data = f.to_dict()
-        factura_data["items"] = items
-        data.append(factura_data)
-    os.makedirs(DATA_DIR, exist_ok=True)
-    with open(FACTURAS_PATH, "w", encoding="utf-8") as f:
-        json.dump(data, f, default=str, ensure_ascii=False)
-
-
-def guardar_envios():
-    os.makedirs(DATA_DIR, exist_ok=True)
-    with open(ENVIOS_PATH, "w", encoding="utf-8") as f:
-        json.dump(envios, f, default=str, ensure_ascii=False, indent=2)
-
-
-def factura_por_codigo(codigo):
-    for factura in gestor_facturas.facturas:
-        if factura.codigo == codigo:
-            return factura
-    return None
-
-
-def codigos_en_envios():
-    """Códigos de facturas ya incluidas en algún envío."""
-    codigos = set()
-    for envio in envios:
-        if envio.get("estado") == "cancelado":
-            continue
-        for ref in envio.get("facturas", []):
-            codigo = ref.get("codigo") if isinstance(ref, dict) else ref
-            if codigo:
-                codigos.add(codigo)
-    return codigos
-
-
-def resumen_factura_envio(factura):
-    """Copia estable de los datos de la factura para mostrarla en el envío."""
-    return {
-        "codigo": factura.codigo,
-        "numero": factura.numero,
-        "fecha": str(factura.fecha),
-        "usuario": factura.usuario,
-        "total": factura.total,
-        "costo_envio": factura.costo_envio,
-        "estado": factura.estado,
-        "ubicacion": factura.envio["ubicacion"],
-        "direccion": factura.envio["direccion"],
-    }
-
-
-def envio_publico(envio):
-    """Combina la referencia guardada con el estado actual de cada factura."""
-    facturas = []
-    for ref in envio.get("facturas", []):
-        codigo = ref.get("codigo") if isinstance(ref, dict) else ref
-        factura = factura_por_codigo(codigo)
-        if factura:
-            facturas.append(resumen_factura_envio(factura))
-        elif isinstance(ref, dict):
-            facturas.append(dict(ref))
-
-    destinos = []
-    for factura in facturas:
-        destino = ", ".join(
-            parte for parte in (factura.get("direccion"), factura.get("ubicacion")) if parte
-        )
-        if destino and destino not in destinos:
-            destinos.append(destino)
-
-    return {
-        "id": envio.get("id"),
-        "codigo": envio.get("codigo"),
-        "fecha": envio.get("fecha"),
-        "estado": envio.get("estado", "en_envio"),
-        "creado_por": envio.get("creado_por", ""),
-        "notas": envio.get("notas", ""),
-        "facturas": facturas,
-        "cantidad_facturas": len(facturas),
-        "destinos": destinos,
-        "total": round(sum(float(f.get("total") or 0) for f in facturas), 2),
-        "costo": round(sum(float(f.get("costo_envio") or 0) for f in facturas), 2),
-    }
-
-
-def facturas_disponibles_para_envio():
-    """Facturas a domicilio que aún no pertenecen a un envío."""
-    ocupadas = codigos_en_envios()
-    return [
-        factura.to_dict()
-        for factura in gestor_facturas.facturas
-        if factura.envio["a_domicilio"]
-        and factura.estado not in ("cancelada", "pagada")
-        and factura.codigo not in ocupadas
-    ]
-
 # ===== SERVIR LA INTERFAZ =====
-@app.route('/')
+@app.route("/")
 def index():
-    index_path = os.path.join(FRONTEND_DIST, 'index.html')
+    index_path = os.path.join(FRONTEND_DIST, "index.html")
     if not os.path.exists(index_path):
         return jsonify({
-            'error': 'Frontend no compilado',
-            'detalle': 'Ejecuta `npm run build` dentro de frontend/.',
+            "error": "Frontend no compilado",
+            "detalle": "Ejecuta `npm run build` dentro de frontend/.",
         }), 503
-    return send_from_directory(FRONTEND_DIST, 'index.html')
+    return send_from_directory(FRONTEND_DIST, "index.html")
 
-@app.route('/uploads/<path:filename>')
+
+@app.route("/uploads/<path:filename>")
 def uploaded_file(filename):
     return send_from_directory(UPLOAD_DIR, filename)
 
+
 def es_ruta_api():
-    return request.path == '/api' or request.path.startswith('/api/')
+    return request.path == "/api" or request.path.startswith("/api/")
+
 
 RUTAS_PUBLICAS = {
-    '/api/auth/login',
-    '/api/auth/register',
-    '/api/auth/logout',
-    '/api/auth/me',
-    '/api/auth/estado',
+    "/api/auth/login",
+    "/api/auth/register",
+    "/api/auth/logout",
+    "/api/auth/me",
+    "/api/auth/estado",
 }
 
 # El catálogo y las fotos son de consulta pública: un visitante puede ver los
 # productos y su ficha, pero todo lo demás sigue exigiendo sesión.
 RUTAS_PUBLICAS_LECTURA = {
-    '/api/products',
+    "/api/products",
 }
+
 
 @app.before_request
 def exigir_sesion():
-    if request.method == 'OPTIONS':
+    if request.method == "OPTIONS":
         return None
     ruta = request.path
-    if not (es_ruta_api() or ruta.startswith('/uploads/')):
+    if not (es_ruta_api() or ruta.startswith("/uploads/")):
         return None
     if ruta in RUTAS_PUBLICAS:
         return None
-    if request.method in ('GET', 'HEAD'):
-        if ruta in RUTAS_PUBLICAS_LECTURA or ruta.startswith('/uploads/'):
+    if request.method in ("GET", "HEAD"):
+        if ruta in RUTAS_PUBLICAS_LECTURA or ruta.startswith("/uploads/"):
             return None
-    if not session.get('usuario'):
-        return jsonify({'error': 'Necesitas iniciar sesión.'}), 401
+    if not session.get("usuario"):
+        return jsonify({"error": "Necesitas iniciar sesión."}), 401
     return None
+
 
 @app.errorhandler(413)
 def foto_demasiado_grande(_error):
-    return jsonify({'error': 'La foto supera el límite de 10 MB.'}), 413
+    return jsonify({"error": "La foto supera el límite de 10 MB."}), 413
+
 
 @app.errorhandler(400)
 def api_bad_request(error):
     if not es_ruta_api():
         return error
-    return jsonify({'error': 'Solicitud inválida.'}), 400
+    return jsonify({"error": "Solicitud inválida."}), 400
+
 
 @app.errorhandler(404)
 def api_not_found(error):
     if es_ruta_api():
-        return jsonify({'error': 'Recurso no encontrado.'}), 404
+        return jsonify({"error": "Recurso no encontrado."}), 404
     # Rutas del cliente (por ejemplo /facturas): devolvemos el index de la SPA.
-    index_path = os.path.join(FRONTEND_DIST, 'index.html')
+    index_path = os.path.join(FRONTEND_DIST, "index.html")
     if (
-        request.method == 'GET'
+        request.method == "GET"
         and request.accept_mimetypes.accept_html
         and os.path.exists(index_path)
     ):
-        return send_from_directory(FRONTEND_DIST, 'index.html')
+        return send_from_directory(FRONTEND_DIST, "index.html")
     return error
+
 
 @app.errorhandler(405)
 def api_method_not_allowed(error):
     if not es_ruta_api():
         return error
-    return jsonify({'error': 'Método no permitido.'}), 405
+    return jsonify({"error": "Método no permitido."}), 405
+
 
 @app.errorhandler(500)
 def api_internal_error(error):
     if not es_ruta_api():
         return error
-    return jsonify({'error': 'Error interno del servidor.'}), 500
+    return jsonify({"error": "Error interno del servidor."}), 500
+
+
+@app.errorhandler(ErrorServicio)
+def api_error_servicio(error):
+    return jsonify({"error": error.mensaje}), error.estado
+
 
 # ===== AUTENTICACIÓN =====
-@app.route('/api/auth/estado', methods=['GET'])
+@app.route("/api/auth/estado", methods=["GET"])
 def auth_estado():
     """Informa si ya existe alguna cuenta; la primera registrada será admin."""
+    total = ejecutar(servicios.contar_usuarios())
     return jsonify({
-        'hay_usuarios': bool(usuarios),
-        'total_usuarios': len(usuarios),
-        'primer_usuario_admin': not usuarios,
+        "hay_usuarios": total > 0,
+        "total_usuarios": total,
+        "primer_usuario_admin": total == 0,
     })
 
 
-@app.route('/api/auth/register', methods=['POST'])
+@app.route("/api/auth/register", methods=["POST"])
 def auth_register():
-    global usuarios
     datos = request.get_json(silent=True) or {}
-    valores, errores = validar_registro(datos, usuarios)
+    valores, errores = validar_registro(
+        datos, ejecutar(servicios.nombres_usuarios())
+    )
     if errores:
         return jsonify({
-            'error': 'Revisa los datos ingresados.',
-            'campos': errores,
+            "error": "Revisa los datos ingresados.",
+            "campos": errores,
         }), 400
 
-    usuario = crear_usuario(
-        nombres=valores['nombres'],
-        apellidos=valores['apellidos'],
-        usuario=valores['usuario'],
-        email=valores['email'],
-        password=valores['password'],
-        # La primera cuenta de la página es, por definición, la administradora.
-        rol=ROL_ADMIN if not usuarios else ROL_POR_DEFECTO,
-    )
-    usuarios.append(usuario)
-    guardar_usuarios(usuarios)
+    usuario = ejecutar(servicios.crear_cuenta(valores))
 
     session.clear()
     session.permanent = True
-    session['usuario'] = usuario['usuario']
-    return jsonify(usuario_publico(usuario)), 201
+    session["usuario"] = usuario["usuario"]
+    return jsonify(usuario), 201
 
-@app.route('/api/auth/login', methods=['POST'])
+
+@app.route("/api/auth/login", methods=["POST"])
 def auth_login():
     datos = request.get_json(silent=True) or {}
-    nombre_usuario = str(datos.get('usuario') or '').strip()
-    password = datos.get('password')
+    nombre_usuario = str(datos.get("usuario") or "").strip()
+    password = datos.get("password")
     ip = ip_cliente()
 
     espera = espera_login(ip, nombre_usuario)
     if espera:
         respuesta = jsonify({
-            'error': (
-                'Demasiados intentos fallidos. '
-                f'Espera {espera} segundos antes de volver a intentar.'
+            "error": (
+                "Demasiados intentos fallidos. "
+                f"Espera {espera} segundos antes de volver a intentar."
             ),
         })
-        respuesta.headers['Retry-After'] = str(espera)
+        respuesta.headers["Retry-After"] = str(espera)
         return respuesta, 429
 
-    cuenta = buscar_usuario(usuarios, nombre_usuario)
+    cuenta = ejecutar(servicios.obtener_cuenta(nombre_usuario))
     if not cuenta or not verificar_password(cuenta, password):
         registrar_fallo_login(ip, nombre_usuario)
-        return jsonify({'error': 'Usuario o contraseña incorrectos.'}), 401
+        return jsonify({"error": "Usuario o contraseña incorrectos."}), 401
 
     limpiar_intentos_login(ip, nombre_usuario)
     session.clear()
     session.permanent = True
-    session['usuario'] = cuenta['usuario']
+    session["usuario"] = cuenta["usuario"]
     return jsonify(usuario_publico(cuenta))
 
-@app.route('/api/auth/logout', methods=['POST'])
+
+@app.route("/api/auth/logout", methods=["POST"])
 def auth_logout():
     session.clear()
-    return jsonify({'success': True})
+    return jsonify({"success": True})
 
-@app.route('/api/auth/me', methods=['GET'])
+
+@app.route("/api/auth/me", methods=["GET"])
 def auth_me():
-    nombre_usuario = session.get('usuario')
-    if not nombre_usuario:
-        return jsonify({'error': 'No hay una sesión activa.'}), 401
-
-    cuenta = buscar_usuario(usuarios, nombre_usuario)
+    cuenta = usuario_sesion()
     if not cuenta:
-        session.clear()
-        return jsonify({'error': 'No hay una sesión activa.'}), 401
-
+        return jsonify({"error": "No hay una sesión activa."}), 401
     return jsonify(usuario_publico(cuenta))
 
 
-@app.route('/api/auth/perfil', methods=['PATCH'])
+@app.route("/api/auth/perfil", methods=["PATCH"])
 def auth_update_profile():
-    nombre_sesion = session.get('usuario')
-    if not nombre_sesion:
-        return jsonify({'error': 'No hay una sesión activa.'}), 401
-
-    cuenta = buscar_usuario(usuarios, nombre_sesion)
+    cuenta = usuario_sesion()
     if not cuenta:
-        session.clear()
-        return jsonify({'error': 'No hay una sesión activa.'}), 401
+        return jsonify({"error": "No hay una sesión activa."}), 401
 
     datos = request.get_json(silent=True) or {}
-    valores, errores = validar_perfil(datos, usuarios, cuenta)
+    valores, errores = validar_perfil(
+        datos, ejecutar(servicios.nombres_usuarios()), cuenta
+    )
     if errores:
         return jsonify({
-            'error': 'Revisa los datos ingresados.',
-            'campos': errores,
+            "error": "Revisa los datos ingresados.",
+            "campos": errores,
         }), 400
 
-    anterior = cuenta['usuario']
-    with STOCK_LOCK:
-        cuenta['usuario'] = valores['usuario']
-        cuenta['email'] = valores['email']
-        guardar_usuarios(usuarios)
-
-        if anterior != valores['usuario']:
-            renombrar_facturas_usuario(anterior, valores['usuario'])
-        session['usuario'] = valores['usuario']
-
-    return jsonify(usuario_publico(cuenta))
+    actualizado = ejecutar(servicios.actualizar_perfil(cuenta["id"], valores))
+    session["usuario"] = actualizado["usuario"]
+    g.cuenta = {**actualizado, "id": cuenta["id"]}
+    return jsonify(actualizado)
 
 
-@app.route('/api/auth/password', methods=['POST'])
+@app.route("/api/auth/password", methods=["POST"])
 def auth_change_password():
-    nombre_sesion = session.get('usuario')
-    if not nombre_sesion:
-        return jsonify({'error': 'No hay una sesión activa.'}), 401
-
-    cuenta = buscar_usuario(usuarios, nombre_sesion)
+    cuenta = usuario_sesion()
     if not cuenta:
+        return jsonify({"error": "No hay una sesión activa."}), 401
+
+    # La cuenta de sesión no incluye el hash; se consulta para verificar la
+    # contraseña actual antes de cambiarla.
+    cuenta_completa = ejecutar(servicios.obtener_cuenta(cuenta["usuario"]))
+    if not cuenta_completa:
         session.clear()
-        return jsonify({'error': 'No hay una sesión activa.'}), 401
+        return jsonify({"error": "No hay una sesión activa."}), 401
 
     datos = request.get_json(silent=True) or {}
-    valores, errores = validar_cambio_password(datos, cuenta)
+    valores, errores = validar_cambio_password(datos, cuenta_completa)
     if errores:
         return jsonify({
-            'error': 'Revisa los datos ingresados.',
-            'campos': errores,
+            "error": "Revisa los datos ingresados.",
+            "campos": errores,
         }), 400
 
-    with STOCK_LOCK:
-        actualizar_password(cuenta, valores['password_nueva'])
-        guardar_usuarios(usuarios)
-
-    return jsonify({'success': True})
+    ejecutar(
+        servicios.guardar_password(cuenta["id"], valores["password_nueva"])
+    )
+    return jsonify({"success": True})
 
 
 # ===== ADMINISTRACIÓN =====
-MESES_CORTOS = (
-    'ene', 'feb', 'mar', 'abr', 'may', 'jun',
-    'jul', 'ago', 'sep', 'oct', 'nov', 'dic',
-)
-
-
-@app.route('/api/admin/usuarios', methods=['GET'])
+@app.route("/api/admin/usuarios", methods=["GET"])
 @requiere_roles(ROL_ADMIN)
 def admin_listar_usuarios():
-    facturas_por_usuario = {}
-    for factura in gestor_facturas.facturas:
-        clave = factura.usuario.casefold()
-        facturas_por_usuario[clave] = facturas_por_usuario.get(clave, 0) + 1
-
-    return jsonify([
-        {
-            **usuario_publico(usuario),
-            'fundador': indice == 0,
-            'facturas': facturas_por_usuario.get(
-                usuario['usuario'].casefold(), 0
-            ),
-        }
-        for indice, usuario in enumerate(usuarios)
-    ])
+    return jsonify(ejecutar(servicios.listar_usuarios_admin()))
 
 
-@app.route('/api/admin/usuarios/<nombre>/rol', methods=['PATCH'])
+@app.route("/api/admin/usuarios/<nombre>/rol", methods=["PATCH"])
 @requiere_roles(ROL_ADMIN)
 def admin_cambiar_rol(nombre):
     datos = request.get_json(silent=True) or {}
-    rol = str(datos.get('rol') or '').strip()
+    rol = str(datos.get("rol") or "").strip()
     if rol not in ROLES:
-        return jsonify({'error': 'El rol indicado no es válido.'}), 400
+        return jsonify({"error": "El rol indicado no es válido."}), 400
 
-    cuenta = buscar_usuario(usuarios, nombre)
-    if not cuenta:
-        return jsonify({'error': 'Usuario no encontrado.'}), 404
-
-    rol_actual = normalizar_rol(cuenta.get('rol'))
-    if rol == rol_actual:
-        return jsonify(usuario_publico(cuenta))
-
-    admins = [
-        usuario
-        for usuario in usuarios
-        if normalizar_rol(usuario.get('rol')) == ROL_ADMIN
-    ]
-    if rol_actual == ROL_ADMIN and rol != ROL_ADMIN and len(admins) <= 1:
-        return jsonify({
-            'error': 'Debe quedar al menos un administrador en Venture.',
-        }), 409
-
-    with STOCK_LOCK:
-        cuenta['rol'] = rol
-        guardar_usuarios(usuarios)
-
-    return jsonify(usuario_publico(cuenta))
+    return jsonify(ejecutar(servicios.cambiar_rol(nombre, rol)))
 
 
-def claves_meses_recientes(cantidad=8):
-    """Devuelve [(año, mes)] de los últimos meses, del más viejo al actual."""
-    hoy = date.today()
-    anio, mes = hoy.year, hoy.month
-    claves = []
-    for _ in range(cantidad):
-        claves.append((anio, mes))
-        mes -= 1
-        if mes == 0:
-            mes = 12
-            anio -= 1
-    return list(reversed(claves))
-
-
-def datos_contabilidad():
-    """Agrega métricas de facturación para el panel de administración."""
-    facturas = list(gestor_facturas.facturas)
-    validas = [f for f in facturas if f.estado != 'cancelada']
-
-    total_facturado = round(sum(float(f.total) for f in validas), 2)
-    total_cobrado = round(
-        sum(float(f.total) for f in validas if f.estado == 'pagada'), 2
-    )
-    total_pendiente = round(
-        sum(
-            float(f.total)
-            for f in validas
-            if f.estado in ('pendiente', 'en_envio')
-        ),
-        2,
-    )
-
-    facturas_pendientes = sum(
-        1 for f in validas if f.estado in ('pendiente', 'en_envio')
-    )
-    clientes_unicos = {f.usuario.casefold() for f in validas if f.usuario}
-    productos_vendidos = sum(
-        cantidad for f in validas for _, cantidad in f.items
-    )
-
-    por_estado = []
-    for estado in ESTADOS_FACTURA:
-        grupo = [f for f in facturas if f.estado == estado]
-        por_estado.append({
-            'estado': estado,
-            'cantidad': len(grupo),
-            'total': round(sum(float(f.total) for f in grupo), 2),
-        })
-
-    por_mes = []
-    for anio, mes in claves_meses_recientes():
-        clave = f'{anio:04d}-{mes:02d}'
-        grupo = [
-            f for f in validas if str(f.fecha)[:7] == clave
-        ]
-        por_mes.append({
-            'clave': clave,
-            'etiqueta': f'{MESES_CORTOS[mes - 1]} {str(anio)[2:]}',
-            'total': round(sum(float(f.total) for f in grupo), 2),
-            'facturas': len(grupo),
-        })
-
-    productos = {}
-    for factura in validas:
-        for producto, cantidad in factura.items:
-            precio = (
-                producto.precio_vigente(factura.fecha)
-                if hasattr(producto, 'precio_vigente')
-                else producto.precio
-            )
-            fila = productos.setdefault(producto.nombre, {
-                'nombre': producto.nombre,
-                'cantidad': 0,
-                'total': 0.0,
-            })
-            fila['cantidad'] += cantidad
-            fila['total'] = round(fila['total'] + precio * cantidad, 2)
-
-    top_productos = sorted(
-        productos.values(),
-        key=lambda fila: (fila['total'], fila['cantidad']),
-        reverse=True,
-    )[:8]
-
-    for fila in top_productos:
-        fila['participacion'] = (
-            round(fila['total'] / total_facturado * 100, 1)
-            if total_facturado
-            else 0
-        )
-
-    cuentas = {
-        usuario['usuario'].casefold(): usuario for usuario in usuarios
-    }
-    clientes = {}
-    for factura in validas:
-        clave = factura.usuario.casefold()
-        fila = clientes.setdefault(clave, {
-            'usuario': factura.usuario,
-            'nombre': '',
-            'facturas': 0,
-            'total': 0.0,
-        })
-        cuenta = cuentas.get(clave)
-        if cuenta:
-            fila['nombre'] = (
-                f"{cuenta.get('nombres', '')} {cuenta.get('apellidos', '')}"
-            ).strip()
-        fila['facturas'] += 1
-        fila['total'] = round(fila['total'] + float(factura.total), 2)
-
-    top_clientes = sorted(
-        clientes.values(),
-        key=lambda fila: (fila['total'], fila['facturas']),
-        reverse=True,
-    )[:5]
-
-    ultimas = sorted(
-        facturas,
-        key=lambda f: (str(f.fecha), f.numero),
-        reverse=True,
-    )[:6]
-
-    porcentaje_cobrado = (
-        round(total_cobrado / total_facturado * 100, 1)
-        if total_facturado
-        else 0
-    )
-
-    return {
-        'generado': datetime.now(timezone.utc).isoformat(timespec='seconds'),
-        'resumen': {
-            'total_facturado': total_facturado,
-            'total_cobrado': total_cobrado,
-            'total_pendiente': total_pendiente,
-            'porcentaje_cobrado': porcentaje_cobrado,
-            'ticket_promedio': (
-                round(total_facturado / len(validas), 2) if validas else 0
-            ),
-            'facturas_total': len(facturas),
-            'facturas_validas': len(validas),
-            'facturas_canceladas': len(facturas) - len(validas),
-            'facturas_pendientes': facturas_pendientes,
-            'clientes': len(clientes_unicos),
-            'productos_vendidos': productos_vendidos,
-        },
-        'por_estado': por_estado,
-        'por_mes': por_mes,
-        'top_productos': top_productos,
-        'top_clientes': top_clientes,
-        'ultimas_facturas': [
-            {
-                'numero': f.numero,
-                'fecha': str(f.fecha),
-                'usuario': f.usuario,
-                'total': f.total,
-                'estado': f.estado,
-            }
-            for f in ultimas
-        ],
-    }
-
-
-@app.route('/api/contabilidad', methods=['GET'])
+@app.route("/api/contabilidad", methods=["GET"])
 @requiere_roles(ROL_ADMIN)
 def get_contabilidad():
-    return jsonify(datos_contabilidad())
+    return jsonify(ejecutar(servicios.datos_contabilidad()))
 
 
 # ===== ENDPOINTS API =====
-@app.route('/api/config', methods=['GET'])
+@app.route("/api/config", methods=["GET"])
 def get_config():
-    return jsonify(configuracion)
+    return jsonify(ejecutar(servicios.obtener_config()))
 
 
-@app.route('/api/config', methods=['PUT'])
+@app.route("/api/config", methods=["PUT"])
 @requiere_roles(ROL_ADMIN)
 def update_config():
-    global configuracion
     data = request.get_json(silent=True) or {}
 
     try:
-        costo = float(data.get('costo_envio'))
+        costo = float(data.get("costo_envio"))
     except (TypeError, ValueError):
-        return jsonify({'error': 'El costo de envío debe ser un número.'}), 400
+        return jsonify({"error": "El costo de envío debe ser un número."}), 400
     if costo < 0:
-        return jsonify({'error': 'El costo de envío no puede ser negativo.'}), 400
+        return jsonify({"error": "El costo de envío no puede ser negativo."}), 400
     if costo > 1_000_000:
-        return jsonify({'error': 'El costo de envío es demasiado alto.'}), 400
+        return jsonify({"error": "El costo de envío es demasiado alto."}), 400
 
-    with STOCK_LOCK:
-        configuracion = {'costo_envio': round(costo, 2)}
-        guardar_config(configuracion)
-
-    return jsonify(configuracion)
+    return jsonify(ejecutar(servicios.actualizar_config(costo)))
 
 
-@app.route('/api/uploads', methods=['POST'])
+@app.route("/api/uploads", methods=["POST"])
 @requiere_roles(*ROLES_GESTION)
 def upload_foto():
-    archivo = request.files.get('foto')
+    archivo = request.files.get("foto")
     if not archivo or not archivo.filename:
-        return jsonify({'error': 'No se recibió ninguna foto.'}), 400
+        return jsonify({"error": "No se recibió ninguna foto."}), 400
 
     extension = os.path.splitext(archivo.filename)[1].lower()
     if extension not in EXTENSIONES_FOTO:
-        return jsonify({'error': 'Formato no admitido. Usa JPG, PNG, WEBP, GIF o AVIF.'}), 400
+        return jsonify({
+            "error": "Formato no admitido. Usa JPG, PNG, WEBP, GIF o AVIF."
+        }), 400
 
-    if not (archivo.mimetype or '').startswith('image/'):
-        return jsonify({'error': 'El archivo no parece ser una imagen.'}), 400
+    if not (archivo.mimetype or "").startswith("image/"):
+        return jsonify({"error": "El archivo no parece ser una imagen."}), 400
 
     os.makedirs(UPLOAD_DIR, exist_ok=True)
-    nombre_archivo = f'{uuid4().hex}{extension}'
+    nombre_archivo = f"{uuid4().hex}{extension}"
     archivo.save(os.path.join(UPLOAD_DIR, nombre_archivo))
-    return jsonify({'url': f'/uploads/{nombre_archivo}'})
+    return jsonify({"url": f"/uploads/{nombre_archivo}"})
 
-@app.route('/api/products', methods=['GET'])
+
+@app.route("/api/products", methods=["GET"])
 def get_products():
-    with STOCK_LOCK:
-        return jsonify([p.__dict__ for p in inventario.productos])
+    return jsonify(ejecutar(servicios.listar_productos()))
 
-@app.route('/api/products', methods=['POST'])
+
+@app.route("/api/products", methods=["POST"])
 @requiere_roles(*ROLES_GESTION)
 def add_product():
     data = request.get_json(silent=True) or {}
-    nombre = str(data.get('nombre') or '').strip()
+    nombre = str(data.get("nombre") or "").strip()
     if not nombre:
-        return jsonify({'error': 'El nombre no puede estar vacío.'}), 400
-    if inventario.searchProducto(nombre):
-        return jsonify({'error': 'Ya existe un producto con ese nombre.'}), 409
+        return jsonify({"error": "El nombre no puede estar vacío."}), 400
 
     try:
-        precio = float(data.get('precio'))
+        precio = float(data.get("precio"))
     except (TypeError, ValueError):
-        return jsonify({'error': 'El precio debe ser un número.'}), 400
+        return jsonify({"error": "El precio debe ser un número."}), 400
     if precio <= 0:
-        return jsonify({'error': 'El precio debe ser mayor a cero.'}), 400
+        return jsonify({"error": "El precio debe ser mayor a cero."}), 400
 
     try:
-        stock = int(data.get('stock', 0))
+        stock = int(data.get("stock", 0))
     except (TypeError, ValueError):
-        return jsonify({'error': 'El stock debe ser un número entero.'}), 400
+        return jsonify({"error": "El stock debe ser un número entero."}), 400
     if stock < 0:
-        return jsonify({'error': 'El stock no puede ser negativo.'}), 400
+        return jsonify({"error": "El stock no puede ser negativo."}), 400
 
-    fotos = data.get('fotos')
+    fotos = data.get("fotos")
     if not isinstance(fotos, list):
-        fotos = [data['foto']] if data.get('foto') else []
+        fotos = [data["foto"]] if data.get("foto") else []
 
-    descuento, error_descuento = parsear_descuento(data.get('descuento'))
+    descuento, error_descuento = parsear_descuento(data.get("descuento"))
     if error_descuento:
-        return jsonify({'error': error_descuento}), 400
+        return jsonify({"error": error_descuento}), 400
 
-    producto = Producto(
-        nombre=nombre,
-        precio=precio,
-        unidad_medida=str(data.get('unidad_medida') or 'unidad').strip() or 'unidad',
-        descripcion=str(data.get('descripcion') or '').strip(),
-        fotos=[url for url in fotos if isinstance(url, str) and url],
-        stock=stock,
-        categoria=normalizar_categoria(data.get('categoria')),
-        descuento=descuento,
-        reposicion_pendiente=bool(data.get('reposicion_pendiente')),
-    )
-    with STOCK_LOCK:
-        inventario.addProducto(producto)
-        guardar_inventario()
-    return jsonify(producto.__dict__)
+    producto = ejecutar(servicios.crear_producto({
+        "nombre": nombre,
+        "precio": precio,
+        "unidad_medida": (
+            str(data.get("unidad_medida") or "unidad").strip() or "unidad"
+        ),
+        "descripcion": str(data.get("descripcion") or "").strip(),
+        "fotos": [url for url in fotos if isinstance(url, str) and url],
+        "stock": stock,
+        "categoria": normalizar_categoria(data.get("categoria")),
+        "descuento": descuento,
+        "reposicion_pendiente": bool(data.get("reposicion_pendiente")),
+    }))
+    return jsonify(producto)
 
-@app.route('/api/products/<nombre>', methods=['PUT'])
+
+@app.route("/api/products/<nombre>", methods=["PUT"])
 @requiere_roles(*ROLES_GESTION)
 def update_product(nombre):
     data = request.get_json(silent=True) or {}
-    producto = inventario.searchProducto(nombre)
-    if not producto:
-        return jsonify({'error': 'Producto no encontrado.'}), 404
+    cambios = {}
 
-    nuevo_nombre = str(data.get('nombre', producto.nombre)).strip()
-    if not nuevo_nombre:
-        return jsonify({'error': 'El nombre no puede estar vacío.'}), 400
+    if "nombre" in data:
+        nuevo_nombre = str(data.get("nombre") or "").strip()
+        if not nuevo_nombre:
+            return jsonify({"error": "El nombre no puede estar vacío."}), 400
+        cambios["nombre"] = nuevo_nombre
 
-    duplicado = inventario.searchProducto(nuevo_nombre)
-    if duplicado and duplicado is not producto:
-        return jsonify({'error': 'Ya existe un producto con ese nombre.'}), 409
-
-    try:
-        precio = float(data.get('precio', producto.precio))
-    except (TypeError, ValueError):
-        return jsonify({'error': 'El precio debe ser un número.'}), 400
-    if precio <= 0:
-        return jsonify({'error': 'El precio debe ser mayor a cero.'}), 400
-
-    stock_nuevo = None
-    if 'stock' in data:
+    if "precio" in data:
         try:
-            stock_nuevo = int(data.get('stock'))
+            precio = float(data.get("precio"))
         except (TypeError, ValueError):
-            return jsonify({'error': 'El stock debe ser un número entero.'}), 400
+            return jsonify({"error": "El precio debe ser un número."}), 400
+        if precio <= 0:
+            return jsonify({"error": "El precio debe ser mayor a cero."}), 400
+        cambios["precio"] = precio
+
+    if "stock" in data:
+        try:
+            stock_nuevo = int(data.get("stock"))
+        except (TypeError, ValueError):
+            return jsonify({
+                "error": "El stock debe ser un número entero."
+            }), 400
         if stock_nuevo < 0:
-            return jsonify({'error': 'El stock no puede ser negativo.'}), 400
+            return jsonify({"error": "El stock no puede ser negativo."}), 400
+        cambios["stock"] = stock_nuevo
 
-    descuento_nuevo = None
-    if 'descuento' in data:
-        descuento_nuevo, error_descuento = parsear_descuento(data.get('descuento'))
+    if "descuento" in data:
+        descuento_nuevo, error_descuento = parsear_descuento(
+            data.get("descuento")
+        )
         if error_descuento:
-            return jsonify({'error': error_descuento}), 400
+            return jsonify({"error": error_descuento}), 400
+        cambios["descuento"] = descuento_nuevo
 
-    fotos = data.get('fotos')
+    fotos = data.get("fotos")
+    if isinstance(fotos, list):
+        cambios["fotos"] = [
+            url for url in fotos if isinstance(url, str) and url
+        ]
+    elif data.get("foto"):
+        cambios["fotos"] = [data["foto"]]
 
-    with STOCK_LOCK:
-        producto.nombre = nuevo_nombre
-        producto.precio = precio
-        if stock_nuevo is not None:
-            producto.stock = stock_nuevo
-        if 'unidad_medida' in data:
-            producto.unidad_medida = str(data.get('unidad_medida') or '').strip() or 'unidad'
-        if 'descripcion' in data:
-            producto.descripcion = str(data.get('descripcion') or '').strip()
-        if 'categoria' in data:
-            producto.categoria = normalizar_categoria(data.get('categoria'))
-        if 'descuento' in data:
-            producto.descuento = descuento_nuevo
-        if 'reposicion_pendiente' in data:
-            producto.reposicion_pendiente = bool(data.get('reposicion_pendiente'))
-        # Al volver a tener stock, el aviso de reposición deja de tener sentido.
-        if producto.stock > 0:
-            producto.reposicion_pendiente = False
-        if isinstance(fotos, list):
-            producto.fotos = [url for url in fotos if isinstance(url, str) and url]
-        elif data.get('foto'):
-            producto.fotos = [data['foto']]
+    if "unidad_medida" in data:
+        cambios["unidad_medida"] = (
+            str(data.get("unidad_medida") or "").strip() or "unidad"
+        )
+    if "descripcion" in data:
+        cambios["descripcion"] = str(data.get("descripcion") or "").strip()
+    if "categoria" in data:
+        cambios["categoria"] = normalizar_categoria(data.get("categoria"))
+    if "reposicion_pendiente" in data:
+        cambios["reposicion_pendiente"] = bool(
+            data.get("reposicion_pendiente")
+        )
 
-        guardar_inventario()
+    return jsonify(ejecutar(servicios.actualizar_producto(nombre, cambios)))
 
-    return jsonify(producto.__dict__)
 
-@app.route('/api/products/<nombre>', methods=['DELETE'])
+@app.route("/api/products/<nombre>", methods=["DELETE"])
 @requiere_roles(*ROLES_GESTION)
 def delete_product(nombre):
-    with STOCK_LOCK:
-        producto = inventario.searchProducto(nombre)
-        if not producto:
-            return jsonify({'success': False, 'error': 'Product not found'}), 404
-        inventario.removeProducto(producto)
-        guardar_inventario()
-    return jsonify({'success': True})
+    ejecutar(servicios.eliminar_producto(nombre))
+    return jsonify({"success": True})
 
-@app.route('/api/invoices', methods=['GET'])
+
+@app.route("/api/invoices", methods=["GET"])
 def get_invoices():
-    usuario = str(session.get('usuario') or '')
+    cuenta = usuario_sesion()
+    if not cuenta:
+        return jsonify({"error": "Necesitas iniciar sesión."}), 401
+
     # Clientes ven solo sus facturas; empleados y administradores, todas.
-    if rol_sesion() in ROLES_GESTION:
-        return jsonify([f.to_dict() for f in gestor_facturas.facturas])
+    todas = cuenta["rol"] in ROLES_GESTION
+    return jsonify(ejecutar(
+        servicios.listar_facturas(usuario_id=cuenta["id"], todas=todas)
+    ))
 
-    return jsonify([
-        f.to_dict()
-        for f in gestor_facturas.facturas
-        if f.usuario.casefold() == usuario.casefold()
-    ])
 
-@app.route('/api/invoices', methods=['POST'])
+@app.route("/api/invoices", methods=["POST"])
 def create_invoice():
     data = request.get_json(silent=True) or {}
-    items = data.get('items')
+    items = data.get("items")
     if not isinstance(items, list) or not items:
-        return jsonify({'error': 'La factura no tiene artículos.'}), 400
+        return jsonify({"error": "La factura no tiene artículos."}), 400
 
-    envio, error_envio = parsear_envio(data.get('envio'))
+    envio, error_envio = parsear_envio(data.get("envio"))
     if error_envio:
-        return jsonify({'error': error_envio}), 400
+        return jsonify({"error": error_envio}), 400
 
-    usuario = str(session.get('usuario') or '')
+    cuenta = usuario_sesion()
+    if not cuenta:
+        return jsonify({"error": "Necesitas iniciar sesión."}), 401
 
-    with STOCK_LOCK:
-        pedidos = {}
-        for item in items:
-            if not isinstance(item, dict):
-                return jsonify({'error': 'Hay un artículo inválido en la factura.'}), 400
+    pedidos = []
+    for item in items:
+        if not isinstance(item, dict):
+            return jsonify({
+                "error": "Hay un artículo inválido en la factura."
+            }), 400
 
-            producto_data = item.get('producto')
-            nombre = producto_data.get('nombre') if isinstance(producto_data, dict) else None
-            cantidad = item.get('cantidad')
-
-            if not isinstance(nombre, str) or not nombre.strip():
-                return jsonify({'error': 'Hay un artículo inválido en la factura.'}), 400
-            if isinstance(cantidad, bool) or not isinstance(cantidad, int) or cantidad <= 0:
-                return jsonify({'error': 'Las cantidades deben ser números enteros positivos.'}), 400
-
-            producto = inventario.searchProducto(nombre)
-            if not producto:
-                return jsonify({'error': f'El producto "{nombre}" ya no está en el inventario.'}), 400
-
-            pedidos[producto.nombre] = pedidos.get(producto.nombre, 0) + cantidad
-
-        carrito_temp = Carrito()
-        for nombre, cantidad in pedidos.items():
-            producto = inventario.searchProducto(nombre)
-            # Se vuelve a comprobar dentro del bloqueo: otra venta pudo haber
-            # descontado el stock entre la validación previa y este momento.
-            if cantidad > producto.stock:
-                return jsonify({
-                    'error': (
-                        f'No hay stock suficiente de "{producto.nombre}". '
-                        f'Disponible: {producto.stock}.'
-                    )
-                }), 409
-            carrito_temp.addChart(producto, cantidad)
-
-        factura = Factura(
-            siguiente_numero_factura(usuario),
-            carrito_temp,
-            estado=estado_inicial(envio),
-            envio=envio,
-            usuario=usuario,
-            costo_envio=configuracion.get('costo_envio', 0),
+        producto_data = item.get("producto")
+        nombre = (
+            producto_data.get("nombre")
+            if isinstance(producto_data, dict)
+            else None
         )
-        gestor_facturas.facturas.append(factura)
+        cantidad = item.get("cantidad")
 
-        for producto, cantidad in carrito_temp.items:
-            producto.stock -= cantidad
+        if not isinstance(nombre, str) or not nombre.strip():
+            return jsonify({
+                "error": "Hay un artículo inválido en la factura."
+            }), 400
+        if isinstance(cantidad, bool) or not isinstance(cantidad, int) or cantidad <= 0:
+            return jsonify({
+                "error": "Las cantidades deben ser números enteros positivos."
+            }), 400
 
-        guardar_inventario()
-        guardar_facturas()
+        pedidos.append({"nombre": nombre, "cantidad": cantidad})
 
-    return jsonify(factura.to_dict())
-
-def validar_stock_para_factura(factura):
-    """Comprueba que el inventario pueda cubrir de nuevo los artículos."""
-    faltantes = []
-    for producto, cantidad in factura.items:
-        actual = inventario.searchProducto(producto.nombre)
-        if not actual:
-            faltantes.append(f'"{producto.nombre}" ya no está en el inventario')
-        elif actual.stock < cantidad:
-            faltantes.append(
-                f'"{actual.nombre}" solo tiene {actual.stock} disponibles'
-            )
-    return faltantes
+    factura = ejecutar(servicios.crear_factura(cuenta["id"], pedidos, envio))
+    return jsonify(factura)
 
 
-def ajustar_stock_factura(factura, signo):
-    """Suma (signo 1) o resta (signo -1) las cantidades de una factura."""
-    cambiado = False
-    for producto, cantidad in factura.items:
-        actual = inventario.searchProducto(producto.nombre)
-        if not actual:
-            continue
-        actual.stock = max(0, actual.stock + signo * cantidad)
-        if actual.stock > 0:
-            actual.reposicion_pendiente = False
-        cambiado = True
-    return cambiado
-
-
-@app.route('/api/invoices/<int:numero>', methods=['PATCH'])
+@app.route("/api/invoices/<int:numero>", methods=["PATCH"])
 @requiere_roles(*ROLES_GESTION)
 def update_invoice(numero):
     data = request.get_json(silent=True) or {}
-    estado = str(data.get('estado') or '').strip()
+    estado = str(data.get("estado") or "").strip()
     if estado not in ESTADOS_FACTURA:
-        return jsonify({'error': 'El estado indicado no es válido.'}), 400
+        return jsonify({"error": "El estado indicado no es válido."}), 400
 
     motivo = str(
-        data.get('motivo_cancelacion') or data.get('motivo') or ''
+        data.get("motivo_cancelacion") or data.get("motivo") or ""
     ).strip()
-    usuario = str(data.get('usuario') or '').strip()
+    usuario = str(data.get("usuario") or "").strip()
 
-    with STOCK_LOCK:
-        if usuario:
-            factura = gestor_facturas.searchFactura(numero, usuario)
-            if not factura:
-                return jsonify({'error': 'Factura no encontrada.'}), 404
-        else:
-            # La numeración es por usuario: con varias cuentas puede repetirse.
-            coincidencias = [
-                f for f in gestor_facturas.facturas if f.numero == numero
-            ]
-            if not coincidencias:
-                return jsonify({'error': 'Factura no encontrada.'}), 404
-            if len(coincidencias) > 1:
-                return jsonify({
-                    'error': (
-                        'Hay varias facturas con ese número. '
-                        'Indica el usuario de la factura.'
-                    ),
-                }), 409
-            factura = coincidencias[0]
-
-        if estado == 'en_envio' and not factura.envio['a_domicilio']:
-            return jsonify({
-                'error': (
-                    'Solo las facturas con envío a domicilio pueden marcarse '
-                    'como «En envío».'
-                ),
-            }), 400
-
-        stock_cambiado = False
-        if estado == 'cancelada' and factura.estado != 'cancelada':
-            # Cancelar devuelve al inventario lo que la factura había descontado.
-            stock_cambiado = ajustar_stock_factura(factura, 1)
-        elif factura.estado == 'cancelada' and estado != 'cancelada':
-            # Reactivar una factura cancelada vuelve a descontar el stock.
-            faltantes = validar_stock_para_factura(factura)
-            if faltantes:
-                return jsonify({
-                    'error': (
-                        'No hay stock suficiente para reactivar la factura: '
-                        + '; '.join(faltantes)
-                        + '.'
-                    ),
-                }), 409
-            stock_cambiado = ajustar_stock_factura(factura, -1)
-
-        factura.cambiar_estado(estado, motivo)
-        if stock_cambiado:
-            guardar_inventario()
-        guardar_facturas()
-
-    return jsonify(factura.to_dict())
+    return jsonify(ejecutar(
+        servicios.cambiar_estado_factura(numero, estado, motivo, usuario)
+    ))
 
 
-@app.route('/api/envios', methods=['GET'])
+@app.route("/api/envios", methods=["GET"])
 @requiere_roles(*ROLES_GESTION)
 def get_envios():
-    return jsonify({
-        'envios': [envio_publico(envio) for envio in reversed(envios)],
-        'facturas_disponibles': facturas_disponibles_para_envio(),
-    })
+    return jsonify(ejecutar(servicios.listar_envios()))
 
 
-@app.route('/api/envios', methods=['POST'])
+@app.route("/api/envios", methods=["POST"])
 @requiere_roles(*ROLES_GESTION)
 def create_envio():
     data = request.get_json(silent=True) or {}
-    seleccion = data.get('facturas')
+    seleccion = data.get("facturas")
     if not isinstance(seleccion, list) or not seleccion:
-        return jsonify({'error': 'Selecciona al menos una factura para el envío.'}), 400
+        return jsonify({
+            "error": "Selecciona al menos una factura para el envío."
+        }), 400
 
-    notas = str(data.get('notas') or '').strip()[:300]
+    codigos = []
+    for entrada in seleccion:
+        codigo = (
+            str(entrada.get("codigo") or "").strip()
+            if isinstance(entrada, dict)
+            else str(entrada or "").strip()
+        )
+        codigos.append(codigo)
 
-    with STOCK_LOCK:
-        ocupadas = codigos_en_envios()
-        elegidas = []
-        vistos = set()
+    cuenta = usuario_sesion()
+    if not cuenta:
+        return jsonify({"error": "Necesitas iniciar sesión."}), 401
 
-        for entrada in seleccion:
-            codigo = (
-                str(entrada.get('codigo') or '').strip()
-                if isinstance(entrada, dict)
-                else str(entrada or '').strip()
-            )
-            if not codigo:
-                return jsonify({'error': 'Hay una factura inválida en la selección.'}), 400
-            if codigo in vistos:
-                return jsonify({'error': 'Una factura está repetida en la selección.'}), 400
-            vistos.add(codigo)
-
-            factura = factura_por_codigo(codigo)
-            if not factura:
-                return jsonify({'error': 'Alguna de las facturas ya no existe.'}), 404
-            if not factura.envio['a_domicilio']:
-                return jsonify({
-                    'error': f'La factura #{factura.numero} no es un envío a domicilio.',
-                }), 400
-            if factura.estado in ('cancelada', 'pagada'):
-                return jsonify({
-                    'error': (
-                        f'La factura #{factura.numero} está {factura.estado} '
-                        'y no se puede agrupar.'
-                    ),
-                }), 409
-            if codigo in ocupadas:
-                return jsonify({
-                    'error': f'La factura #{factura.numero} ya pertenece a otro envío.',
-                }), 409
-            elegidas.append(factura)
-
-        envio = {
-            'id': uuid4().hex,
-            'codigo': f'ENV-{secrets.token_hex(3).upper()}',
-            'fecha': datetime.now(timezone.utc).isoformat(timespec='seconds'),
-            'estado': 'en_envio',
-            'creado_por': str(session.get('usuario') or ''),
-            'notas': notas,
-            'facturas': [resumen_factura_envio(factura) for factura in elegidas],
-        }
-
-        for factura in elegidas:
-            factura.cambiar_estado('en_envio')
-
-        envios.append(envio)
-        guardar_facturas()
-        guardar_envios()
-
-    return jsonify(envio_publico(envio)), 201
+    envio = ejecutar(servicios.crear_envio(
+        cuenta["id"], codigos, data.get("notas") or ""
+    ))
+    return jsonify(envio), 201
 
 
-@app.route('/api/envios/<envio_id>', methods=['PATCH'])
+@app.route("/api/envios/<envio_id>", methods=["PATCH"])
 @requiere_roles(*ROLES_GESTION)
 def update_envio(envio_id):
     data = request.get_json(silent=True) or {}
-    estado = str(data.get('estado') or '').strip()
-    if estado not in ('entregado', 'cancelado'):
-        return jsonify({'error': 'El estado del envío no es válido.'}), 400
+    estado = str(data.get("estado") or "").strip()
+    if estado not in ("entregado", "cancelado"):
+        return jsonify({"error": "El estado del envío no es válido."}), 400
 
-    envio = next((item for item in envios if item.get('id') == envio_id), None)
-    if not envio:
-        return jsonify({'error': 'Envío no encontrado.'}), 404
-
-    if envio.get('estado') == 'cancelado':
-        return jsonify({'error': 'Este envío ya está cancelado.'}), 409
-
-    with STOCK_LOCK:
-        for ref in envio.get('facturas', []):
-            codigo = ref.get('codigo') if isinstance(ref, dict) else ref
-            factura = factura_por_codigo(codigo)
-            if not factura or factura.estado == 'cancelada':
-                continue
-            if estado == 'entregado':
-                # El envío se completó: las facturas quedan cobradas.
-                factura.cambiar_estado('pagada')
-            elif factura.estado == 'en_envio':
-                # Al cancelar el envío, las facturas vuelven a estar pendientes.
-                factura.cambiar_estado('pendiente')
-
-        envio['estado'] = estado
-        guardar_facturas()
-        guardar_envios()
-
-    return jsonify(envio_publico(envio))
+    return jsonify(ejecutar(servicios.actualizar_envio(envio_id, estado)))
 
 
-if __name__ == '__main__':
-    cargar_datos()
+if __name__ == "__main__":
     app.run(debug=True, port=5000)
