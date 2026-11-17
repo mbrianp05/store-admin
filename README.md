@@ -16,7 +16,7 @@ La aplicación permite:
 - **Emitir facturas** con numeración automática por usuario y descuento de stock.
 - **Gestionar el estado de las facturas**: pendiente, en envío, pagada o cancelada.
 - **Verificar entregas con QR** en las facturas con envío a domicilio.
-- **Persistir los datos** en archivos JSON locales.
+- **Persistir los datos** en PostgreSQL con un esquema normalizado.
 - **Autenticación**: registro e inicio de sesión con usuario y contraseña.
 - **Validar contraseñas**: se exige una contraseña suficientemente fuerte según zxcvbn.
 - **Roles**: visitante (`guest`), cliente, empleado y administrador, con permisos distintos sobre productos, facturas y usuarios.
@@ -27,6 +27,7 @@ La aplicación permite:
 ## ✅ Requisitos
 
 - **Python 3.10+** (el proyecto se ejecuta con Python 3.14 en Windows).
+- **PostgreSQL 14+** en ejecución (probado con PostgreSQL 16).
 - **Node.js `^20.19.0 || >=22.12.0`** y **npm** (requisito de Vite 8).
 - **Navegador web moderno** (Chrome, Firefox, Edge, etc.).
 
@@ -36,11 +37,14 @@ La aplicación permite:
 
 ### Backend
 
+Se instalan con `requirements.txt`:
+
 - **Flask** — framework web y servidor de la API.
 - **Flask-CORS** — habilitación de CORS.
 - **zxcvbn** — evalúa la fortaleza de las contraseñas antes de registrar un usuario.
-
-No hay `requirements.txt`: las dependencias se instalan manualmente.
+- **SQLAlchemy 2** (extra `asyncio`) — ORM y capa de acceso a datos.
+- **asyncpg** — driver asíncrono de PostgreSQL.
+- **greenlet** — requerido por SQLAlchemy para su modo asíncrono (se instala con SQLAlchemy).
 
 ### Frontend
 
@@ -84,25 +88,53 @@ source venv/bin/activate
 ### 3. Instalar dependencias del backend
 
 ```bash
-py -m pip install flask flask-cors zxcvbn
+py -m pip install -r requirements.txt
 ```
 
-En macOS/Linux usa `python3 -m pip install flask flask-cors zxcvbn`.
+En macOS/Linux usa `python3 -m pip install -r requirements.txt`.
 
-### 4. Instalar dependencias del frontend
+### 4. Crear la base de datos PostgreSQL
+
+Con el servidor de PostgreSQL en ejecución, crea la base una sola vez:
+
+```bash
+createdb -U postgres venture
+```
+
+Configura la conexión con la variable `DATABASE_URL` (ajusta usuario y contraseña):
+
+```bash
+# PowerShell
+$env:DATABASE_URL = "postgresql+asyncpg://postgres:TU_CLAVE@localhost:5432/venture"
+
+# Bash
+export DATABASE_URL="postgresql+asyncpg://postgres:TU_CLAVE@localhost:5432/venture"
+```
+
+Si no se define, se usa `postgresql+asyncpg://postgres:postgres@localhost:5432/venture`. Las tablas se crean automáticamente al iniciar la aplicación.
+
+Para importar los datos históricos de `data/*.json` (solo con la base vacía):
+
+```bash
+py migrar_json.py
+```
+
+Usa `py migrar_json.py --forzar` para vaciar las tablas y volver a importar. Ejecútalo antes de iniciar la aplicación en una base nueva; si no, el arranque siembra cuatro productos de ejemplo y el importador pedirá `--forzar`.
+
+### 5. Instalar dependencias del frontend
 
 ```bash
 cd frontend
 npm install
 ```
 
-### 5. Verificar la instalación
+### 6. Verificar la instalación
 
 ```bash
 py -m pip list
 ```
 
-Deberías ver `flask` y `flask-cors` en la lista. En `frontend/`, `npm install` genera `node_modules/` y `package-lock.json`.
+Deberías ver `flask`, `flask-cors`, `sqlalchemy`, `asyncpg` y `greenlet` en la lista. En `frontend/`, `npm install` genera `node_modules/` y `package-lock.json`.
 
 ## ▶️ Ejecutar la aplicación
 
@@ -114,7 +146,7 @@ Deberías ver `flask` y `flask-cors` en la lista. En `frontend/`, `npm install` 
 py app.py
 ```
 
-Queda disponible en `http://localhost:5000` con el modo debug activado.
+Queda disponible en `http://localhost:5000` con el modo debug activado. Antes de iniciarlo, define `DATABASE_URL` en esa terminal y asegúrate de que PostgreSQL esté en ejecución. Si la conexión falla, el arranque se detiene con un error claro.
 
 **Terminal 2 — frontend Vite:**
 
@@ -240,15 +272,20 @@ El encabezado fijo muestra la marca **Venture** y la fecha del día. Las pestañ
 
 ```text
 app.py                         # API Flask y servidor de frontend/dist
-autenticacion.py               # Registro, contraseñas, roles y persistencia de usuarios
+database.py                    # Motor async, bucle dedicado, sesiones e inicialización
+servicios.py                   # Lógica asíncrona de negocio sobre PostgreSQL
+autenticacion.py               # Contraseñas, roles y validación de campos
 limitador.py                   # Rate limit en memoria para el login
+migrar_json.py                 # Importador de los data/*.json históricos
+requirements.txt               # Dependencias del backend
 models/
-  __init__.py                  # Reexporta las clases del dominio
-  Producto.py                  # Producto (nombre, precio, stock, fotos, descuento...)
-  Inventario.py                # Inventario de productos
-  Carrito.py                   # Carrito y cálculo de totales
-  Factura.py                   # Factura, estados, envío y QR
-  GestorFacturas.py            # Historial de facturas
+  __init__.py                  # Reexporta los modelos y utilidades del dominio
+  Usuario.py                   # Usuarios, roles y hash de contraseña
+  Producto.py                  # Categorías, productos, fotos y descuentos
+  Factura.py                   # Facturas e ítems, estados, envío y QR
+  Envio.py                     # Envíos y su relación con facturas
+  Configuracion.py             # Fila única de configuración (costo de envío)
+  Carrito.py                   # Carrito y cálculo de totales (no persistido)
 frontend/
   index.html                   # HTML de la SPA
   package.json
@@ -318,6 +355,23 @@ README.md
 ```
 
 `frontend/dist/` se genera con `npm run build` y también está ignorado por git.
+
+## 🗃️ Base de datos
+
+PostgreSQL normalizado y gestionado con SQLAlchemy 2 async:
+
+- `usuarios` — cuentas y roles (`cliente`, `empleado`, `admin`).
+- `categorias` — una fila por categoría; `productos.categoria_id` es FK opcional.
+- `productos` — precio, unidad, descripción, stock y aviso de reposición.
+- `producto_fotos` — una fila por foto, ordenada; la primera es la portada.
+- `producto_descuentos` — descuento uno a uno por producto (`porcentaje`, `desde`, `hasta`).
+- `facturas` — cabecera con `numero` por usuario, `codigo` público, entrega, totales y estado.
+- `factura_items` — líneas con `producto_id` opcional y copia histórica de nombre, unidad y precio.
+- `envios` — cabecera del envío y su creador.
+- `envio_facturas` — relación envío ↔ factura con `orden`; una factura pertenece a un solo envío.
+- `configuracion` — fila única (`id = 1`) con `costo_envio`.
+
+El dinero usa `Numeric(12, 2)` y la unicidad sin distinguir mayúsculas se respalda con índices únicos sobre `lower(...)`. Las fotos siguen guardándose en `data/uploads/`; la base solo almacena sus URLs.
 
 ## 🔌 API
 
@@ -512,8 +566,8 @@ Devuelve las facturas de la más antigua a la más reciente. Un `cliente` recibe
 ```
 
 - `items` es un array de objetos con `producto` y `cantidad`.
-- `producto` contiene el estado del producto en el momento de la consulta, no una copia histórica.
-- `subtotal` es la suma de los precios vigentes al momento de emitir; `total` incluye `costo_envio`.
+- `producto` contiene el estado actual del producto; si el producto fue eliminado, se usan los datos históricos guardados en la línea (`factura_items`).
+- `subtotal` es la suma de los precios aplicados al emitir; `total` incluye `costo_envio`.
 - `estado` puede ser `pendiente`, `en_envio`, `pagada` o `cancelada`.
 - `qr` solo tiene contenido cuando la factura es con envío a domicilio.
 - El frontend ordena las facturas de la más reciente a la más antigua para mostrarlas.
@@ -542,9 +596,9 @@ Devuelve las facturas de la más antigua a la más reciente. Un `cliente` recibe
 - Si un producto aparece repetido, las cantidades se agrupan.
 - Se valida el stock antes de emitir; si no alcanza, responde **409** con la cantidad disponible.
 - `envio` es opcional. Si `a_domicilio` es `true`, `direccion` es obligatoria; en ese caso se suma el costo fijo de envío configurado.
-- El **número de factura lo asigna el servidor** por usuario (`next_invoice_number`), no el cliente.
+- El **número de factura lo asigna el servidor** por usuario, dentro de la misma transacción que descuenta el stock.
 - La factura nace en estado `pendiente`.
-- Al emitir, descuenta el stock, guarda los cambios y devuelve la factura creada.
+- Al emitir, descuenta el stock con bloqueo de fila, guarda los cambios en PostgreSQL y devuelve la factura creada.
 
 ### PATCH /api/invoices/<numero>
 
@@ -616,7 +670,7 @@ Requiere rol `empleado` o `admin`. Devuelve los envíos agrupados y las facturas
 - Requiere rol `empleado` o `admin`.
 - Cada elemento puede ser el `codigo` de la factura o un objeto `{ "codigo": "..." }`.
 - Todas deben ser facturas a domicilio, no canceladas, no pagadas y no incluidas en otro envío.
-- Al agrupar, todas pasan automáticamente a estado `en_envio` y se guarda el envío en `data/envios.json`.
+- Al agrupar, todas pasan automáticamente a estado `en_envio` y el envío se guarda en PostgreSQL (tablas `envios` y `envio_facturas`).
 - Responde **400** si la selección está vacía o contiene una factura no válida, **409** si alguna ya pertenece a otro envío o no se puede agrupar.
 
 ### PATCH /api/envios/<id>
@@ -663,8 +717,21 @@ Verifica que el backend esté corriendo en el puerto 5000. El proxy de Vite est�
 Instala las dependencias del backend:
 
 ```bash
-py -m pip install flask flask-cors zxcvbn
+py -m pip install -r requirements.txt
 ```
+
+### No se puede conectar a PostgreSQL
+
+El arranque se detiene con un `RuntimeError` si la base no responde. Comprueba que:
+
+- El servicio de PostgreSQL esté en ejecución.
+- La base `venture` exista (`createdb -U postgres venture`).
+- `DATABASE_URL` tenga el usuario, la contraseña, el host, el puerto y el nombre correctos.
+- El driver sea asíncrono: usa el prefijo `postgresql+asyncpg://` (también se acepta `postgresql://` y se normaliza).
+
+### El importador dice que la base ya tiene datos
+
+`migrar_json.py` solo importa sobre una base vacía. Si ya arrancaste la aplicación, se sembraron los productos de ejemplo; usa `py migrar_json.py --forzar` para vaciar las tablas y reimportar.
 
 ### Error: «Address already in use»
 
@@ -694,13 +761,13 @@ Puede haber cambiado de nombre o haberse eliminado en otra pestaña. Recarga la 
 
 ## 📝 Notas adicionales
 
-- No hay base de datos: los usuarios, el inventario, las facturas y la configuración viven en archivos JSON, y la sesión en una cookie firmada.
+- Los usuarios, el inventario, las facturas, los envíos y la configuración viven en PostgreSQL; la sesión sigue en una cookie firmada.
 - Cada cuenta guarda un `rol` (`cliente`, `empleado` o `admin`). `guest` es solo el visitante sin sesión y no se persiste.
-- La primera cuenta registrada en un archivo de usuarios vacío se crea como `admin`; las siguientes, como `cliente`.
-- Si un archivo de usuarios antiguo no tiene roles, la primera cuenta del JSON se normaliza como `admin` y el resto como `cliente`.
+- La primera cuenta registrada en una tabla `usuarios` vacía se crea como `admin`; las siguientes, como `cliente`.
+- Los datos históricos de `data/*.json` se importan con `migrar_json.py`; el tiempo de ejecución ya no lee ni escribe esos archivos.
 - El backend valida los permisos en cada petición; la interfaz solo oculta las acciones no permitidas.
 - La contabilidad y la administración de usuarios son exclusivas del rol `admin`.
-- El número de factura lo controla el servidor y se restaura desde la factura de mayor número de cada usuario al iniciar.
+- El número de factura lo controla el servidor y se calcula dentro de la transacción de emisión, con la cuenta bloqueada.
 - El stock se descuenta en el backend al emitir la factura; el frontend actualiza su copia de forma optimista.
 - El carrito es estado del cliente y se vacía después de emitir una factura.
 - La moneda se muestra en pesos cubanos (CUP) y las fechas en formato estándar de español (`es-ES`).
