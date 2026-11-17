@@ -1,5 +1,3 @@
-from .Producto import Producto
-
 class Carrito:
     def __init__(self):
         self.items = []
@@ -17,7 +15,7 @@ class Carrito:
     def calcTotal(self):
         total = 0
         for producto, cantidad in self.items:
-            if hasattr(producto, 'precio_vigente'):
+            if hasattr(producto, "precio_vigente"):
                 precio = producto.precio_vigente()
             else:
                 precio = producto.precio
