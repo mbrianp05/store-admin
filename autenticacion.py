@@ -1,16 +1,16 @@
-"""Registro, validación y persistencia de usuarios en JSON."""
+"""Reglas de autenticación, contraseñas y validación de cuentas.
 
-import json
-import os
+La persistencia de los usuarios vive en PostgreSQL (``models.Usuario``); este
+módulo solo valida los datos y construye/verifica credenciales.
+"""
+
 import re
 from datetime import datetime, timezone
 
 from werkzeug.security import check_password_hash, generate_password_hash
 from zxcvbn import zxcvbn
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(BASE_DIR, "data")
-USUARIOS_PATH = os.path.join(DATA_DIR, "usuarios.json")
+from models.Usuario import Usuario
 
 PASSWORD_MIN_LENGTH = 8
 PASSWORD_MAX_LENGTH = 128
@@ -49,66 +49,37 @@ MENSAJES_ZXCVBN = {
     "Predictable substitutions like '@' instead of 'a' don't help very much": "Cambiar «a» por «@» no la hace mucho más segura.",
 }
 
+
 def normalizar_rol(valor):
     """Devuelve un rol válido; cualquier valor desconocido cae en cliente."""
     return valor if valor in ROLES else ROL_POR_DEFECTO
 
 
-def normalizar_roles(usuarios):
-    """Asegura que cada cuenta tenga rol y que siempre exista un admin.
-
-    La primera cuenta registrada (el orden del JSON) es la fundadora: si el
-    archivo viene de versiones anteriores sin roles, esa cuenta pasa a admin.
-    """
-    for usuario in usuarios:
-        usuario["rol"] = normalizar_rol(usuario.get("rol"))
-
-    if usuarios and not any(u.get("rol") == ROL_ADMIN for u in usuarios):
-        usuarios[0]["rol"] = ROL_ADMIN
-
-    return usuarios
+def _campo(usuario, nombre, defecto=""):
+    if isinstance(usuario, dict):
+        return usuario.get(nombre, defecto)
+    return getattr(usuario, nombre, defecto)
 
 
-def cargar_usuarios():
-    try:
-        with open(USUARIOS_PATH, "r", encoding="utf-8") as archivo:
-            datos = json.load(archivo)
-    except (FileNotFoundError, json.JSONDecodeError):
-        return []
-    if not isinstance(datos, list):
-        return []
-    usuarios = [
-        usuario
-        for usuario in datos
-        if isinstance(usuario, dict) and usuario.get("usuario")
-    ]
-    return normalizar_roles(usuarios)
-
-
-def guardar_usuarios(usuarios):
-    os.makedirs(DATA_DIR, exist_ok=True)
-    ruta_temporal = f"{USUARIOS_PATH}.tmp"
-    with open(ruta_temporal, "w", encoding="utf-8") as archivo:
-        json.dump(usuarios, archivo, ensure_ascii=False, indent=2)
-    os.replace(ruta_temporal, USUARIOS_PATH)
-
-
-def buscar_usuario(usuarios, nombre):
-    buscado = str(nombre or "").strip().casefold()
-    for usuario in usuarios:
-        if usuario["usuario"].casefold() == buscado:
-            return usuario
-    return None
+def _nombres_existentes(nombres):
+    return {
+        str(nombre).strip().casefold()
+        for nombre in (nombres or ())
+        if str(nombre).strip()
+    }
 
 
 def usuario_publico(usuario):
+    creado = _campo(usuario, "creado", "")
+    if hasattr(creado, "isoformat"):
+        creado = creado.isoformat(timespec="seconds")
     return {
-        "usuario": usuario.get("usuario", ""),
-        "nombres": usuario.get("nombres", ""),
-        "apellidos": usuario.get("apellidos", ""),
-        "email": usuario.get("email", ""),
-        "creado": usuario.get("creado", ""),
-        "rol": normalizar_rol(usuario.get("rol")),
+        "usuario": _campo(usuario, "usuario", ""),
+        "nombres": _campo(usuario, "nombres", ""),
+        "apellidos": _campo(usuario, "apellidos", ""),
+        "email": _campo(usuario, "email", ""),
+        "creado": creado,
+        "rol": normalizar_rol(_campo(usuario, "rol")),
     }
 
 
@@ -120,21 +91,21 @@ def crear_usuario(
     password,
     rol=ROL_POR_DEFECTO,
 ):
-    return {
-        "usuario": usuario,
-        "nombres": nombres,
-        "apellidos": apellidos,
-        "email": email,
-        "password_hash": generate_password_hash(password),
-        "creado": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "rol": normalizar_rol(rol),
-    }
+    return Usuario(
+        usuario=usuario,
+        nombres=nombres,
+        apellidos=apellidos,
+        email=email,
+        password_hash=generate_password_hash(password),
+        creado=datetime.now(timezone.utc),
+        rol=normalizar_rol(rol),
+    )
 
 
 def verificar_password(usuario, password):
     if not usuario or not isinstance(password, str) or not password:
         return False
-    return check_password_hash(usuario.get("password_hash", ""), password)
+    return check_password_hash(_campo(usuario, "password_hash", ""), password)
 
 
 def evaluar_password(password, datos_personales=()):
@@ -186,13 +157,14 @@ def evaluar_password(password, datos_personales=()):
     return {"valida": False, "score": score, "mensaje": mensaje}
 
 
-def validar_perfil(datos, usuarios, cuenta):
+def validar_perfil(datos, nombres_existentes, cuenta):
     """Valida los datos editables del perfil: usuario y correo."""
     datos = datos if isinstance(datos, dict) else {}
 
     usuario = str(datos.get("usuario") or "").strip()
     email = str(datos.get("email") or "").strip()
-    actual = str(cuenta.get("usuario") or "").strip()
+    actual = str(_campo(cuenta, "usuario", "")).strip()
+    existentes = _nombres_existentes(nombres_existentes)
 
     errores = {}
 
@@ -203,7 +175,10 @@ def validar_perfil(datos, usuarios, cuenta):
             "El usuario debe tener entre 3 y 30 caracteres y usar solo letras, "
             "números, puntos, guiones o guiones bajos."
         )
-    elif usuario.casefold() != actual.casefold() and buscar_usuario(usuarios, usuario):
+    elif (
+        usuario.casefold() != actual.casefold()
+        and usuario.casefold() in existentes
+    ):
         errores["usuario"] = "Ese usuario ya está en uso."
 
     if email:
@@ -233,10 +208,10 @@ def validar_cambio_password(datos, cuenta):
     evaluacion = evaluar_password(
         nueva,
         datos_personales=[
-            cuenta.get("usuario"),
-            cuenta.get("nombres"),
-            cuenta.get("apellidos"),
-            cuenta.get("email"),
+            _campo(cuenta, "usuario"),
+            _campo(cuenta, "nombres"),
+            _campo(cuenta, "apellidos"),
+            _campo(cuenta, "email"),
         ],
     )
     if not evaluacion["valida"]:
@@ -248,10 +223,10 @@ def validar_cambio_password(datos, cuenta):
 
 
 def actualizar_password(cuenta, password):
-    cuenta["password_hash"] = generate_password_hash(password)
+    cuenta.password_hash = generate_password_hash(password)
 
 
-def validar_registro(datos, usuarios):
+def validar_registro(datos, nombres_existentes=()):
     """Devuelve (valores_normalizados, errores_por_campo)."""
     datos = datos if isinstance(datos, dict) else {}
 
@@ -260,6 +235,7 @@ def validar_registro(datos, usuarios):
     usuario = str(datos.get("usuario") or "").strip()
     email = str(datos.get("email") or "").strip()
     password = datos.get("password")
+    existentes = _nombres_existentes(nombres_existentes)
 
     errores = {}
 
@@ -280,7 +256,7 @@ def validar_registro(datos, usuarios):
             "El usuario debe tener entre 3 y 30 caracteres y usar solo letras, "
             "números, puntos, guiones o guiones bajos."
         )
-    elif buscar_usuario(usuarios, usuario):
+    elif usuario.casefold() in existentes:
         errores["usuario"] = "Ese usuario ya está en uso."
 
     if email:
