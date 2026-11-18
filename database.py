@@ -12,6 +12,7 @@ import threading
 from contextlib import asynccontextmanager
 from decimal import Decimal
 
+from dotenv import load_dotenv
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
@@ -19,6 +20,11 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 from sqlalchemy.orm import DeclarativeBase
+
+# La configuración de la base vive en ``.env`` (ignorado por git). Las
+# variables ya definidas en el entorno real tienen prioridad.
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+load_dotenv(os.path.join(BASE_DIR, ".env"), override=False)
 
 DATABASE_URL = os.environ.get(
     "DATABASE_URL",

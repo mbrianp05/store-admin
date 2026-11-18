@@ -16,6 +16,11 @@ data/*.json
 data/secret_key
 data/uploads/
 
+# Variables de entorno
+.env
+.env.*
+!.env.example
+
 # IDEs
 .vscode/
 .idea/
