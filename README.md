@@ -101,17 +101,23 @@ Con el servidor de PostgreSQL en ejecución, crea la base una sola vez:
 createdb -U postgres venture
 ```
 
-Configura la conexión con la variable `DATABASE_URL` (ajusta usuario y contraseña):
+Configura la conexión en un archivo `.env` en la raíz del proyecto. Cópialo desde el ejemplo:
 
 ```bash
-# PowerShell
-$env:DATABASE_URL = "postgresql+asyncpg://postgres:TU_CLAVE@localhost:5432/venture"
+# Windows
+copy .env.example .env
 
-# Bash
-export DATABASE_URL="postgresql+asyncpg://postgres:TU_CLAVE@localhost:5432/venture"
+# macOS/Linux
+cp .env.example .env
 ```
 
-Si no se define, se usa `postgresql+asyncpg://postgres:postgres@localhost:5432/venture`. Las tablas se crean automáticamente al iniciar la aplicación.
+Edita `DATABASE_URL` con tu usuario y contraseña:
+
+```env
+DATABASE_URL=postgresql+asyncpg://postgres:TU_CLAVE@localhost:5432/venture
+```
+
+`database.py` carga `.env` automáticamente al arrancar. Si una variable ya está definida en el entorno real, esa tiene prioridad. Si `DATABASE_URL` no se define en ningún lado, se usa `postgresql+asyncpg://postgres:postgres@localhost:5432/venture`. Las tablas se crean automáticamente al iniciar la aplicación.
 
 Para importar los datos históricos de `data/*.json` (solo con la base vacía):
 
