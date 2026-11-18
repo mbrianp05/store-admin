@@ -5,11 +5,8 @@ Inventory, cart, and invoicing app: Flask JSON API + React/Tailwind frontend, ba
 ## Run
 
 - PostgreSQL 14+ must be running. Create the database once: `createdb -U postgres venture`.
-- Configure the connection with `DATABASE_URL`, for example:
-  - PowerShell: `$env:DATABASE_URL = "postgresql+asyncpg://postgres:TU_CLAVE@localhost:5432/venture"`
-  - Bash: `export DATABASE_URL="postgresql+asyncpg://postgres:TU_CLAVE@localhost:5432/venture"`
-  - Default when unset: `postgresql+asyncpg://postgres:postgres@localhost:5432/venture`.
-- Install Python deps: `py -m pip install -r requirements.txt` (Flask, Flask-CORS, zxcvbn, SQLAlchemy async, asyncpg). `requirements.txt` exists now.
+- Database config lives in `.env` at the repo root (gitignored). Copy `.env.example` to `.env` and set `DATABASE_URL`, for example `postgresql+asyncpg://postgres:TU_CLAVE@localhost:5432/venture`. `database.py` calls `load_dotenv(..., override=False)`, so real environment variables win; default when unset is `postgresql+asyncpg://postgres:postgres@localhost:5432/venture`.
+- Install Python deps: `py -m pip install -r requirements.txt` (Flask, Flask-CORS, zxcvbn, SQLAlchemy async, asyncpg, python-dotenv). `requirements.txt` exists now.
 - Backend: `py app.py` → http://localhost:5000. On this Windows setup `python` is a Store stub; use `py` (Python 3.14).
 - Frontend dev: `cd frontend && npm install && npm run dev` → http://localhost:5173. Vite proxies `/api` and `/uploads` to Flask on port 5000.
 - Production-ish: `cd frontend && npm run build`, then `py app.py`. Flask serves `frontend/dist` at `/` and the API at `/api/*`.
