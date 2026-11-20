@@ -65,8 +65,8 @@ Se instalan con `npm install` dentro de `frontend/`:
 ### 1. Clonar el repositorio
 
 ```bash
-git clone https://github.com/mbrianp05/store-admin
-cd store-admin
+git clone https://github.com/mbrianp05/venture
+cd venture
 ```
 
 ### 2. Crear y activar un entorno virtual
