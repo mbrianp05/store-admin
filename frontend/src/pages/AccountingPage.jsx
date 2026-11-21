@@ -12,6 +12,7 @@ import {
 import { getAccounting } from '../api'
 import {
   RevenueChart,
+  ShipmentActivityHeatmap,
   StatusDonut,
   TopClientsChart,
   TopProductsChart,
@@ -99,6 +100,7 @@ function AccountingSkeleton() {
         <Skeleton className="h-80 rounded-xl xl:col-span-3" />
         <Skeleton className="h-80 rounded-xl xl:col-span-2" />
       </div>
+      <Skeleton className="h-44 rounded-xl" />
     </div>
   )
 }
@@ -241,6 +243,8 @@ export default function AccountingPage() {
               className="xl:col-span-2"
             />
           </div>
+
+          <ShipmentActivityHeatmap actividad={datos.actividad_envios} />
 
           <Card className="gap-0 overflow-hidden py-0">
             <CardHeader className="border-b border-border/70 px-4 py-3">
