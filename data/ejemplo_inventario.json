@@ -1,0 +1,131 @@
+[
+  {
+    "nombre": "Laptop Lenovo IdeaPad",
+    "precio": 42000.0,
+    "unidad_medida": "unidad",
+    "descripcion": "14 pulgadas, 16 GB de RAM y 512 GB SSD.",
+    "categoria": "Electrónica",
+    "fotos": [],
+    "stock": 6,
+    "descuento": null,
+    "reposicion_pendiente": false
+  },
+  {
+    "nombre": "Auriculares Bluetooth",
+    "precio": 3500.0,
+    "unidad_medida": "unidad",
+    "descripcion": "Cancelación de ruido y estuche de carga.",
+    "categoria": "Electrónica",
+    "fotos": [],
+    "stock": 18,
+    "descuento": {
+      "porcentaje": 15.0,
+      "desde": "2026-11-15",
+      "hasta": "2026-12-15"
+    },
+    "reposicion_pendiente": false
+  },
+  {
+    "nombre": "Reloj inteligente",
+    "precio": 7800.0,
+    "unidad_medida": "unidad",
+    "descripcion": "Pantalla AMOLED, GPS y monitor de sueño.",
+    "categoria": "Electrónica",
+    "fotos": [],
+    "stock": 9,
+    "descuento": null,
+    "reposicion_pendiente": false
+  },
+  {
+    "nombre": "Cámara instantánea",
+    "precio": 9500.0,
+    "unidad_medida": "unidad",
+    "descripcion": "Incluye un paquete de películas de regalo.",
+    "categoria": "Electrónica",
+    "fotos": [],
+    "stock": 4,
+    "descuento": null,
+    "reposicion_pendiente": false
+  },
+  {
+    "nombre": "Billetes antiguos",
+    "precio": 1200.0,
+    "unidad_medida": "lote",
+    "descripcion": "Lote de billetes cubanos de colección.",
+    "categoria": "Coleccionismo",
+    "fotos": [],
+    "stock": 3,
+    "descuento": null,
+    "reposicion_pendiente": false
+  },
+  {
+    "nombre": "Monedas conmemorativas",
+    "precio": 2500.0,
+    "unidad_medida": "lote",
+    "descripcion": "Seis monedas con estuche de presentación.",
+    "categoria": "Coleccionismo",
+    "fotos": [],
+    "stock": 0,
+    "descuento": null,
+    "reposicion_pendiente": true
+  },
+  {
+    "nombre": "Cafetera eléctrica",
+    "precio": 6300.0,
+    "unidad_medida": "unidad",
+    "descripcion": "Capacidad de 1,5 litros con filtro permanente.",
+    "categoria": "Hogar",
+    "fotos": [],
+    "stock": 7,
+    "descuento": null,
+    "reposicion_pendiente": false
+  },
+  {
+    "nombre": "Juego de sábanas",
+    "precio": 2800.0,
+    "unidad_medida": "juego",
+    "descripcion": "Matrimonio, algodón 100 %, tonos neutros.",
+    "categoria": "Hogar",
+    "fotos": [],
+    "stock": 12,
+    "descuento": null,
+    "reposicion_pendiente": false
+  },
+  {
+    "nombre": "Mochila urbana",
+    "precio": 2200.0,
+    "unidad_medida": "unidad",
+    "descripcion": "Compartimento acolchado para laptop de 15 pulgadas.",
+    "categoria": "Accesorios",
+    "fotos": [],
+    "stock": 15,
+    "descuento": null,
+    "reposicion_pendiente": false
+  },
+  {
+    "nombre": "Gafas de sol",
+    "precio": 1800.0,
+    "unidad_medida": "unidad",
+    "descripcion": "Lentes polarizadas con estuche rígido.",
+    "categoria": "Accesorios",
+    "fotos": [],
+    "stock": 0,
+    "descuento": null,
+    "reposicion_pendiente": true
+  },
+  {
+    "nombre": "Café cubano 500 g",
+    "precio": 950.0,
+    "unidad_medida": "bolsa",
+    "descripcion": "Tueste natural, molido para colador.",
+    "categoria": "Alimentos",
+    "fotos": [],
+    "stock": 30,
+    "descuento": {
+      "porcentaje": 10.0,
+      "desde": "2026-09-01",
+      "hasta": "2026-09-30"
+    },
+    "reposicion_pendiente": false
+  }
+]

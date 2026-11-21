@@ -1,0 +1,3187 @@
+[
+  {
+    "numero": 1,
+    "fecha": "2025-12-03",
+    "items": [
+      [
+        {
+          "nombre": "Billetes antiguos",
+          "precio": 1200.0,
+          "unidad_medida": "lote",
+          "descripcion": "Lote de billetes cubanos de colección.",
+          "categoria": "Coleccionismo",
+          "fotos": [],
+          "stock": 3,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        4
+      ]
+    ],
+    "subtotal": 4800.0,
+    "costo_envio": 0.0,
+    "total": 4800.0,
+    "estado": "cancelada",
+    "envio": {
+      "a_domicilio": false,
+      "ubicacion": "",
+      "direccion": ""
+    },
+    "usuario": "ana.gomez",
+    "codigo": "SEED0001",
+    "qr": "",
+    "motivo_cancelacion": "Dirección incorrecta."
+  },
+  {
+    "numero": 2,
+    "fecha": "2025-12-06",
+    "items": [
+      [
+        {
+          "nombre": "Juego de sábanas",
+          "precio": 2800.0,
+          "unidad_medida": "juego",
+          "descripcion": "Matrimonio, algodón 100 %, tonos neutros.",
+          "categoria": "Hogar",
+          "fotos": [],
+          "stock": 12,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        3
+      ]
+    ],
+    "subtotal": 8400.0,
+    "costo_envio": 250.0,
+    "total": 8650.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "Marianao, La Habana",
+      "direccion": "Avenida 51 #7821"
+    },
+    "usuario": "ana.gomez",
+    "codigo": "SEED0002",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 1,
+    "fecha": "2025-12-09",
+    "items": [
+      [
+        {
+          "nombre": "Reloj inteligente",
+          "precio": 7800.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Pantalla AMOLED, GPS y monitor de sueño.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 9,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        3
+      ],
+      [
+        {
+          "nombre": "Mochila urbana",
+          "precio": 2200.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Compartimento acolchado para laptop de 15 pulgadas.",
+          "categoria": "Accesorios",
+          "fotos": [],
+          "stock": 15,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        2
+      ]
+    ],
+    "subtotal": 27800.0,
+    "costo_envio": 250.0,
+    "total": 28050.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "Diez de Octubre, La Habana",
+      "direccion": "Jesús del Monte #54"
+    },
+    "usuario": "carlos.perez",
+    "codigo": "SEED0003",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 1,
+    "fecha": "2025-12-11",
+    "items": [
+      [
+        {
+          "nombre": "Billetes antiguos",
+          "precio": 1200.0,
+          "unidad_medida": "lote",
+          "descripcion": "Lote de billetes cubanos de colección.",
+          "categoria": "Coleccionismo",
+          "fotos": [],
+          "stock": 3,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 1200.0,
+    "costo_envio": 0.0,
+    "total": 1200.0,
+    "estado": "cancelada",
+    "envio": {
+      "a_domicilio": false,
+      "ubicacion": "",
+      "direccion": ""
+    },
+    "usuario": "luisa.martin",
+    "codigo": "SEED0004",
+    "qr": "",
+    "motivo_cancelacion": "El cliente canceló por demora."
+  },
+  {
+    "numero": 3,
+    "fecha": "2025-12-12",
+    "items": [
+      [
+        {
+          "nombre": "Juego de sábanas",
+          "precio": 2800.0,
+          "unidad_medida": "juego",
+          "descripcion": "Matrimonio, algodón 100 %, tonos neutros.",
+          "categoria": "Hogar",
+          "fotos": [],
+          "stock": 12,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        2
+      ],
+      [
+        {
+          "nombre": "Gafas de sol",
+          "precio": 1800.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Lentes polarizadas con estuche rígido.",
+          "categoria": "Accesorios",
+          "fotos": [],
+          "stock": 0,
+          "descuento": null,
+          "reposicion_pendiente": true
+        },
+        1
+      ]
+    ],
+    "subtotal": 7400.0,
+    "costo_envio": 250.0,
+    "total": 7650.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "Playa, La Habana",
+      "direccion": "Calle 7ma #1204"
+    },
+    "usuario": "ana.gomez",
+    "codigo": "SEED0005",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 1,
+    "fecha": "2025-12-20",
+    "items": [
+      [
+        {
+          "nombre": "Café cubano 500 g",
+          "precio": 950.0,
+          "unidad_medida": "bolsa",
+          "descripcion": "Tueste natural, molido para colador.",
+          "categoria": "Alimentos",
+          "fotos": [],
+          "stock": 30,
+          "descuento": {
+            "porcentaje": 10.0,
+            "desde": "2026-09-01",
+            "hasta": "2026-09-30"
+          },
+          "reposicion_pendiente": false
+        },
+        1
+      ],
+      [
+        {
+          "nombre": "Reproductor MP3 descontinuado",
+          "precio": 1500.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Modelo fuera de catálogo; solo queda el registro histórico.",
+          "categoria": "",
+          "fotos": [],
+          "stock": 0,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 2450.0,
+    "costo_envio": 0.0,
+    "total": 2450.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": false,
+      "ubicacion": "",
+      "direccion": ""
+    },
+    "usuario": "empleado",
+    "codigo": "SEED0006",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 2,
+    "fecha": "2025-12-26",
+    "items": [
+      [
+        {
+          "nombre": "Cámara instantánea",
+          "precio": 9500.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Incluye un paquete de películas de regalo.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 4,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 9500.0,
+    "costo_envio": 250.0,
+    "total": 9750.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "Cerro, La Habana",
+      "direccion": "Arango 365 e/ Fábrica y Justicia"
+    },
+    "usuario": "carlos.perez",
+    "codigo": "SEED0007",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 4,
+    "fecha": "2026-01-01",
+    "items": [
+      [
+        {
+          "nombre": "Mochila urbana",
+          "precio": 2200.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Compartimento acolchado para laptop de 15 pulgadas.",
+          "categoria": "Accesorios",
+          "fotos": [],
+          "stock": 15,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        3
+      ]
+    ],
+    "subtotal": 6600.0,
+    "costo_envio": 250.0,
+    "total": 6850.0,
+    "estado": "en_envio",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "Playa, La Habana",
+      "direccion": "Calle 7ma #1204"
+    },
+    "usuario": "ana.gomez",
+    "codigo": "SEED0008",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 2,
+    "fecha": "2026-01-06",
+    "items": [
+      [
+        {
+          "nombre": "Mochila urbana",
+          "precio": 2200.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Compartimento acolchado para laptop de 15 pulgadas.",
+          "categoria": "Accesorios",
+          "fotos": [],
+          "stock": 15,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        4
+      ],
+      [
+        {
+          "nombre": "Auriculares Bluetooth",
+          "precio": 3500.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Cancelación de ruido y estuche de carga.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 18,
+          "descuento": {
+            "porcentaje": 15.0,
+            "desde": "2026-11-15",
+            "hasta": "2026-12-15"
+          },
+          "reposicion_pendiente": false
+        },
+        2
+      ]
+    ],
+    "subtotal": 15800.0,
+    "costo_envio": 0.0,
+    "total": 15800.0,
+    "estado": "cancelada",
+    "envio": {
+      "a_domicilio": false,
+      "ubicacion": "",
+      "direccion": ""
+    },
+    "usuario": "empleado",
+    "codigo": "SEED0009",
+    "qr": "",
+    "motivo_cancelacion": "Dirección incorrecta."
+  },
+  {
+    "numero": 5,
+    "fecha": "2026-01-12",
+    "items": [
+      [
+        {
+          "nombre": "Cámara instantánea",
+          "precio": 9500.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Incluye un paquete de películas de regalo.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 4,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        3
+      ]
+    ],
+    "subtotal": 28500.0,
+    "costo_envio": 0.0,
+    "total": 28500.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": false,
+      "ubicacion": "",
+      "direccion": ""
+    },
+    "usuario": "ana.gomez",
+    "codigo": "SEED0010",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 1,
+    "fecha": "2026-01-20",
+    "items": [
+      [
+        {
+          "nombre": "Cámara instantánea",
+          "precio": 9500.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Incluye un paquete de películas de regalo.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 4,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        2
+      ],
+      [
+        {
+          "nombre": "Laptop Lenovo IdeaPad",
+          "precio": 42000.0,
+          "unidad_medida": "unidad",
+          "descripcion": "14 pulgadas, 16 GB de RAM y 512 GB SSD.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 6,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 61000.0,
+    "costo_envio": 0.0,
+    "total": 61000.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": false,
+      "ubicacion": "",
+      "direccion": ""
+    },
+    "usuario": "admin",
+    "codigo": "SEED0011",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 6,
+    "fecha": "2026-01-31",
+    "items": [
+      [
+        {
+          "nombre": "Cafetera eléctrica",
+          "precio": 6300.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Capacidad de 1,5 litros con filtro permanente.",
+          "categoria": "Hogar",
+          "fotos": [],
+          "stock": 7,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        3
+      ],
+      [
+        {
+          "nombre": "Reproductor MP3 descontinuado",
+          "precio": 1500.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Modelo fuera de catálogo; solo queda el registro histórico.",
+          "categoria": "",
+          "fotos": [],
+          "stock": 0,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 20400.0,
+    "costo_envio": 250.0,
+    "total": 20650.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "Cerro, La Habana",
+      "direccion": "Arango 365 e/ Fábrica y Justicia"
+    },
+    "usuario": "ana.gomez",
+    "codigo": "SEED0012",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 3,
+    "fecha": "2026-02-04",
+    "items": [
+      [
+        {
+          "nombre": "Monedas conmemorativas",
+          "precio": 2500.0,
+          "unidad_medida": "lote",
+          "descripcion": "Seis monedas con estuche de presentación.",
+          "categoria": "Coleccionismo",
+          "fotos": [],
+          "stock": 0,
+          "descuento": null,
+          "reposicion_pendiente": true
+        },
+        2
+      ],
+      [
+        {
+          "nombre": "Gafas de sol",
+          "precio": 1800.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Lentes polarizadas con estuche rígido.",
+          "categoria": "Accesorios",
+          "fotos": [],
+          "stock": 0,
+          "descuento": null,
+          "reposicion_pendiente": true
+        },
+        1
+      ],
+      [
+        {
+          "nombre": "Reproductor MP3 descontinuado",
+          "precio": 1500.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Modelo fuera de catálogo; solo queda el registro histórico.",
+          "categoria": "",
+          "fotos": [],
+          "stock": 0,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 8300.0,
+    "costo_envio": 0.0,
+    "total": 8300.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": false,
+      "ubicacion": "",
+      "direccion": ""
+    },
+    "usuario": "carlos.perez",
+    "codigo": "SEED0013",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 2,
+    "fecha": "2026-02-08",
+    "items": [
+      [
+        {
+          "nombre": "Billetes antiguos",
+          "precio": 1200.0,
+          "unidad_medida": "lote",
+          "descripcion": "Lote de billetes cubanos de colección.",
+          "categoria": "Coleccionismo",
+          "fotos": [],
+          "stock": 3,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ],
+      [
+        {
+          "nombre": "Café cubano 500 g",
+          "precio": 950.0,
+          "unidad_medida": "bolsa",
+          "descripcion": "Tueste natural, molido para colador.",
+          "categoria": "Alimentos",
+          "fotos": [],
+          "stock": 30,
+          "descuento": {
+            "porcentaje": 10.0,
+            "desde": "2026-09-01",
+            "hasta": "2026-09-30"
+          },
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 2150.0,
+    "costo_envio": 0.0,
+    "total": 2150.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": false,
+      "ubicacion": "",
+      "direccion": ""
+    },
+    "usuario": "luisa.martin",
+    "codigo": "SEED0014",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 4,
+    "fecha": "2026-02-12",
+    "items": [
+      [
+        {
+          "nombre": "Monedas conmemorativas",
+          "precio": 2500.0,
+          "unidad_medida": "lote",
+          "descripcion": "Seis monedas con estuche de presentación.",
+          "categoria": "Coleccionismo",
+          "fotos": [],
+          "stock": 0,
+          "descuento": null,
+          "reposicion_pendiente": true
+        },
+        1
+      ],
+      [
+        {
+          "nombre": "Cafetera eléctrica",
+          "precio": 6300.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Capacidad de 1,5 litros con filtro permanente.",
+          "categoria": "Hogar",
+          "fotos": [],
+          "stock": 7,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ],
+      [
+        {
+          "nombre": "Auriculares Bluetooth",
+          "precio": 3500.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Cancelación de ruido y estuche de carga.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 18,
+          "descuento": {
+            "porcentaje": 15.0,
+            "desde": "2026-11-15",
+            "hasta": "2026-12-15"
+          },
+          "reposicion_pendiente": false
+        },
+        2
+      ]
+    ],
+    "subtotal": 15800.0,
+    "costo_envio": 250.0,
+    "total": 16050.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "Centro Habana, La Habana",
+      "direccion": "Calle 1 #2, entre 2 y 4"
+    },
+    "usuario": "carlos.perez",
+    "codigo": "SEED0015",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 3,
+    "fecha": "2026-02-13",
+    "items": [
+      [
+        {
+          "nombre": "Mochila urbana",
+          "precio": 2200.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Compartimento acolchado para laptop de 15 pulgadas.",
+          "categoria": "Accesorios",
+          "fotos": [],
+          "stock": 15,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        4
+      ],
+      [
+        {
+          "nombre": "Auriculares Bluetooth",
+          "precio": 3500.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Cancelación de ruido y estuche de carga.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 18,
+          "descuento": {
+            "porcentaje": 15.0,
+            "desde": "2026-11-15",
+            "hasta": "2026-12-15"
+          },
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 12300.0,
+    "costo_envio": 250.0,
+    "total": 12550.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "San Miguel del Padrón, La Habana",
+      "direccion": "Calle Dolores #215"
+    },
+    "usuario": "luisa.martin",
+    "codigo": "SEED0016",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 3,
+    "fecha": "2026-02-20",
+    "items": [
+      [
+        {
+          "nombre": "Mochila urbana",
+          "precio": 2200.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Compartimento acolchado para laptop de 15 pulgadas.",
+          "categoria": "Accesorios",
+          "fotos": [],
+          "stock": 15,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 2200.0,
+    "costo_envio": 250.0,
+    "total": 2450.0,
+    "estado": "pendiente",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "Diez de Octubre, La Habana",
+      "direccion": "Jesús del Monte #54"
+    },
+    "usuario": "empleado",
+    "codigo": "SEED0017",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 7,
+    "fecha": "2026-02-27",
+    "items": [
+      [
+        {
+          "nombre": "Juego de sábanas",
+          "precio": 2800.0,
+          "unidad_medida": "juego",
+          "descripcion": "Matrimonio, algodón 100 %, tonos neutros.",
+          "categoria": "Hogar",
+          "fotos": [],
+          "stock": 12,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        2
+      ]
+    ],
+    "subtotal": 5600.0,
+    "costo_envio": 250.0,
+    "total": 5850.0,
+    "estado": "cancelada",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "Marianao, La Habana",
+      "direccion": "Avenida 51 #7821"
+    },
+    "usuario": "ana.gomez",
+    "codigo": "SEED0018",
+    "qr": "",
+    "motivo_cancelacion": "El cliente no estaba en el domicilio."
+  },
+  {
+    "numero": 8,
+    "fecha": "2026-03-03",
+    "items": [
+      [
+        {
+          "nombre": "Billetes antiguos",
+          "precio": 1200.0,
+          "unidad_medida": "lote",
+          "descripcion": "Lote de billetes cubanos de colección.",
+          "categoria": "Coleccionismo",
+          "fotos": [],
+          "stock": 3,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ],
+      [
+        {
+          "nombre": "Café cubano 500 g",
+          "precio": 950.0,
+          "unidad_medida": "bolsa",
+          "descripcion": "Tueste natural, molido para colador.",
+          "categoria": "Alimentos",
+          "fotos": [],
+          "stock": 30,
+          "descuento": {
+            "porcentaje": 10.0,
+            "desde": "2026-09-01",
+            "hasta": "2026-09-30"
+          },
+          "reposicion_pendiente": false
+        },
+        1
+      ],
+      [
+        {
+          "nombre": "Cámara instantánea",
+          "precio": 9500.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Incluye un paquete de películas de regalo.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 4,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        2
+      ],
+      [
+        {
+          "nombre": "Reproductor MP3 descontinuado",
+          "precio": 1500.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Modelo fuera de catálogo; solo queda el registro histórico.",
+          "categoria": "",
+          "fotos": [],
+          "stock": 0,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 22650.0,
+    "costo_envio": 250.0,
+    "total": 22900.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "Vedado, La Habana",
+      "direccion": "Calle 23 #456, apto 3"
+    },
+    "usuario": "ana.gomez",
+    "codigo": "SEED0019",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 5,
+    "fecha": "2026-03-05",
+    "items": [
+      [
+        {
+          "nombre": "Mochila urbana",
+          "precio": 2200.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Compartimento acolchado para laptop de 15 pulgadas.",
+          "categoria": "Accesorios",
+          "fotos": [],
+          "stock": 15,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        3
+      ],
+      [
+        {
+          "nombre": "Cámara instantánea",
+          "precio": 9500.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Incluye un paquete de películas de regalo.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 4,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 16100.0,
+    "costo_envio": 250.0,
+    "total": 16350.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "San Miguel del Padrón, La Habana",
+      "direccion": "Calle Dolores #215"
+    },
+    "usuario": "carlos.perez",
+    "codigo": "SEED0020",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 4,
+    "fecha": "2026-03-11",
+    "items": [
+      [
+        {
+          "nombre": "Laptop Lenovo IdeaPad",
+          "precio": 42000.0,
+          "unidad_medida": "unidad",
+          "descripcion": "14 pulgadas, 16 GB de RAM y 512 GB SSD.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 6,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 42000.0,
+    "costo_envio": 250.0,
+    "total": 42250.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "Habana del Este, La Habana",
+      "direccion": "Calle 5ta #88"
+    },
+    "usuario": "luisa.martin",
+    "codigo": "SEED0021",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 5,
+    "fecha": "2026-03-16",
+    "items": [
+      [
+        {
+          "nombre": "Juego de sábanas",
+          "precio": 2800.0,
+          "unidad_medida": "juego",
+          "descripcion": "Matrimonio, algodón 100 %, tonos neutros.",
+          "categoria": "Hogar",
+          "fotos": [],
+          "stock": 12,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ],
+      [
+        {
+          "nombre": "Mochila urbana",
+          "precio": 2200.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Compartimento acolchado para laptop de 15 pulgadas.",
+          "categoria": "Accesorios",
+          "fotos": [],
+          "stock": 15,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 5000.0,
+    "costo_envio": 0.0,
+    "total": 5000.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": false,
+      "ubicacion": "",
+      "direccion": ""
+    },
+    "usuario": "luisa.martin",
+    "codigo": "SEED0022",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 9,
+    "fecha": "2026-03-30",
+    "items": [
+      [
+        {
+          "nombre": "Cafetera eléctrica",
+          "precio": 6300.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Capacidad de 1,5 litros con filtro permanente.",
+          "categoria": "Hogar",
+          "fotos": [],
+          "stock": 7,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        3
+      ],
+      [
+        {
+          "nombre": "Laptop Lenovo IdeaPad",
+          "precio": 42000.0,
+          "unidad_medida": "unidad",
+          "descripcion": "14 pulgadas, 16 GB de RAM y 512 GB SSD.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 6,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ],
+      [
+        {
+          "nombre": "Café cubano 500 g",
+          "precio": 950.0,
+          "unidad_medida": "bolsa",
+          "descripcion": "Tueste natural, molido para colador.",
+          "categoria": "Alimentos",
+          "fotos": [],
+          "stock": 30,
+          "descuento": {
+            "porcentaje": 10.0,
+            "desde": "2026-09-01",
+            "hasta": "2026-09-30"
+          },
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 61850.0,
+    "costo_envio": 250.0,
+    "total": 62100.0,
+    "estado": "en_envio",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "Centro Habana, La Habana",
+      "direccion": "Calle 1 #2, entre 2 y 4"
+    },
+    "usuario": "ana.gomez",
+    "codigo": "SEED0023",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 2,
+    "fecha": "2026-03-31",
+    "items": [
+      [
+        {
+          "nombre": "Mochila urbana",
+          "precio": 2200.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Compartimento acolchado para laptop de 15 pulgadas.",
+          "categoria": "Accesorios",
+          "fotos": [],
+          "stock": 15,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 2200.0,
+    "costo_envio": 250.0,
+    "total": 2450.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "Centro Habana, La Habana",
+      "direccion": "Calle 1 #2, entre 2 y 4"
+    },
+    "usuario": "admin",
+    "codigo": "SEED0024",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 6,
+    "fecha": "2026-04-01",
+    "items": [
+      [
+        {
+          "nombre": "Laptop Lenovo IdeaPad",
+          "precio": 42000.0,
+          "unidad_medida": "unidad",
+          "descripcion": "14 pulgadas, 16 GB de RAM y 512 GB SSD.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 6,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 42000.0,
+    "costo_envio": 250.0,
+    "total": 42250.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "Vedado, La Habana",
+      "direccion": "Calle 23 #456, apto 3"
+    },
+    "usuario": "luisa.martin",
+    "codigo": "SEED0025",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 7,
+    "fecha": "2026-04-07",
+    "items": [
+      [
+        {
+          "nombre": "Billetes antiguos",
+          "precio": 1200.0,
+          "unidad_medida": "lote",
+          "descripcion": "Lote de billetes cubanos de colección.",
+          "categoria": "Coleccionismo",
+          "fotos": [],
+          "stock": 3,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        4
+      ]
+    ],
+    "subtotal": 4800.0,
+    "costo_envio": 0.0,
+    "total": 4800.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": false,
+      "ubicacion": "",
+      "direccion": ""
+    },
+    "usuario": "luisa.martin",
+    "codigo": "SEED0026",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 10,
+    "fecha": "2026-04-08",
+    "items": [
+      [
+        {
+          "nombre": "Cámara instantánea",
+          "precio": 9500.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Incluye un paquete de películas de regalo.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 4,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 9500.0,
+    "costo_envio": 250.0,
+    "total": 9750.0,
+    "estado": "pendiente",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "Diez de Octubre, La Habana",
+      "direccion": "Jesús del Monte #54"
+    },
+    "usuario": "ana.gomez",
+    "codigo": "SEED0027",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 11,
+    "fecha": "2026-04-12",
+    "items": [
+      [
+        {
+          "nombre": "Cafetera eléctrica",
+          "precio": 6300.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Capacidad de 1,5 litros con filtro permanente.",
+          "categoria": "Hogar",
+          "fotos": [],
+          "stock": 7,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 6300.0,
+    "costo_envio": 250.0,
+    "total": 6550.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "Marianao, La Habana",
+      "direccion": "Avenida 51 #7821"
+    },
+    "usuario": "ana.gomez",
+    "codigo": "SEED0028",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 6,
+    "fecha": "2026-04-22",
+    "items": [
+      [
+        {
+          "nombre": "Cámara instantánea",
+          "precio": 9500.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Incluye un paquete de películas de regalo.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 4,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        4
+      ],
+      [
+        {
+          "nombre": "Laptop Lenovo IdeaPad",
+          "precio": 42000.0,
+          "unidad_medida": "unidad",
+          "descripcion": "14 pulgadas, 16 GB de RAM y 512 GB SSD.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 6,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ],
+      [
+        {
+          "nombre": "Juego de sábanas",
+          "precio": 2800.0,
+          "unidad_medida": "juego",
+          "descripcion": "Matrimonio, algodón 100 %, tonos neutros.",
+          "categoria": "Hogar",
+          "fotos": [],
+          "stock": 12,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 82800.0,
+    "costo_envio": 0.0,
+    "total": 82800.0,
+    "estado": "pendiente",
+    "envio": {
+      "a_domicilio": false,
+      "ubicacion": "",
+      "direccion": ""
+    },
+    "usuario": "carlos.perez",
+    "codigo": "SEED0029",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 12,
+    "fecha": "2026-05-01",
+    "items": [
+      [
+        {
+          "nombre": "Gafas de sol",
+          "precio": 1800.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Lentes polarizadas con estuche rígido.",
+          "categoria": "Accesorios",
+          "fotos": [],
+          "stock": 0,
+          "descuento": null,
+          "reposicion_pendiente": true
+        },
+        2
+      ],
+      [
+        {
+          "nombre": "Juego de sábanas",
+          "precio": 2800.0,
+          "unidad_medida": "juego",
+          "descripcion": "Matrimonio, algodón 100 %, tonos neutros.",
+          "categoria": "Hogar",
+          "fotos": [],
+          "stock": 12,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        2
+      ],
+      [
+        {
+          "nombre": "Reproductor MP3 descontinuado",
+          "precio": 1500.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Modelo fuera de catálogo; solo queda el registro histórico.",
+          "categoria": "",
+          "fotos": [],
+          "stock": 0,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 10700.0,
+    "costo_envio": 250.0,
+    "total": 10950.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "Playa, La Habana",
+      "direccion": "Calle 7ma #1204"
+    },
+    "usuario": "ana.gomez",
+    "codigo": "SEED0030",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 7,
+    "fecha": "2026-05-14",
+    "items": [
+      [
+        {
+          "nombre": "Café cubano 500 g",
+          "precio": 950.0,
+          "unidad_medida": "bolsa",
+          "descripcion": "Tueste natural, molido para colador.",
+          "categoria": "Alimentos",
+          "fotos": [],
+          "stock": 30,
+          "descuento": {
+            "porcentaje": 10.0,
+            "desde": "2026-09-01",
+            "hasta": "2026-09-30"
+          },
+          "reposicion_pendiente": false
+        },
+        1
+      ],
+      [
+        {
+          "nombre": "Cámara instantánea",
+          "precio": 9500.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Incluye un paquete de películas de regalo.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 4,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        4
+      ],
+      [
+        {
+          "nombre": "Reloj inteligente",
+          "precio": 7800.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Pantalla AMOLED, GPS y monitor de sueño.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 9,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 46750.0,
+    "costo_envio": 0.0,
+    "total": 46750.0,
+    "estado": "pendiente",
+    "envio": {
+      "a_domicilio": false,
+      "ubicacion": "",
+      "direccion": ""
+    },
+    "usuario": "carlos.perez",
+    "codigo": "SEED0031",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 8,
+    "fecha": "2026-05-17",
+    "items": [
+      [
+        {
+          "nombre": "Auriculares Bluetooth",
+          "precio": 3500.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Cancelación de ruido y estuche de carga.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 18,
+          "descuento": {
+            "porcentaje": 15.0,
+            "desde": "2026-11-15",
+            "hasta": "2026-12-15"
+          },
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 3500.0,
+    "costo_envio": 250.0,
+    "total": 3750.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "Cerro, La Habana",
+      "direccion": "Arango 365 e/ Fábrica y Justicia"
+    },
+    "usuario": "luisa.martin",
+    "codigo": "SEED0032",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 3,
+    "fecha": "2026-05-21",
+    "items": [
+      [
+        {
+          "nombre": "Laptop Lenovo IdeaPad",
+          "precio": 42000.0,
+          "unidad_medida": "unidad",
+          "descripcion": "14 pulgadas, 16 GB de RAM y 512 GB SSD.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 6,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ],
+      [
+        {
+          "nombre": "Reproductor MP3 descontinuado",
+          "precio": 1500.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Modelo fuera de catálogo; solo queda el registro histórico.",
+          "categoria": "",
+          "fotos": [],
+          "stock": 0,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 43500.0,
+    "costo_envio": 250.0,
+    "total": 43750.0,
+    "estado": "en_envio",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "San Miguel del Padrón, La Habana",
+      "direccion": "Calle Dolores #215"
+    },
+    "usuario": "admin",
+    "codigo": "SEED0033",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 4,
+    "fecha": "2026-05-25",
+    "items": [
+      [
+        {
+          "nombre": "Cámara instantánea",
+          "precio": 9500.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Incluye un paquete de películas de regalo.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 4,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 9500.0,
+    "costo_envio": 250.0,
+    "total": 9750.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "Marianao, La Habana",
+      "direccion": "Avenida 51 #7821"
+    },
+    "usuario": "admin",
+    "codigo": "SEED0034",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 13,
+    "fecha": "2026-05-28",
+    "items": [
+      [
+        {
+          "nombre": "Laptop Lenovo IdeaPad",
+          "precio": 42000.0,
+          "unidad_medida": "unidad",
+          "descripcion": "14 pulgadas, 16 GB de RAM y 512 GB SSD.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 6,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        2
+      ],
+      [
+        {
+          "nombre": "Cafetera eléctrica",
+          "precio": 6300.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Capacidad de 1,5 litros con filtro permanente.",
+          "categoria": "Hogar",
+          "fotos": [],
+          "stock": 7,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        2
+      ],
+      [
+        {
+          "nombre": "Reproductor MP3 descontinuado",
+          "precio": 1500.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Modelo fuera de catálogo; solo queda el registro histórico.",
+          "categoria": "",
+          "fotos": [],
+          "stock": 0,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 98100.0,
+    "costo_envio": 0.0,
+    "total": 98100.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": false,
+      "ubicacion": "",
+      "direccion": ""
+    },
+    "usuario": "ana.gomez",
+    "codigo": "SEED0035",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 14,
+    "fecha": "2026-06-05",
+    "items": [
+      [
+        {
+          "nombre": "Cafetera eléctrica",
+          "precio": 6300.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Capacidad de 1,5 litros con filtro permanente.",
+          "categoria": "Hogar",
+          "fotos": [],
+          "stock": 7,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        2
+      ],
+      [
+        {
+          "nombre": "Café cubano 500 g",
+          "precio": 950.0,
+          "unidad_medida": "bolsa",
+          "descripcion": "Tueste natural, molido para colador.",
+          "categoria": "Alimentos",
+          "fotos": [],
+          "stock": 30,
+          "descuento": {
+            "porcentaje": 10.0,
+            "desde": "2026-09-01",
+            "hasta": "2026-09-30"
+          },
+          "reposicion_pendiente": false
+        },
+        3
+      ]
+    ],
+    "subtotal": 15450.0,
+    "costo_envio": 250.0,
+    "total": 15700.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "Centro Habana, La Habana",
+      "direccion": "Calle 1 #2, entre 2 y 4"
+    },
+    "usuario": "ana.gomez",
+    "codigo": "SEED0036",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 5,
+    "fecha": "2026-06-06",
+    "items": [
+      [
+        {
+          "nombre": "Juego de sábanas",
+          "precio": 2800.0,
+          "unidad_medida": "juego",
+          "descripcion": "Matrimonio, algodón 100 %, tonos neutros.",
+          "categoria": "Hogar",
+          "fotos": [],
+          "stock": 12,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 2800.0,
+    "costo_envio": 250.0,
+    "total": 3050.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "Vedado, La Habana",
+      "direccion": "Calle 23 #456, apto 3"
+    },
+    "usuario": "admin",
+    "codigo": "SEED0037",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 15,
+    "fecha": "2026-06-07",
+    "items": [
+      [
+        {
+          "nombre": "Cafetera eléctrica",
+          "precio": 6300.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Capacidad de 1,5 litros con filtro permanente.",
+          "categoria": "Hogar",
+          "fotos": [],
+          "stock": 7,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        2
+      ],
+      [
+        {
+          "nombre": "Reloj inteligente",
+          "precio": 7800.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Pantalla AMOLED, GPS y monitor de sueño.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 9,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        2
+      ]
+    ],
+    "subtotal": 28200.0,
+    "costo_envio": 250.0,
+    "total": 28450.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "Diez de Octubre, La Habana",
+      "direccion": "Jesús del Monte #54"
+    },
+    "usuario": "ana.gomez",
+    "codigo": "SEED0038",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 9,
+    "fecha": "2026-06-20",
+    "items": [
+      [
+        {
+          "nombre": "Billetes antiguos",
+          "precio": 1200.0,
+          "unidad_medida": "lote",
+          "descripcion": "Lote de billetes cubanos de colección.",
+          "categoria": "Coleccionismo",
+          "fotos": [],
+          "stock": 3,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 1200.0,
+    "costo_envio": 250.0,
+    "total": 1450.0,
+    "estado": "pendiente",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "Habana del Este, La Habana",
+      "direccion": "Calle 5ta #88"
+    },
+    "usuario": "luisa.martin",
+    "codigo": "SEED0039",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 8,
+    "fecha": "2026-06-28",
+    "items": [
+      [
+        {
+          "nombre": "Laptop Lenovo IdeaPad",
+          "precio": 42000.0,
+          "unidad_medida": "unidad",
+          "descripcion": "14 pulgadas, 16 GB de RAM y 512 GB SSD.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 6,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        2
+      ]
+    ],
+    "subtotal": 84000.0,
+    "costo_envio": 250.0,
+    "total": 84250.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "Habana del Este, La Habana",
+      "direccion": "Calle 5ta #88"
+    },
+    "usuario": "carlos.perez",
+    "codigo": "SEED0040",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 16,
+    "fecha": "2026-07-12",
+    "items": [
+      [
+        {
+          "nombre": "Monedas conmemorativas",
+          "precio": 2500.0,
+          "unidad_medida": "lote",
+          "descripcion": "Seis monedas con estuche de presentación.",
+          "categoria": "Coleccionismo",
+          "fotos": [],
+          "stock": 0,
+          "descuento": null,
+          "reposicion_pendiente": true
+        },
+        1
+      ]
+    ],
+    "subtotal": 2500.0,
+    "costo_envio": 250.0,
+    "total": 2750.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "Diez de Octubre, La Habana",
+      "direccion": "Jesús del Monte #54"
+    },
+    "usuario": "ana.gomez",
+    "codigo": "SEED0041",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 17,
+    "fecha": "2026-07-20",
+    "items": [
+      [
+        {
+          "nombre": "Gafas de sol",
+          "precio": 1800.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Lentes polarizadas con estuche rígido.",
+          "categoria": "Accesorios",
+          "fotos": [],
+          "stock": 0,
+          "descuento": null,
+          "reposicion_pendiente": true
+        },
+        2
+      ],
+      [
+        {
+          "nombre": "Reproductor MP3 descontinuado",
+          "precio": 1500.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Modelo fuera de catálogo; solo queda el registro histórico.",
+          "categoria": "",
+          "fotos": [],
+          "stock": 0,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 5100.0,
+    "costo_envio": 250.0,
+    "total": 5350.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "Habana del Este, La Habana",
+      "direccion": "Calle 5ta #88"
+    },
+    "usuario": "ana.gomez",
+    "codigo": "SEED0042",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 9,
+    "fecha": "2026-07-23",
+    "items": [
+      [
+        {
+          "nombre": "Billetes antiguos",
+          "precio": 1200.0,
+          "unidad_medida": "lote",
+          "descripcion": "Lote de billetes cubanos de colección.",
+          "categoria": "Coleccionismo",
+          "fotos": [],
+          "stock": 3,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ],
+      [
+        {
+          "nombre": "Auriculares Bluetooth",
+          "precio": 3500.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Cancelación de ruido y estuche de carga.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 18,
+          "descuento": {
+            "porcentaje": 15.0,
+            "desde": "2026-11-15",
+            "hasta": "2026-12-15"
+          },
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 4700.0,
+    "costo_envio": 250.0,
+    "total": 4950.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "Vedado, La Habana",
+      "direccion": "Calle 23 #456, apto 3"
+    },
+    "usuario": "carlos.perez",
+    "codigo": "SEED0043",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 10,
+    "fecha": "2026-07-27",
+    "items": [
+      [
+        {
+          "nombre": "Café cubano 500 g",
+          "precio": 950.0,
+          "unidad_medida": "bolsa",
+          "descripcion": "Tueste natural, molido para colador.",
+          "categoria": "Alimentos",
+          "fotos": [],
+          "stock": 30,
+          "descuento": {
+            "porcentaje": 10.0,
+            "desde": "2026-09-01",
+            "hasta": "2026-09-30"
+          },
+          "reposicion_pendiente": false
+        },
+        1
+      ],
+      [
+        {
+          "nombre": "Cámara instantánea",
+          "precio": 9500.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Incluye un paquete de películas de regalo.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 4,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        2
+      ],
+      [
+        {
+          "nombre": "Gafas de sol",
+          "precio": 1800.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Lentes polarizadas con estuche rígido.",
+          "categoria": "Accesorios",
+          "fotos": [],
+          "stock": 0,
+          "descuento": null,
+          "reposicion_pendiente": true
+        },
+        2
+      ]
+    ],
+    "subtotal": 23550.0,
+    "costo_envio": 0.0,
+    "total": 23550.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": false,
+      "ubicacion": "",
+      "direccion": ""
+    },
+    "usuario": "luisa.martin",
+    "codigo": "SEED0044",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 11,
+    "fecha": "2026-07-29",
+    "items": [
+      [
+        {
+          "nombre": "Juego de sábanas",
+          "precio": 2800.0,
+          "unidad_medida": "juego",
+          "descripcion": "Matrimonio, algodón 100 %, tonos neutros.",
+          "categoria": "Hogar",
+          "fotos": [],
+          "stock": 12,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ],
+      [
+        {
+          "nombre": "Monedas conmemorativas",
+          "precio": 2500.0,
+          "unidad_medida": "lote",
+          "descripcion": "Seis monedas con estuche de presentación.",
+          "categoria": "Coleccionismo",
+          "fotos": [],
+          "stock": 0,
+          "descuento": null,
+          "reposicion_pendiente": true
+        },
+        2
+      ]
+    ],
+    "subtotal": 7800.0,
+    "costo_envio": 0.0,
+    "total": 7800.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": false,
+      "ubicacion": "",
+      "direccion": ""
+    },
+    "usuario": "luisa.martin",
+    "codigo": "SEED0045",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 18,
+    "fecha": "2026-07-31",
+    "items": [
+      [
+        {
+          "nombre": "Reloj inteligente",
+          "precio": 7800.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Pantalla AMOLED, GPS y monitor de sueño.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 9,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        4
+      ],
+      [
+        {
+          "nombre": "Laptop Lenovo IdeaPad",
+          "precio": 42000.0,
+          "unidad_medida": "unidad",
+          "descripcion": "14 pulgadas, 16 GB de RAM y 512 GB SSD.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 6,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        2
+      ],
+      [
+        {
+          "nombre": "Auriculares Bluetooth",
+          "precio": 3500.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Cancelación de ruido y estuche de carga.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 18,
+          "descuento": {
+            "porcentaje": 15.0,
+            "desde": "2026-11-15",
+            "hasta": "2026-12-15"
+          },
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 118700.0,
+    "costo_envio": 250.0,
+    "total": 118950.0,
+    "estado": "en_envio",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "Playa, La Habana",
+      "direccion": "Calle 7ma #1204"
+    },
+    "usuario": "ana.gomez",
+    "codigo": "SEED0046",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 10,
+    "fecha": "2026-08-14",
+    "items": [
+      [
+        {
+          "nombre": "Mochila urbana",
+          "precio": 2200.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Compartimento acolchado para laptop de 15 pulgadas.",
+          "categoria": "Accesorios",
+          "fotos": [],
+          "stock": 15,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        2
+      ]
+    ],
+    "subtotal": 4400.0,
+    "costo_envio": 0.0,
+    "total": 4400.0,
+    "estado": "pendiente",
+    "envio": {
+      "a_domicilio": false,
+      "ubicacion": "",
+      "direccion": ""
+    },
+    "usuario": "carlos.perez",
+    "codigo": "SEED0047",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 11,
+    "fecha": "2026-08-15",
+    "items": [
+      [
+        {
+          "nombre": "Café cubano 500 g",
+          "precio": 950.0,
+          "unidad_medida": "bolsa",
+          "descripcion": "Tueste natural, molido para colador.",
+          "categoria": "Alimentos",
+          "fotos": [],
+          "stock": 30,
+          "descuento": {
+            "porcentaje": 10.0,
+            "desde": "2026-09-01",
+            "hasta": "2026-09-30"
+          },
+          "reposicion_pendiente": false
+        },
+        3
+      ],
+      [
+        {
+          "nombre": "Billetes antiguos",
+          "precio": 1200.0,
+          "unidad_medida": "lote",
+          "descripcion": "Lote de billetes cubanos de colección.",
+          "categoria": "Coleccionismo",
+          "fotos": [],
+          "stock": 3,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        4
+      ]
+    ],
+    "subtotal": 7650.0,
+    "costo_envio": 0.0,
+    "total": 7650.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": false,
+      "ubicacion": "",
+      "direccion": ""
+    },
+    "usuario": "carlos.perez",
+    "codigo": "SEED0048",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 4,
+    "fecha": "2026-08-19",
+    "items": [
+      [
+        {
+          "nombre": "Auriculares Bluetooth",
+          "precio": 3500.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Cancelación de ruido y estuche de carga.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 18,
+          "descuento": {
+            "porcentaje": 15.0,
+            "desde": "2026-11-15",
+            "hasta": "2026-12-15"
+          },
+          "reposicion_pendiente": false
+        },
+        1
+      ],
+      [
+        {
+          "nombre": "Billetes antiguos",
+          "precio": 1200.0,
+          "unidad_medida": "lote",
+          "descripcion": "Lote de billetes cubanos de colección.",
+          "categoria": "Coleccionismo",
+          "fotos": [],
+          "stock": 3,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ],
+      [
+        {
+          "nombre": "Mochila urbana",
+          "precio": 2200.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Compartimento acolchado para laptop de 15 pulgadas.",
+          "categoria": "Accesorios",
+          "fotos": [],
+          "stock": 15,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        2
+      ]
+    ],
+    "subtotal": 9100.0,
+    "costo_envio": 250.0,
+    "total": 9350.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "Habana del Este, La Habana",
+      "direccion": "Calle 5ta #88"
+    },
+    "usuario": "empleado",
+    "codigo": "SEED0049",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 6,
+    "fecha": "2026-08-22",
+    "items": [
+      [
+        {
+          "nombre": "Billetes antiguos",
+          "precio": 1200.0,
+          "unidad_medida": "lote",
+          "descripcion": "Lote de billetes cubanos de colección.",
+          "categoria": "Coleccionismo",
+          "fotos": [],
+          "stock": 3,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        4
+      ],
+      [
+        {
+          "nombre": "Gafas de sol",
+          "precio": 1800.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Lentes polarizadas con estuche rígido.",
+          "categoria": "Accesorios",
+          "fotos": [],
+          "stock": 0,
+          "descuento": null,
+          "reposicion_pendiente": true
+        },
+        2
+      ],
+      [
+        {
+          "nombre": "Cámara instantánea",
+          "precio": 9500.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Incluye un paquete de películas de regalo.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 4,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        2
+      ],
+      [
+        {
+          "nombre": "Reproductor MP3 descontinuado",
+          "precio": 1500.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Modelo fuera de catálogo; solo queda el registro histórico.",
+          "categoria": "",
+          "fotos": [],
+          "stock": 0,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 28900.0,
+    "costo_envio": 0.0,
+    "total": 28900.0,
+    "estado": "pendiente",
+    "envio": {
+      "a_domicilio": false,
+      "ubicacion": "",
+      "direccion": ""
+    },
+    "usuario": "admin",
+    "codigo": "SEED0050",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 12,
+    "fecha": "2026-08-30",
+    "items": [
+      [
+        {
+          "nombre": "Cámara instantánea",
+          "precio": 9500.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Incluye un paquete de películas de regalo.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 4,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ],
+      [
+        {
+          "nombre": "Reloj inteligente",
+          "precio": 7800.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Pantalla AMOLED, GPS y monitor de sueño.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 9,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 17300.0,
+    "costo_envio": 0.0,
+    "total": 17300.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": false,
+      "ubicacion": "",
+      "direccion": ""
+    },
+    "usuario": "luisa.martin",
+    "codigo": "SEED0051",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 12,
+    "fecha": "2026-08-31",
+    "items": [
+      [
+        {
+          "nombre": "Café cubano 500 g",
+          "precio": 950.0,
+          "unidad_medida": "bolsa",
+          "descripcion": "Tueste natural, molido para colador.",
+          "categoria": "Alimentos",
+          "fotos": [],
+          "stock": 30,
+          "descuento": {
+            "porcentaje": 10.0,
+            "desde": "2026-09-01",
+            "hasta": "2026-09-30"
+          },
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 950.0,
+    "costo_envio": 250.0,
+    "total": 1200.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "Marianao, La Habana",
+      "direccion": "Avenida 51 #7821"
+    },
+    "usuario": "carlos.perez",
+    "codigo": "SEED0052",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 13,
+    "fecha": "2026-09-01",
+    "items": [
+      [
+        {
+          "nombre": "Juego de sábanas",
+          "precio": 2800.0,
+          "unidad_medida": "juego",
+          "descripcion": "Matrimonio, algodón 100 %, tonos neutros.",
+          "categoria": "Hogar",
+          "fotos": [],
+          "stock": 12,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        3
+      ]
+    ],
+    "subtotal": 8400.0,
+    "costo_envio": 250.0,
+    "total": 8650.0,
+    "estado": "cancelada",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "Playa, La Habana",
+      "direccion": "Calle 7ma #1204"
+    },
+    "usuario": "carlos.perez",
+    "codigo": "SEED0053",
+    "qr": "",
+    "motivo_cancelacion": "El cliente no estaba en el domicilio."
+  },
+  {
+    "numero": 19,
+    "fecha": "2026-09-08",
+    "items": [
+      [
+        {
+          "nombre": "Reloj inteligente",
+          "precio": 7800.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Pantalla AMOLED, GPS y monitor de sueño.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 9,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 7800.0,
+    "costo_envio": 250.0,
+    "total": 8050.0,
+    "estado": "pendiente",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "San Miguel del Padrón, La Habana",
+      "direccion": "Calle Dolores #215"
+    },
+    "usuario": "ana.gomez",
+    "codigo": "SEED0054",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 14,
+    "fecha": "2026-09-17",
+    "items": [
+      [
+        {
+          "nombre": "Auriculares Bluetooth",
+          "precio": 3500.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Cancelación de ruido y estuche de carga.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 18,
+          "descuento": {
+            "porcentaje": 15.0,
+            "desde": "2026-11-15",
+            "hasta": "2026-12-15"
+          },
+          "reposicion_pendiente": false
+        },
+        2
+      ],
+      [
+        {
+          "nombre": "Mochila urbana",
+          "precio": 2200.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Compartimento acolchado para laptop de 15 pulgadas.",
+          "categoria": "Accesorios",
+          "fotos": [],
+          "stock": 15,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        3
+      ],
+      [
+        {
+          "nombre": "Cafetera eléctrica",
+          "precio": 6300.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Capacidad de 1,5 litros con filtro permanente.",
+          "categoria": "Hogar",
+          "fotos": [],
+          "stock": 7,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        3
+      ]
+    ],
+    "subtotal": 32500.0,
+    "costo_envio": 250.0,
+    "total": 32750.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "Vedado, La Habana",
+      "direccion": "Calle 23 #456, apto 3"
+    },
+    "usuario": "carlos.perez",
+    "codigo": "SEED0055",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 13,
+    "fecha": "2026-09-20",
+    "items": [
+      [
+        {
+          "nombre": "Café cubano 500 g",
+          "precio": 950.0,
+          "unidad_medida": "bolsa",
+          "descripcion": "Tueste natural, molido para colador.",
+          "categoria": "Alimentos",
+          "fotos": [],
+          "stock": 30,
+          "descuento": {
+            "porcentaje": 10.0,
+            "desde": "2026-09-01",
+            "hasta": "2026-09-30"
+          },
+          "reposicion_pendiente": false
+        },
+        1
+      ],
+      [
+        {
+          "nombre": "Monedas conmemorativas",
+          "precio": 2500.0,
+          "unidad_medida": "lote",
+          "descripcion": "Seis monedas con estuche de presentación.",
+          "categoria": "Coleccionismo",
+          "fotos": [],
+          "stock": 0,
+          "descuento": null,
+          "reposicion_pendiente": true
+        },
+        2
+      ],
+      [
+        {
+          "nombre": "Cámara instantánea",
+          "precio": 9500.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Incluye un paquete de películas de regalo.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 4,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        2
+      ]
+    ],
+    "subtotal": 24855.0,
+    "costo_envio": 250.0,
+    "total": 25105.0,
+    "estado": "cancelada",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "Diez de Octubre, La Habana",
+      "direccion": "Jesús del Monte #54"
+    },
+    "usuario": "luisa.martin",
+    "codigo": "SEED0056",
+    "qr": "",
+    "motivo_cancelacion": "El cliente canceló por demora."
+  },
+  {
+    "numero": 5,
+    "fecha": "2026-09-23",
+    "items": [
+      [
+        {
+          "nombre": "Mochila urbana",
+          "precio": 2200.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Compartimento acolchado para laptop de 15 pulgadas.",
+          "categoria": "Accesorios",
+          "fotos": [],
+          "stock": 15,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        4
+      ]
+    ],
+    "subtotal": 8800.0,
+    "costo_envio": 250.0,
+    "total": 9050.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "Playa, La Habana",
+      "direccion": "Calle 7ma #1204"
+    },
+    "usuario": "empleado",
+    "codigo": "SEED0057",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 20,
+    "fecha": "2026-09-28",
+    "items": [
+      [
+        {
+          "nombre": "Reloj inteligente",
+          "precio": 7800.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Pantalla AMOLED, GPS y monitor de sueño.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 9,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 7800.0,
+    "costo_envio": 0.0,
+    "total": 7800.0,
+    "estado": "pendiente",
+    "envio": {
+      "a_domicilio": false,
+      "ubicacion": "",
+      "direccion": ""
+    },
+    "usuario": "ana.gomez",
+    "codigo": "SEED0058",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 15,
+    "fecha": "2026-10-13",
+    "items": [
+      [
+        {
+          "nombre": "Cafetera eléctrica",
+          "precio": 6300.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Capacidad de 1,5 litros con filtro permanente.",
+          "categoria": "Hogar",
+          "fotos": [],
+          "stock": 7,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 6300.0,
+    "costo_envio": 0.0,
+    "total": 6300.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": false,
+      "ubicacion": "",
+      "direccion": ""
+    },
+    "usuario": "carlos.perez",
+    "codigo": "SEED0059",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 7,
+    "fecha": "2026-10-15",
+    "items": [
+      [
+        {
+          "nombre": "Billetes antiguos",
+          "precio": 1200.0,
+          "unidad_medida": "lote",
+          "descripcion": "Lote de billetes cubanos de colección.",
+          "categoria": "Coleccionismo",
+          "fotos": [],
+          "stock": 3,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ],
+      [
+        {
+          "nombre": "Monedas conmemorativas",
+          "precio": 2500.0,
+          "unidad_medida": "lote",
+          "descripcion": "Seis monedas con estuche de presentación.",
+          "categoria": "Coleccionismo",
+          "fotos": [],
+          "stock": 0,
+          "descuento": null,
+          "reposicion_pendiente": true
+        },
+        2
+      ],
+      [
+        {
+          "nombre": "Gafas de sol",
+          "precio": 1800.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Lentes polarizadas con estuche rígido.",
+          "categoria": "Accesorios",
+          "fotos": [],
+          "stock": 0,
+          "descuento": null,
+          "reposicion_pendiente": true
+        },
+        1
+      ]
+    ],
+    "subtotal": 8000.0,
+    "costo_envio": 250.0,
+    "total": 8250.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "San Miguel del Padrón, La Habana",
+      "direccion": "Calle Dolores #215"
+    },
+    "usuario": "admin",
+    "codigo": "SEED0060",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 16,
+    "fecha": "2026-10-16",
+    "items": [
+      [
+        {
+          "nombre": "Cámara instantánea",
+          "precio": 9500.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Incluye un paquete de películas de regalo.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 4,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        2
+      ],
+      [
+        {
+          "nombre": "Monedas conmemorativas",
+          "precio": 2500.0,
+          "unidad_medida": "lote",
+          "descripcion": "Seis monedas con estuche de presentación.",
+          "categoria": "Coleccionismo",
+          "fotos": [],
+          "stock": 0,
+          "descuento": null,
+          "reposicion_pendiente": true
+        },
+        3
+      ]
+    ],
+    "subtotal": 26500.0,
+    "costo_envio": 250.0,
+    "total": 26750.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "Vedado, La Habana",
+      "direccion": "Calle 23 #456, apto 3"
+    },
+    "usuario": "carlos.perez",
+    "codigo": "SEED0061",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 14,
+    "fecha": "2026-10-17",
+    "items": [
+      [
+        {
+          "nombre": "Auriculares Bluetooth",
+          "precio": 3500.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Cancelación de ruido y estuche de carga.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 18,
+          "descuento": {
+            "porcentaje": 15.0,
+            "desde": "2026-11-15",
+            "hasta": "2026-12-15"
+          },
+          "reposicion_pendiente": false
+        },
+        1
+      ],
+      [
+        {
+          "nombre": "Reloj inteligente",
+          "precio": 7800.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Pantalla AMOLED, GPS y monitor de sueño.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 9,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ],
+      [
+        {
+          "nombre": "Juego de sábanas",
+          "precio": 2800.0,
+          "unidad_medida": "juego",
+          "descripcion": "Matrimonio, algodón 100 %, tonos neutros.",
+          "categoria": "Hogar",
+          "fotos": [],
+          "stock": 12,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 14100.0,
+    "costo_envio": 0.0,
+    "total": 14100.0,
+    "estado": "pendiente",
+    "envio": {
+      "a_domicilio": false,
+      "ubicacion": "",
+      "direccion": ""
+    },
+    "usuario": "luisa.martin",
+    "codigo": "SEED0062",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 8,
+    "fecha": "2026-10-23",
+    "items": [
+      [
+        {
+          "nombre": "Café cubano 500 g",
+          "precio": 950.0,
+          "unidad_medida": "bolsa",
+          "descripcion": "Tueste natural, molido para colador.",
+          "categoria": "Alimentos",
+          "fotos": [],
+          "stock": 30,
+          "descuento": {
+            "porcentaje": 10.0,
+            "desde": "2026-09-01",
+            "hasta": "2026-09-30"
+          },
+          "reposicion_pendiente": false
+        },
+        1
+      ],
+      [
+        {
+          "nombre": "Juego de sábanas",
+          "precio": 2800.0,
+          "unidad_medida": "juego",
+          "descripcion": "Matrimonio, algodón 100 %, tonos neutros.",
+          "categoria": "Hogar",
+          "fotos": [],
+          "stock": 12,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ],
+      [
+        {
+          "nombre": "Reloj inteligente",
+          "precio": 7800.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Pantalla AMOLED, GPS y monitor de sueño.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 9,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 11550.0,
+    "costo_envio": 0.0,
+    "total": 11550.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": false,
+      "ubicacion": "",
+      "direccion": ""
+    },
+    "usuario": "admin",
+    "codigo": "SEED0063",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 15,
+    "fecha": "2026-10-29",
+    "items": [
+      [
+        {
+          "nombre": "Auriculares Bluetooth",
+          "precio": 3500.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Cancelación de ruido y estuche de carga.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 18,
+          "descuento": {
+            "porcentaje": 15.0,
+            "desde": "2026-11-15",
+            "hasta": "2026-12-15"
+          },
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 3500.0,
+    "costo_envio": 250.0,
+    "total": 3750.0,
+    "estado": "en_envio",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "Habana del Este, La Habana",
+      "direccion": "Calle 5ta #88"
+    },
+    "usuario": "luisa.martin",
+    "codigo": "SEED0064",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 17,
+    "fecha": "2026-11-03",
+    "items": [
+      [
+        {
+          "nombre": "Reloj inteligente",
+          "precio": 7800.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Pantalla AMOLED, GPS y monitor de sueño.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 9,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ],
+      [
+        {
+          "nombre": "Billetes antiguos",
+          "precio": 1200.0,
+          "unidad_medida": "lote",
+          "descripcion": "Lote de billetes cubanos de colección.",
+          "categoria": "Coleccionismo",
+          "fotos": [],
+          "stock": 3,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        2
+      ],
+      [
+        {
+          "nombre": "Monedas conmemorativas",
+          "precio": 2500.0,
+          "unidad_medida": "lote",
+          "descripcion": "Seis monedas con estuche de presentación.",
+          "categoria": "Coleccionismo",
+          "fotos": [],
+          "stock": 0,
+          "descuento": null,
+          "reposicion_pendiente": true
+        },
+        2
+      ]
+    ],
+    "subtotal": 15200.0,
+    "costo_envio": 0.0,
+    "total": 15200.0,
+    "estado": "cancelada",
+    "envio": {
+      "a_domicilio": false,
+      "ubicacion": "",
+      "direccion": ""
+    },
+    "usuario": "carlos.perez",
+    "codigo": "SEED0065",
+    "qr": "",
+    "motivo_cancelacion": "El cliente canceló por demora."
+  },
+  {
+    "numero": 18,
+    "fecha": "2026-11-12",
+    "items": [
+      [
+        {
+          "nombre": "Laptop Lenovo IdeaPad",
+          "precio": 42000.0,
+          "unidad_medida": "unidad",
+          "descripcion": "14 pulgadas, 16 GB de RAM y 512 GB SSD.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 6,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ],
+      [
+        {
+          "nombre": "Auriculares Bluetooth",
+          "precio": 3500.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Cancelación de ruido y estuche de carga.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 18,
+          "descuento": {
+            "porcentaje": 15.0,
+            "desde": "2026-11-15",
+            "hasta": "2026-12-15"
+          },
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 45500.0,
+    "costo_envio": 250.0,
+    "total": 45750.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "Habana del Este, La Habana",
+      "direccion": "Calle 5ta #88"
+    },
+    "usuario": "carlos.perez",
+    "codigo": "SEED0066",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 21,
+    "fecha": "2026-11-13",
+    "items": [
+      [
+        {
+          "nombre": "Auriculares Bluetooth",
+          "precio": 3500.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Cancelación de ruido y estuche de carga.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 18,
+          "descuento": {
+            "porcentaje": 15.0,
+            "desde": "2026-11-15",
+            "hasta": "2026-12-15"
+          },
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 3500.0,
+    "costo_envio": 250.0,
+    "total": 3750.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "Vedado, La Habana",
+      "direccion": "Calle 23 #456, apto 3"
+    },
+    "usuario": "ana.gomez",
+    "codigo": "SEED0067",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 16,
+    "fecha": "2026-11-16",
+    "items": [
+      [
+        {
+          "nombre": "Auriculares Bluetooth",
+          "precio": 3500.0,
+          "unidad_medida": "unidad",
+          "descripcion": "Cancelación de ruido y estuche de carga.",
+          "categoria": "Electrónica",
+          "fotos": [],
+          "stock": 18,
+          "descuento": {
+            "porcentaje": 15.0,
+            "desde": "2026-11-15",
+            "hasta": "2026-12-15"
+          },
+          "reposicion_pendiente": false
+        },
+        3
+      ]
+    ],
+    "subtotal": 8925.0,
+    "costo_envio": 250.0,
+    "total": 9175.0,
+    "estado": "pagada",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "Playa, La Habana",
+      "direccion": "Calle 7ma #1204"
+    },
+    "usuario": "luisa.martin",
+    "codigo": "SEED0068",
+    "qr": "",
+    "motivo_cancelacion": ""
+  },
+  {
+    "numero": 9,
+    "fecha": "2026-11-19",
+    "items": [
+      [
+        {
+          "nombre": "Juego de sábanas",
+          "precio": 2800.0,
+          "unidad_medida": "juego",
+          "descripcion": "Matrimonio, algodón 100 %, tonos neutros.",
+          "categoria": "Hogar",
+          "fotos": [],
+          "stock": 12,
+          "descuento": null,
+          "reposicion_pendiente": false
+        },
+        1
+      ]
+    ],
+    "subtotal": 2800.0,
+    "costo_envio": 250.0,
+    "total": 3050.0,
+    "estado": "pendiente",
+    "envio": {
+      "a_domicilio": true,
+      "ubicacion": "Habana del Este, La Habana",
+      "direccion": "Calle 5ta #88"
+    },
+    "usuario": "admin",
+    "codigo": "SEED0069",
+    "qr": "",
+    "motivo_cancelacion": ""
+  }
+]

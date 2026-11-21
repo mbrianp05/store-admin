@@ -1,0 +1,814 @@
+[
+  {
+    "id": "871043e05929b4cdc0bedf2a31f8225b",
+    "codigo": "ENV-SEED01",
+    "fecha": "2025-12-12T12:45:00+00:00",
+    "estado": "entregado",
+    "creado_por": "empleado",
+    "notas": "Entregar en la tarde.",
+    "facturas": [
+      {
+        "codigo": "SEED0002",
+        "numero": 2,
+        "fecha": "2025-12-06",
+        "usuario": "ana.gomez",
+        "total": 8650.0,
+        "costo_envio": 250.0,
+        "estado": "pagada",
+        "ubicacion": "Marianao, La Habana",
+        "direccion": "Avenida 51 #7821"
+      },
+      {
+        "codigo": "SEED0003",
+        "numero": 1,
+        "fecha": "2025-12-09",
+        "usuario": "carlos.perez",
+        "total": 28050.0,
+        "costo_envio": 250.0,
+        "estado": "pagada",
+        "ubicacion": "Diez de Octubre, La Habana",
+        "direccion": "Jesús del Monte #54"
+      }
+    ]
+  },
+  {
+    "id": "3699b647eef472a4be7c5b07cd0151dc",
+    "codigo": "ENV-SEED02",
+    "fecha": "2025-12-13T08:00:00+00:00",
+    "estado": "entregado",
+    "creado_por": "admin",
+    "notas": "Llamar antes de salir.",
+    "facturas": [
+      {
+        "codigo": "SEED0005",
+        "numero": 3,
+        "fecha": "2025-12-12",
+        "usuario": "ana.gomez",
+        "total": 7650.0,
+        "costo_envio": 250.0,
+        "estado": "pagada",
+        "ubicacion": "Playa, La Habana",
+        "direccion": "Calle 7ma #1204"
+      }
+    ]
+  },
+  {
+    "id": "9aff6243c0a381ca97e31eeb71028421",
+    "codigo": "ENV-SEED03",
+    "fecha": "2025-12-13T09:15:00+00:00",
+    "estado": "entregado",
+    "creado_por": "empleado",
+    "notas": "",
+    "facturas": [
+      {
+        "codigo": "SEED0007",
+        "numero": 2,
+        "fecha": "2025-12-26",
+        "usuario": "carlos.perez",
+        "total": 9750.0,
+        "costo_envio": 250.0,
+        "estado": "pagada",
+        "ubicacion": "Cerro, La Habana",
+        "direccion": "Arango 365 e/ Fábrica y Justicia"
+      }
+    ]
+  },
+  {
+    "id": "7c6c37323d220aa69e29c604a88e78bb",
+    "codigo": "ENV-SEED04",
+    "fecha": "2026-01-04T17:45:00+00:00",
+    "estado": "en_envio",
+    "creado_por": "empleado",
+    "notas": "",
+    "facturas": [
+      {
+        "codigo": "SEED0008",
+        "numero": 4,
+        "fecha": "2026-01-01",
+        "usuario": "ana.gomez",
+        "total": 6850.0,
+        "costo_envio": 250.0,
+        "estado": "en_envio",
+        "ubicacion": "Playa, La Habana",
+        "direccion": "Calle 7ma #1204"
+      }
+    ]
+  },
+  {
+    "id": "7084c9ea469e4aa00e89348247f3763f",
+    "codigo": "ENV-SEED05",
+    "fecha": "2026-02-03T12:30:00+00:00",
+    "estado": "entregado",
+    "creado_por": "admin",
+    "notas": "Entregar en la tarde.",
+    "facturas": [
+      {
+        "codigo": "SEED0012",
+        "numero": 6,
+        "fecha": "2026-01-31",
+        "usuario": "ana.gomez",
+        "total": 20650.0,
+        "costo_envio": 250.0,
+        "estado": "pagada",
+        "ubicacion": "Cerro, La Habana",
+        "direccion": "Arango 365 e/ Fábrica y Justicia"
+      }
+    ]
+  },
+  {
+    "id": "2f0b50c63754e1818e2f568829bfaa93",
+    "codigo": "ENV-SEED06",
+    "fecha": "2026-02-03T15:29:00+00:00",
+    "estado": "entregado",
+    "creado_por": "admin",
+    "notas": "",
+    "facturas": [
+      {
+        "codigo": "SEED0015",
+        "numero": 4,
+        "fecha": "2026-02-12",
+        "usuario": "carlos.perez",
+        "total": 16050.0,
+        "costo_envio": 250.0,
+        "estado": "pagada",
+        "ubicacion": "Centro Habana, La Habana",
+        "direccion": "Calle 1 #2, entre 2 y 4"
+      },
+      {
+        "codigo": "SEED0016",
+        "numero": 3,
+        "fecha": "2026-02-13",
+        "usuario": "luisa.martin",
+        "total": 12550.0,
+        "costo_envio": 250.0,
+        "estado": "pagada",
+        "ubicacion": "San Miguel del Padrón, La Habana",
+        "direccion": "Calle Dolores #215"
+      }
+    ]
+  },
+  {
+    "id": "0981ffa4296fcde86c264899b0d90c80",
+    "codigo": "ENV-SEED07",
+    "fecha": "2026-02-23T09:45:00+00:00",
+    "estado": "cancelado",
+    "creado_por": "admin",
+    "notas": "Entregar en la tarde.",
+    "facturas": [
+      {
+        "codigo": "SEED0017",
+        "numero": 3,
+        "fecha": "2026-02-20",
+        "usuario": "empleado",
+        "total": 2450.0,
+        "costo_envio": 250.0,
+        "estado": "pendiente",
+        "ubicacion": "Diez de Octubre, La Habana",
+        "direccion": "Jesús del Monte #54"
+      }
+    ]
+  },
+  {
+    "id": "466ddfdb31e0efef4e62c35f94fe1f9a",
+    "codigo": "ENV-SEED08",
+    "fecha": "2026-03-04T12:45:00+00:00",
+    "estado": "entregado",
+    "creado_por": "admin",
+    "notas": "",
+    "facturas": [
+      {
+        "codigo": "SEED0019",
+        "numero": 8,
+        "fecha": "2026-03-03",
+        "usuario": "ana.gomez",
+        "total": 22900.0,
+        "costo_envio": 250.0,
+        "estado": "pagada",
+        "ubicacion": "Vedado, La Habana",
+        "direccion": "Calle 23 #456, apto 3"
+      }
+    ]
+  },
+  {
+    "id": "8d8f6480ef05d842ef41eade521cb0a2",
+    "codigo": "ENV-SEED09",
+    "fecha": "2026-03-04T13:55:00+00:00",
+    "estado": "entregado",
+    "creado_por": "admin",
+    "notas": "",
+    "facturas": [
+      {
+        "codigo": "SEED0020",
+        "numero": 5,
+        "fecha": "2026-03-05",
+        "usuario": "carlos.perez",
+        "total": 16350.0,
+        "costo_envio": 250.0,
+        "estado": "pagada",
+        "ubicacion": "San Miguel del Padrón, La Habana",
+        "direccion": "Calle Dolores #215"
+      }
+    ]
+  },
+  {
+    "id": "6953f62f6d5d2cd3e3d97f56192c9454",
+    "codigo": "ENV-SEED10",
+    "fecha": "2026-03-14T10:15:00+00:00",
+    "estado": "entregado",
+    "creado_por": "empleado",
+    "notas": "",
+    "facturas": [
+      {
+        "codigo": "SEED0021",
+        "numero": 4,
+        "fecha": "2026-03-11",
+        "usuario": "luisa.martin",
+        "total": 42250.0,
+        "costo_envio": 250.0,
+        "estado": "pagada",
+        "ubicacion": "Habana del Este, La Habana",
+        "direccion": "Calle 5ta #88"
+      }
+    ]
+  },
+  {
+    "id": "17738e02a03d16621850ac5f77bf3ccd",
+    "codigo": "ENV-SEED11",
+    "fecha": "2026-04-01T12:30:00+00:00",
+    "estado": "en_envio",
+    "creado_por": "admin",
+    "notas": "",
+    "facturas": [
+      {
+        "codigo": "SEED0023",
+        "numero": 9,
+        "fecha": "2026-03-30",
+        "usuario": "ana.gomez",
+        "total": 62100.0,
+        "costo_envio": 250.0,
+        "estado": "en_envio",
+        "ubicacion": "Centro Habana, La Habana",
+        "direccion": "Calle 1 #2, entre 2 y 4"
+      }
+    ]
+  },
+  {
+    "id": "97586a2198cfe2b79617bfb711643c91",
+    "codigo": "ENV-SEED12",
+    "fecha": "2026-04-02T15:15:00+00:00",
+    "estado": "entregado",
+    "creado_por": "empleado",
+    "notas": "Llamar antes de salir.",
+    "facturas": [
+      {
+        "codigo": "SEED0024",
+        "numero": 2,
+        "fecha": "2026-03-31",
+        "usuario": "admin",
+        "total": 2450.0,
+        "costo_envio": 250.0,
+        "estado": "pagada",
+        "ubicacion": "Centro Habana, La Habana",
+        "direccion": "Calle 1 #2, entre 2 y 4"
+      }
+    ]
+  },
+  {
+    "id": "e06e198dfe203e1c4766ce4702b6ab0a",
+    "codigo": "ENV-SEED13",
+    "fecha": "2026-04-02T17:06:00+00:00",
+    "estado": "entregado",
+    "creado_por": "empleado",
+    "notas": "Entregar en la tarde.",
+    "facturas": [
+      {
+        "codigo": "SEED0025",
+        "numero": 6,
+        "fecha": "2026-04-01",
+        "usuario": "luisa.martin",
+        "total": 42250.0,
+        "costo_envio": 250.0,
+        "estado": "pagada",
+        "ubicacion": "Vedado, La Habana",
+        "direccion": "Calle 23 #456, apto 3"
+      }
+    ]
+  },
+  {
+    "id": "3eee21e18d8c0b5c20be77a32a57914d",
+    "codigo": "ENV-SEED14",
+    "fecha": "2026-04-11T11:00:00+00:00",
+    "estado": "cancelado",
+    "creado_por": "admin",
+    "notas": "Dejar en recepción.",
+    "facturas": [
+      {
+        "codigo": "SEED0027",
+        "numero": 10,
+        "fecha": "2026-04-08",
+        "usuario": "ana.gomez",
+        "total": 9750.0,
+        "costo_envio": 250.0,
+        "estado": "pendiente",
+        "ubicacion": "Diez de Octubre, La Habana",
+        "direccion": "Jesús del Monte #54"
+      }
+    ]
+  },
+  {
+    "id": "a77f154f81144befad71ebec8a30594a",
+    "codigo": "ENV-SEED15",
+    "fecha": "2026-04-14T19:30:00+00:00",
+    "estado": "entregado",
+    "creado_por": "empleado",
+    "notas": "",
+    "facturas": [
+      {
+        "codigo": "SEED0028",
+        "numero": 11,
+        "fecha": "2026-04-12",
+        "usuario": "ana.gomez",
+        "total": 6550.0,
+        "costo_envio": 250.0,
+        "estado": "pagada",
+        "ubicacion": "Marianao, La Habana",
+        "direccion": "Avenida 51 #7821"
+      }
+    ]
+  },
+  {
+    "id": "6c367f78950f5cb84f98929e946639ab",
+    "codigo": "ENV-SEED16",
+    "fecha": "2026-04-14T20:34:00+00:00",
+    "estado": "entregado",
+    "creado_por": "admin",
+    "notas": "Dejar en recepción.",
+    "facturas": [
+      {
+        "codigo": "SEED0030",
+        "numero": 12,
+        "fecha": "2026-05-01",
+        "usuario": "ana.gomez",
+        "total": 10950.0,
+        "costo_envio": 250.0,
+        "estado": "pagada",
+        "ubicacion": "Playa, La Habana",
+        "direccion": "Calle 7ma #1204"
+      }
+    ]
+  },
+  {
+    "id": "5ecb59225d7de8f38bf819ff8fe8391d",
+    "codigo": "ENV-SEED17",
+    "fecha": "2026-04-14T22:07:00+00:00",
+    "estado": "entregado",
+    "creado_por": "empleado",
+    "notas": "",
+    "facturas": [
+      {
+        "codigo": "SEED0032",
+        "numero": 8,
+        "fecha": "2026-05-17",
+        "usuario": "luisa.martin",
+        "total": 3750.0,
+        "costo_envio": 250.0,
+        "estado": "pagada",
+        "ubicacion": "Cerro, La Habana",
+        "direccion": "Arango 365 e/ Fábrica y Justicia"
+      }
+    ]
+  },
+  {
+    "id": "a9020a1a8e1fb0fdaa44b076d0c68ce6",
+    "codigo": "ENV-SEED18",
+    "fecha": "2026-05-22T08:00:00+00:00",
+    "estado": "en_envio",
+    "creado_por": "admin",
+    "notas": "Llamar antes de salir.",
+    "facturas": [
+      {
+        "codigo": "SEED0033",
+        "numero": 3,
+        "fecha": "2026-05-21",
+        "usuario": "admin",
+        "total": 43750.0,
+        "costo_envio": 250.0,
+        "estado": "en_envio",
+        "ubicacion": "San Miguel del Padrón, La Habana",
+        "direccion": "Calle Dolores #215"
+      }
+    ]
+  },
+  {
+    "id": "38464c785732430346cbdbabddcfca80",
+    "codigo": "ENV-SEED19",
+    "fecha": "2026-05-26T08:15:00+00:00",
+    "estado": "entregado",
+    "creado_por": "empleado",
+    "notas": "Llamar antes de salir.",
+    "facturas": [
+      {
+        "codigo": "SEED0034",
+        "numero": 4,
+        "fecha": "2026-05-25",
+        "usuario": "admin",
+        "total": 9750.0,
+        "costo_envio": 250.0,
+        "estado": "pagada",
+        "ubicacion": "Marianao, La Habana",
+        "direccion": "Avenida 51 #7821"
+      }
+    ]
+  },
+  {
+    "id": "4109182d73c0cdce32f38316266e2820",
+    "codigo": "ENV-SEED20",
+    "fecha": "2026-06-10T11:45:00+00:00",
+    "estado": "entregado",
+    "creado_por": "empleado",
+    "notas": "",
+    "facturas": [
+      {
+        "codigo": "SEED0036",
+        "numero": 14,
+        "fecha": "2026-06-05",
+        "usuario": "ana.gomez",
+        "total": 15700.0,
+        "costo_envio": 250.0,
+        "estado": "pagada",
+        "ubicacion": "Centro Habana, La Habana",
+        "direccion": "Calle 1 #2, entre 2 y 4"
+      },
+      {
+        "codigo": "SEED0037",
+        "numero": 5,
+        "fecha": "2026-06-06",
+        "usuario": "admin",
+        "total": 3050.0,
+        "costo_envio": 250.0,
+        "estado": "pagada",
+        "ubicacion": "Vedado, La Habana",
+        "direccion": "Calle 23 #456, apto 3"
+      },
+      {
+        "codigo": "SEED0038",
+        "numero": 15,
+        "fecha": "2026-06-07",
+        "usuario": "ana.gomez",
+        "total": 28450.0,
+        "costo_envio": 250.0,
+        "estado": "pagada",
+        "ubicacion": "Diez de Octubre, La Habana",
+        "direccion": "Jesús del Monte #54"
+      }
+    ]
+  },
+  {
+    "id": "dca77aa9052302320a9c64d16d220fbf",
+    "codigo": "ENV-SEED21",
+    "fecha": "2026-06-22T10:00:00+00:00",
+    "estado": "cancelado",
+    "creado_por": "admin",
+    "notas": "Dejar en recepción.",
+    "facturas": [
+      {
+        "codigo": "SEED0039",
+        "numero": 9,
+        "fecha": "2026-06-20",
+        "usuario": "luisa.martin",
+        "total": 1450.0,
+        "costo_envio": 250.0,
+        "estado": "pendiente",
+        "ubicacion": "Habana del Este, La Habana",
+        "direccion": "Calle 5ta #88"
+      }
+    ]
+  },
+  {
+    "id": "692d342d5180402aee96789d9b683f61",
+    "codigo": "ENV-SEED22",
+    "fecha": "2026-07-01T08:30:00+00:00",
+    "estado": "entregado",
+    "creado_por": "empleado",
+    "notas": "Entregar en la tarde.",
+    "facturas": [
+      {
+        "codigo": "SEED0040",
+        "numero": 8,
+        "fecha": "2026-06-28",
+        "usuario": "carlos.perez",
+        "total": 84250.0,
+        "costo_envio": 250.0,
+        "estado": "pagada",
+        "ubicacion": "Habana del Este, La Habana",
+        "direccion": "Calle 5ta #88"
+      }
+    ]
+  },
+  {
+    "id": "b899562be9dbf46dfad89a99e1e96c42",
+    "codigo": "ENV-SEED23",
+    "fecha": "2026-07-15T15:00:00+00:00",
+    "estado": "entregado",
+    "creado_por": "admin",
+    "notas": "Dejar en recepción.",
+    "facturas": [
+      {
+        "codigo": "SEED0041",
+        "numero": 16,
+        "fecha": "2026-07-12",
+        "usuario": "ana.gomez",
+        "total": 2750.0,
+        "costo_envio": 250.0,
+        "estado": "pagada",
+        "ubicacion": "Diez de Octubre, La Habana",
+        "direccion": "Jesús del Monte #54"
+      }
+    ]
+  },
+  {
+    "id": "1a5150275badfde91f0d0f1684ee5e2c",
+    "codigo": "ENV-SEED24",
+    "fecha": "2026-07-15T17:28:00+00:00",
+    "estado": "entregado",
+    "creado_por": "admin",
+    "notas": "",
+    "facturas": [
+      {
+        "codigo": "SEED0042",
+        "numero": 17,
+        "fecha": "2026-07-20",
+        "usuario": "ana.gomez",
+        "total": 5350.0,
+        "costo_envio": 250.0,
+        "estado": "pagada",
+        "ubicacion": "Habana del Este, La Habana",
+        "direccion": "Calle 5ta #88"
+      },
+      {
+        "codigo": "SEED0043",
+        "numero": 9,
+        "fecha": "2026-07-23",
+        "usuario": "carlos.perez",
+        "total": 4950.0,
+        "costo_envio": 250.0,
+        "estado": "pagada",
+        "ubicacion": "Vedado, La Habana",
+        "direccion": "Calle 23 #456, apto 3"
+      }
+    ]
+  },
+  {
+    "id": "79767111555d7b61840a0a477d72e6e3",
+    "codigo": "ENV-SEED25",
+    "fecha": "2026-08-02T15:15:00+00:00",
+    "estado": "en_envio",
+    "creado_por": "empleado",
+    "notas": "",
+    "facturas": [
+      {
+        "codigo": "SEED0046",
+        "numero": 18,
+        "fecha": "2026-07-31",
+        "usuario": "ana.gomez",
+        "total": 118950.0,
+        "costo_envio": 250.0,
+        "estado": "en_envio",
+        "ubicacion": "Playa, La Habana",
+        "direccion": "Calle 7ma #1204"
+      }
+    ]
+  },
+  {
+    "id": "f5ccc6dbe63a2593882d1def94aad7e2",
+    "codigo": "ENV-SEED26",
+    "fecha": "2026-08-02T17:24:00+00:00",
+    "estado": "entregado",
+    "creado_por": "empleado",
+    "notas": "Llamar antes de salir.",
+    "facturas": [
+      {
+        "codigo": "SEED0049",
+        "numero": 4,
+        "fecha": "2026-08-19",
+        "usuario": "empleado",
+        "total": 9350.0,
+        "costo_envio": 250.0,
+        "estado": "pagada",
+        "ubicacion": "Habana del Este, La Habana",
+        "direccion": "Calle 5ta #88"
+      }
+    ]
+  },
+  {
+    "id": "d0d23ac94cc8b59daefc9c9abc3d4b9e",
+    "codigo": "ENV-SEED27",
+    "fecha": "2026-09-02T15:30:00+00:00",
+    "estado": "entregado",
+    "creado_por": "empleado",
+    "notas": "Entregar en la tarde.",
+    "facturas": [
+      {
+        "codigo": "SEED0052",
+        "numero": 12,
+        "fecha": "2026-08-31",
+        "usuario": "carlos.perez",
+        "total": 1200.0,
+        "costo_envio": 250.0,
+        "estado": "pagada",
+        "ubicacion": "Marianao, La Habana",
+        "direccion": "Avenida 51 #7821"
+      }
+    ]
+  },
+  {
+    "id": "a4f43a108bebf3ad1aab720635492e5a",
+    "codigo": "ENV-SEED28",
+    "fecha": "2026-09-09T19:15:00+00:00",
+    "estado": "cancelado",
+    "creado_por": "empleado",
+    "notas": "",
+    "facturas": [
+      {
+        "codigo": "SEED0054",
+        "numero": 19,
+        "fecha": "2026-09-08",
+        "usuario": "ana.gomez",
+        "total": 8050.0,
+        "costo_envio": 250.0,
+        "estado": "pendiente",
+        "ubicacion": "San Miguel del Padrón, La Habana",
+        "direccion": "Calle Dolores #215"
+      }
+    ]
+  },
+  {
+    "id": "b0bd9e6a416f88f5c834bd17a3cd15b9",
+    "codigo": "ENV-SEED29",
+    "fecha": "2026-09-18T14:00:00+00:00",
+    "estado": "entregado",
+    "creado_por": "empleado",
+    "notas": "Llamar antes de salir.",
+    "facturas": [
+      {
+        "codigo": "SEED0055",
+        "numero": 14,
+        "fecha": "2026-09-17",
+        "usuario": "carlos.perez",
+        "total": 32750.0,
+        "costo_envio": 250.0,
+        "estado": "pagada",
+        "ubicacion": "Vedado, La Habana",
+        "direccion": "Calle 23 #456, apto 3"
+      }
+    ]
+  },
+  {
+    "id": "8be52033525e988ce7948fb8a4e9e831",
+    "codigo": "ENV-SEED30",
+    "fecha": "2026-09-25T13:15:00+00:00",
+    "estado": "entregado",
+    "creado_por": "admin",
+    "notas": "Llamar antes de salir.",
+    "facturas": [
+      {
+        "codigo": "SEED0057",
+        "numero": 5,
+        "fecha": "2026-09-23",
+        "usuario": "empleado",
+        "total": 9050.0,
+        "costo_envio": 250.0,
+        "estado": "pagada",
+        "ubicacion": "Playa, La Habana",
+        "direccion": "Calle 7ma #1204"
+      }
+    ]
+  },
+  {
+    "id": "29d398f4de1a154f58a74e95ce8c542c",
+    "codigo": "ENV-SEED31",
+    "fecha": "2026-10-18T14:00:00+00:00",
+    "estado": "entregado",
+    "creado_por": "empleado",
+    "notas": "Entregar en la tarde.",
+    "facturas": [
+      {
+        "codigo": "SEED0060",
+        "numero": 7,
+        "fecha": "2026-10-15",
+        "usuario": "admin",
+        "total": 8250.0,
+        "costo_envio": 250.0,
+        "estado": "pagada",
+        "ubicacion": "San Miguel del Padrón, La Habana",
+        "direccion": "Calle Dolores #215"
+      },
+      {
+        "codigo": "SEED0061",
+        "numero": 16,
+        "fecha": "2026-10-16",
+        "usuario": "carlos.perez",
+        "total": 26750.0,
+        "costo_envio": 250.0,
+        "estado": "pagada",
+        "ubicacion": "Vedado, La Habana",
+        "direccion": "Calle 23 #456, apto 3"
+      }
+    ]
+  },
+  {
+    "id": "59ca933f510fc4618c67603e607d5812",
+    "codigo": "ENV-SEED32",
+    "fecha": "2026-10-30T18:30:00+00:00",
+    "estado": "en_envio",
+    "creado_por": "empleado",
+    "notas": "",
+    "facturas": [
+      {
+        "codigo": "SEED0064",
+        "numero": 15,
+        "fecha": "2026-10-29",
+        "usuario": "luisa.martin",
+        "total": 3750.0,
+        "costo_envio": 250.0,
+        "estado": "en_envio",
+        "ubicacion": "Habana del Este, La Habana",
+        "direccion": "Calle 5ta #88"
+      }
+    ]
+  },
+  {
+    "id": "b22b08e89a18a7facb81115950194865",
+    "codigo": "ENV-SEED33",
+    "fecha": "2026-10-30T20:06:00+00:00",
+    "estado": "entregado",
+    "creado_por": "empleado",
+    "notas": "",
+    "facturas": [
+      {
+        "codigo": "SEED0066",
+        "numero": 18,
+        "fecha": "2026-11-12",
+        "usuario": "carlos.perez",
+        "total": 45750.0,
+        "costo_envio": 250.0,
+        "estado": "pagada",
+        "ubicacion": "Habana del Este, La Habana",
+        "direccion": "Calle 5ta #88"
+      }
+    ]
+  },
+  {
+    "id": "77841fcd74d9b26b40b0f77555b9dbdb",
+    "codigo": "ENV-SEED34",
+    "fecha": "2026-11-18T16:45:00+00:00",
+    "estado": "entregado",
+    "creado_por": "empleado",
+    "notas": "Entregar en la tarde.",
+    "facturas": [
+      {
+        "codigo": "SEED0067",
+        "numero": 21,
+        "fecha": "2026-11-13",
+        "usuario": "ana.gomez",
+        "total": 3750.0,
+        "costo_envio": 250.0,
+        "estado": "pagada",
+        "ubicacion": "Vedado, La Habana",
+        "direccion": "Calle 23 #456, apto 3"
+      },
+      {
+        "codigo": "SEED0068",
+        "numero": 16,
+        "fecha": "2026-11-16",
+        "usuario": "luisa.martin",
+        "total": 9175.0,
+        "costo_envio": 250.0,
+        "estado": "pagada",
+        "ubicacion": "Playa, La Habana",
+        "direccion": "Calle 7ma #1204"
+      }
+    ]
+  },
+  {
+    "id": "e0d7f9aaa2eaa89468723056fb138e37",
+    "codigo": "ENV-SEED35",
+    "fecha": "2026-11-20T10:15:00+00:00",
+    "estado": "cancelado",
+    "creado_por": "empleado",
+    "notas": "",
+    "facturas": [
+      {
+        "codigo": "SEED0069",
+        "numero": 9,
+        "fecha": "2026-11-19",
+        "usuario": "admin",
+        "total": 3050.0,
+        "costo_envio": 250.0,
+        "estado": "pendiente",
+        "ubicacion": "Habana del Este, La Habana",
+        "direccion": "Calle 5ta #88"
+      }
+    ]
+  }
+]

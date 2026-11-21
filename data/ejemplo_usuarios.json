@@ -1,0 +1,47 @@
+[
+  {
+    "usuario": "admin",
+    "nombres": "Andrea",
+    "apellidos": "Salazar",
+    "email": "admin@venture.test",
+    "password_hash": "scrypt:32768:8:1$OQ9zkcvRhxY6nNP6$932a9ec2d0a1a0c7f849a0e1de7e53b4d61fd9144798dcd115c409d1cab37bd65152f5f773088be3904a5eb517569537c2d5b46cfcc0a2371f2675f18034e362",
+    "creado": "2025-11-28T09:15:00+00:00",
+    "rol": "admin"
+  },
+  {
+    "usuario": "empleado",
+    "nombres": "Emilio",
+    "apellidos": "Duarte",
+    "email": "empleado@venture.test",
+    "password_hash": "scrypt:32768:8:1$Wqw8zh8ladrfTLo7$5b18d687e248204b698b32a24dccbb8386c166e274076480aac5a5004dc978cf31a430d73fa97f32b7ab4735dfa3c4fe751663c9cc896843cbc0c466c9c56ed6",
+    "creado": "2025-12-03T10:40:00+00:00",
+    "rol": "empleado"
+  },
+  {
+    "usuario": "ana.gomez",
+    "nombres": "Ana",
+    "apellidos": "Gómez",
+    "email": "ana@venture.test",
+    "password_hash": "scrypt:32768:8:1$PJ4Re3k906LDbqSa$fe570d7ff0df8dfa7a7ca04b461a33bdb719ad0ad57ad077e817a16d07d8085d88461a7cf0f42a71006bbf7d20fef19476aaf42bdb102e66c2245d991f9013bb",
+    "creado": "2026-01-09T14:20:00+00:00",
+    "rol": "cliente"
+  },
+  {
+    "usuario": "carlos.perez",
+    "nombres": "Carlos",
+    "apellidos": "Pérez",
+    "email": "carlos@venture.test",
+    "password_hash": "scrypt:32768:8:1$06283cZCcGGYukTA$e641fa58fd942c83aacdabb99299d3527f43c6073f84c2eec888377d7e39dab5e8d992bcc2e920ac212bdd184db389a20d22d3b66b8eb46d2015911232c802f6",
+    "creado": "2026-02-14T11:05:00+00:00",
+    "rol": "cliente"
+  },
+  {
+    "usuario": "luisa.martin",
+    "nombres": "Luisa",
+    "apellidos": "Martín",
+    "email": "luisa@venture.test",
+    "password_hash": "scrypt:32768:8:1$tb8Epl1ZMN0kaorg$7850a5d30b44eb103f1452160b514ca792fcf5324e964d954af934e4c846320977c477789576a4b8b34e4d424f4bdf348058b2d1ac7f51515f014ef4273e6992",
+    "creado": "2026-03-22T16:30:00+00:00",
+    "rol": "cliente"
+  }
+]
