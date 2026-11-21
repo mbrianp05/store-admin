@@ -1,12 +1,15 @@
 """Importa los datos JSON históricos de ``data/`` a PostgreSQL.
 
 Uso:
-    py migrar_json.py            # importa solo si la base está vacía
-    py migrar_json.py --forzar   # vacía las tablas y vuelve a importar
+    py migrar_json.py                     # importa solo si la base está vacía
+    py migrar_json.py --forzar            # vacía las tablas y vuelve a importar
+    py migrar_json.py --ejemplo --forzar  # siembra data/ejemplo_*.json
 
 Lee ``data/usuarios.json``, ``inventario.json``, ``facturas.json``,
-``envios.json`` y ``config.json``. Las facturas y envíos de usuarios que ya no
-existen se conservan con su nombre original como dato histórico.
+``envios.json`` y ``config.json``. Con ``--ejemplo`` lee en su lugar los
+archivos ``data/ejemplo_*.json``, que son datos de prueba versionados.
+Las facturas y envíos de usuarios que ya no existen se conservan con su
+nombre original como dato histórico.
 """
 
 import argparse
@@ -36,8 +39,9 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 
 
-def leer_json(nombre):
-    ruta = os.path.join(DATA_DIR, nombre)
+def leer_json(nombre, ejemplo=False):
+    archivo = f"ejemplo_{nombre}" if ejemplo else nombre
+    ruta = os.path.join(DATA_DIR, archivo)
     try:
         with open(ruta, "r", encoding="utf-8") as archivo:
             return json.load(archivo)
@@ -91,14 +95,34 @@ async def obtener_categoria(sesion, nombre):
     return categoria
 
 
-async def importar(forzar=False):
+async def importar(forzar=False, ejemplo=False):
     await inicializar_base(sembrar=False)
 
-    usuarios_json = leer_json("usuarios.json") or []
-    inventario_json = leer_json("inventario.json") or []
-    facturas_json = leer_json("facturas.json") or []
-    envios_json = leer_json("envios.json") or []
-    config_json = leer_json("config.json") or {}
+    usuarios_json = leer_json("usuarios.json", ejemplo)
+    inventario_json = leer_json("inventario.json", ejemplo)
+    facturas_json = leer_json("facturas.json", ejemplo)
+    envios_json = leer_json("envios.json", ejemplo)
+    config_json = leer_json("config.json", ejemplo)
+
+    if ejemplo and all(
+        datos is None
+        for datos in (
+            usuarios_json,
+            inventario_json,
+            facturas_json,
+            envios_json,
+            config_json,
+        )
+    ):
+        raise SystemExit(
+            "No se encontraron los datos de ejemplo en data/ejemplo_*.json."
+        )
+
+    usuarios_json = usuarios_json or []
+    inventario_json = inventario_json or []
+    facturas_json = facturas_json or []
+    envios_json = envios_json or []
+    config_json = config_json or {}
 
     async with sesion_bd() as sesion:
         if forzar:
@@ -297,8 +321,15 @@ def main():
         action="store_true",
         help="Vacía las tablas antes de importar.",
     )
+    parser.add_argument(
+        "--ejemplo",
+        action="store_true",
+        help="Importa data/ejemplo_*.json con datos de prueba.",
+    )
     argumentos = parser.parse_args()
-    ejecutar(importar(forzar=argumentos.forzar))
+    ejecutar(importar(
+        forzar=argumentos.forzar, ejemplo=argumentos.ejemplo
+    ))
 
 
 if __name__ == "__main__":
