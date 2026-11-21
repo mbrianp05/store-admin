@@ -13,7 +13,7 @@ from contextlib import asynccontextmanager
 from decimal import Decimal
 
 from dotenv import load_dotenv
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
@@ -89,6 +89,12 @@ async def crear_tablas():
 
     async with motor.begin() as conexion:
         await conexion.run_sync(Base.metadata.create_all)
+        # Las facturas de un envío cancelado pueden volver a agruparse en otro
+        # envío; el índice único antiguo lo impedía con un error 500.
+        await conexion.execute(text(
+            "ALTER TABLE envio_facturas "
+            "DROP CONSTRAINT IF EXISTS envio_facturas_factura_id_key"
+        ))
 
 
 async def inicializar_base(sembrar=True):

@@ -105,9 +105,7 @@ class EnvioFactura(Base):
         ForeignKey("envios.id", ondelete="CASCADE"), primary_key=True
     )
     factura_id: Mapped[int] = mapped_column(
-        ForeignKey("facturas.id", ondelete="RESTRICT"),
-        primary_key=True,
-        unique=True,
+        ForeignKey("facturas.id", ondelete="RESTRICT"), primary_key=True
     )
     orden: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
