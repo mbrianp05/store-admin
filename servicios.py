@@ -6,7 +6,7 @@ mediante ``database.ejecutar()``.
 """
 
 import secrets
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal, ROUND_HALF_UP
 from uuid import uuid4
 
@@ -632,6 +632,47 @@ def _claves_meses_recientes(cantidad=8):
     return list(reversed(claves))
 
 
+SEMANAS_ACTIVIDAD_ENVIOS = 52
+
+
+def _actividad_envios(filas, semanas=SEMANAS_ACTIVIDAD_ENVIOS):
+    """Cuenta los envíos no cancelados de cada día para el mapa de calor.
+
+    Devuelve una serie continua de días que empieza en lunes, para que el
+    frontend solo tenga que agrupar las columnas por semana.
+    """
+    hoy = date.today()
+    inicio = hoy - timedelta(days=hoy.weekday()) - timedelta(weeks=semanas - 1)
+
+    conteo = {}
+    total = 0
+    for fecha, estado in filas:
+        if estado == "cancelado":
+            continue
+        dia = fecha.date()
+        if not inicio <= dia <= hoy:
+            continue
+        clave = dia.isoformat()
+        conteo[clave] = conteo.get(clave, 0) + 1
+        total += 1
+
+    dias = []
+    cursor = inicio
+    while cursor <= hoy:
+        clave = cursor.isoformat()
+        dias.append({"fecha": clave, "cantidad": conteo.get(clave, 0)})
+        cursor += timedelta(days=1)
+
+    return {
+        "semanas": semanas,
+        "inicio": inicio.isoformat(),
+        "fin": hoy.isoformat(),
+        "total": total,
+        "maximo": max((dia["cantidad"] for dia in dias), default=0),
+        "dias": dias,
+    }
+
+
 async def datos_contabilidad():
     async with sesion_bd() as sesion:
         facturas = list(
@@ -639,6 +680,9 @@ async def datos_contabilidad():
                 select(Factura).order_by(Factura.fecha, Factura.id)
             )
         )
+        envios = (
+            await sesion.execute(select(Envio.fecha, Envio.estado))
+        ).all()
 
     validas = [factura for factura in facturas if factura.estado != "cancelada"]
 
@@ -768,6 +812,7 @@ async def datos_contabilidad():
         },
         "por_estado": por_estado,
         "por_mes": por_mes,
+        "actividad_envios": _actividad_envios(envios),
         "top_productos": top_productos,
         "top_clientes": top_clientes,
         "ultimas_facturas": [
