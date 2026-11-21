@@ -127,6 +127,24 @@ py migrar_json.py
 
 Usa `py migrar_json.py --forzar` para vaciar las tablas y volver a importar. Ejecútalo antes de iniciar la aplicación en una base nueva; si no, el arranque siembra cuatro productos de ejemplo y el importador pedirá `--forzar`.
 
+#### Datos de prueba para sembrar la base
+
+El repositorio incluye `data/ejemplo_*.json` con cuentas, productos, facturas y envíos repartidos entre diciembre de 2025 y noviembre de 2026. Para sembrar una base desde cero:
+
+```bash
+py migrar_json.py --ejemplo --forzar
+```
+
+| Usuario | Contraseña | Rol |
+| --- | --- | --- |
+| `admin` | `Admin123!` | admin |
+| `empleado` | `Empleado123!` | empleado |
+| `ana.gomez` | `Cliente123!` | cliente |
+| `carlos.perez` | `Cliente123!` | cliente |
+| `luisa.martin` | `Cliente123!` | cliente |
+
+El seed incluye 11 productos, 69 facturas y 35 envíos, suficiente para probar el catálogo, el carrito, las facturas, los envíos y la contabilidad. `--ejemplo` lee `data/ejemplo_*.json`; sin el flag se importan los archivos locales `data/*.json`.
+
 ### 5. Instalar dependencias del frontend
 
 ```bash
@@ -271,6 +289,7 @@ El encabezado fijo muestra la marca **Venture** y la fecha del día. Las pestañ
 - **Resumen**: total facturado, cobrado y pendiente, porcentaje de cobro, ticket promedio y facturas por estado.
 - **Gráficos**: evolución mensual de la facturación, distribución por estado, productos que más dinero dejaron y clientes con mayor importe, con Recharts.
 - **Detalle**: últimas facturas y tablas de productos y clientes principales.
+- **Envíos**: mapa de calor tipo GitHub con los envíos no cancelados de las últimas 52 semanas, agrupado por semana.
 - **Productos**: ranking de los 8 productos con más ingresos, con unidades y porcentaje de participación.
 - **Alcance**: las facturas canceladas se excluyen de los totales y gráficos de ventas.
 
@@ -282,7 +301,7 @@ database.py                    # Motor async, bucle dedicado, sesiones e inicial
 servicios.py                   # Lógica asíncrona de negocio sobre PostgreSQL
 autenticacion.py               # Contraseñas, roles y validación de campos
 limitador.py                   # Rate limit en memoria para el login
-migrar_json.py                 # Importador de los data/*.json históricos
+migrar_json.py                 # Importador de data/*.json y seed de ejemplo
 requirements.txt               # Dependencias del backend
 models/
   __init__.py                  # Reexporta los modelos y utilidades del dominio
@@ -737,7 +756,7 @@ El arranque se detiene con un `RuntimeError` si la base no responde. Comprueba q
 
 ### El importador dice que la base ya tiene datos
 
-`migrar_json.py` solo importa sobre una base vacía. Si ya arrancaste la aplicación, se sembraron los productos de ejemplo; usa `py migrar_json.py --forzar` para vaciar las tablas y reimportar.
+`migrar_json.py` solo importa sobre una base vacía. Si ya arrancaste la aplicación, se sembraron los productos de ejemplo; usa `py migrar_json.py --forzar` para vaciar las tablas y reimportar, o `py migrar_json.py --ejemplo --forzar` para cargar los datos de prueba.
 
 ### Error: «Address already in use»
 
@@ -770,7 +789,7 @@ Puede haber cambiado de nombre o haberse eliminado en otra pestaña. Recarga la 
 - Los usuarios, el inventario, las facturas, los envíos y la configuración viven en PostgreSQL; la sesión sigue en una cookie firmada.
 - Cada cuenta guarda un `rol` (`cliente`, `empleado` o `admin`). `guest` es solo el visitante sin sesión y no se persiste.
 - La primera cuenta registrada en una tabla `usuarios` vacía se crea como `admin`; las siguientes, como `cliente`.
-- Los datos históricos de `data/*.json` se importan con `migrar_json.py`; el tiempo de ejecución ya no lee ni escribe esos archivos.
+- Los datos históricos de `data/*.json` se importan con `migrar_json.py`; los `data/ejemplo_*.json` versionados sirven de seed con `--ejemplo`. El tiempo de ejecución ya no lee ni escribe esos archivos.
 - El backend valida los permisos en cada petición; la interfaz solo oculta las acciones no permitidas.
 - La contabilidad y la administración de usuarios son exclusivas del rol `admin`.
 - El número de factura lo controla el servidor y se calcula dentro de la transacción de emisión, con la cuenta bloqueada.
