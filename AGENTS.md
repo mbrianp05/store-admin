@@ -11,6 +11,7 @@ Inventory, cart, and invoicing app: Flask JSON API + React/Tailwind frontend, ba
 - Frontend dev: `cd frontend && npm install && npm run dev` → http://localhost:5173. Vite proxies `/api` and `/uploads` to Flask on port 5000.
 - Production-ish: `cd frontend && npm run build`, then `py app.py`. Flask serves `frontend/dist` at `/` and the API at `/api/*`.
 - Migrate legacy JSON data: `py migrar_json.py` (only when the database is empty) or `py migrar_json.py --forzar` (truncates and reimports). Run it before starting the app on a fresh database, otherwise startup seeds the four sample products and the importer refuses to run without `--forzar`.
+- Seed test data: `py migrar_json.py --ejemplo --forzar` imports the tracked `data/ejemplo_*.json` (5 accounts, 11 products, 69 invoices, 35 shipments). Log in as `admin` / `Admin123!`, `empleado` / `Empleado123!`, or any client (`ana.gomez`, `carlos.perez`, `luisa.martin`) / `Cliente123!`.
 - Lint the frontend with `cd frontend && npm run lint` (oxlint). There is no backend linter, test suite, or CI.
 
 ## Layout
@@ -27,7 +28,7 @@ Inventory, cart, and invoicing app: Flask JSON API + React/Tailwind frontend, ba
   - `Envio.py` — `envios`, `envio_facturas` (shipment line references with order).
   - `Configuracion.py` — single-row `configuracion` (`id = 1`, `costo_envio`).
   - `Carrito.py` — plain domain helper used for cart totals; it is not a persisted model.
-- `migrar_json.py` — one-off importer for the old `data/*.json` files.
+- `migrar_json.py` — one-off importer for the old `data/*.json` files; `--ejemplo` reads the tracked `data/ejemplo_*.json` seed instead.
 - `frontend/` — Vite + React 19 + Tailwind CSS v4. Entrypoint `src/main.jsx`; `src/App.jsx` owns view/cart/invoice state.
 - `frontend/src/components/` — UI pieces; `ProductsView`, `CartPanel`, `InvoicesView`, `ProductForm`, `Pagination`, auth pieces `AuthShell`, `PasswordStrength`, `AppLoader`; admin charts are `AccountingCharts` (Recharts).
 - `frontend/src/pages/` — `LoginPage`, `RegisterPage`, `ProductsPage`, `InvoicesPage`, `UsersPage` (admin), `AccountingPage` (admin), `EnviosPage` (empleado/admin).
@@ -36,7 +37,7 @@ Inventory, cart, and invoicing app: Flask JSON API + React/Tailwind frontend, ba
 - `frontend/src/lib/roles.js` — role labels and permission helpers (`esAdmin`, `puedeGestionarProductos`, `puedeCambiarEstadoFactura`, …).
 - `frontend/src/api.js` — all API calls (`/api` relative). `frontend/src/lib/format.js` — currency/date/unit formatting.
 - `frontend/src/index.css` — Tailwind import, `@theme` design tokens, and base styles.
-- `data/` — only legacy JSON plus `uploads/` and `secret_key`; runtime state lives in PostgreSQL. `data/*.json` is gitignored.
+- `data/` — only legacy JSON plus `uploads/` and `secret_key`; runtime state lives in PostgreSQL. `data/*.json` is gitignored except the tracked `data/ejemplo_*.json` seed.
 
 ## Database schema
 
@@ -65,7 +66,7 @@ Money uses `Numeric(12, 2)` (Decimal in Python, float only in JSON responses). C
 - `sesion_bd()` commits on success and rolls back on exceptions. Do not return ORM objects from it: serialize with `to_dict()` / `usuario_publico()` inside the session and return plain dicts.
 - Lazy loading is async and fails outside the session. Models use `lazy="selectin"`/`joined` for relationships that are serialized; keep it that way and use `.with_for_update(of=Model)` when locking rows that have eager relationships.
 - `inicializar_base()` runs at import time in `app.py`: it creates missing tables, ensures the `configuracion` row and, only when `productos` is empty, seeds four sample products. If PostgreSQL is unreachable the app fails fast with a clear `RuntimeError`.
-- `data/*.json` is local legacy state (only `ejemplo_*.json` is tracked). The runtime no longer reads or writes it; only `migrar_json.py` does.
+- `data/*.json` is local legacy state (only `ejemplo_*.json` is tracked and used as the `--ejemplo` seed). The runtime no longer reads or writes it; only `migrar_json.py` does.
 - Uploaded photos still live under `data/uploads/`; the database stores only their URLs.
 - Auth: users live in `usuarios` with `scrypt` password hashes (never plaintext). Registration asks for nombres, apellidos, usuario, optional email, and a zxcvbn-strong password.
 - Roles live on each user as `rol`: `cliente`, `empleado` or `admin`. `guest` is the unauthenticated visitor and is never stored. The first account in an empty table becomes `admin`; later accounts default to `cliente`.
