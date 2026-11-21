@@ -51,7 +51,7 @@ Normalized around independent entities and relationship tables:
 - `facturas` — invoice header, per-user `numero`, public `codigo`, delivery data, totals, state. `usuario_id` is a nullable FK; `usuario_legado` keeps the original name only for imported invoices whose account no longer exists.
 - `factura_items` — invoice lines with `producto_id` (nullable FK), historical `producto_nombre`, `unidad_medida`, `precio_unitario` and `cantidad`. The snapshot keeps invoices readable after a product is renamed or deleted.
 - `envios` — shipment header and creator.
-- `envio_facturas` — shipment ↔ invoice relation with `orden`; `factura_id` is unique so an invoice belongs to at most one shipment.
+- `envio_facturas` — shipment ↔ invoice relation with `orden`; `factura_id` is not unique so a cancelled shipment keeps its historical links and the invoice can be regrouped into a new shipment.
 - `configuracion` — single row (`id = 1`) with `costo_envio`.
 
 Money uses `Numeric(12, 2)` (Decimal in Python, float only in JSON responses). Case-insensitive uniqueness is enforced with unique indexes on `lower(...)`.
@@ -76,7 +76,7 @@ Money uses `Numeric(12, 2)` (Decimal in Python, float only in JSON responses). C
 - `PATCH /api/invoices/<numero>` rejects `en_envio` with `400` unless the invoice has `a_domicilio`; the invoice UI hides that option for pickup invoices.
 - Cancelling an invoice restores its products' stock; cancelling again is idempotent. Reactivating a cancelled invoice deducts stock again and returns `409` if a product is missing or insufficient. Lines whose product was deleted (`producto_id IS NULL`) are skipped when restoring and block reactivation.
 - Stock is decremented with row locks on `productos`; invoice creation, cancellation and reactivation run in one transaction. There is no global `threading.Lock` anymore.
-- Shipments live in `envios`/`envio_facturas`. A shipment stores invoice references by `codigo` (stable across per-user renumbering) through the relation table. Grouping only accepts home-delivery invoices in `pendiente`/`en_envio` that are not already in another non-cancelled shipment; it sets them to `en_envio`. PATCH `entregado` sets them `pagada`, PATCH `cancelado` returns them to `pendiente`. The shipments UI only exposes cancel; invoice states are changed from Facturas.
+- Shipments live in `envios`/`envio_facturas`. A shipment stores invoice references by `codigo` (stable across per-user renumbering) through the relation table. Grouping only accepts home-delivery invoices in `pendiente`/`en_envio` that are not already in another non-cancelled shipment; it sets them to `en_envio`. PATCH `entregado` sets them `pagada`, PATCH `cancelado` returns them to `pendiente`. The shipments UI only exposes cancel; invoice states are changed from Facturas. A cancelled shipment keeps its invoice links, so the same invoice can appear in a new shipment; `inicializar_base()` drops the old unique constraint on `envio_facturas.factura_id` for databases created before this rule.
 - Shipment invoice links navigate to `/facturas?factura=<codigo>`; `InvoicesPage` selects the matching invoice and clears the query param.
 - `GET /api/invoices` returns invoices oldest-first. Because `numero` restarts per user, the invoices UI sorts newest-first by `fecha` and, within the same day, by creation order (`ordenCreacion` in `InvoicesView`).
 - Invoices show 9 per page in a 3×3 card grid; users, available shipment invoices and shipments paginate 8 per page, with controls at the top (`frontend/src/components/Pagination.jsx`).
