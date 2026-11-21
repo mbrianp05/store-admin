@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   Area,
   AreaChart,
@@ -511,6 +512,218 @@ export function TopClientsChart({ clientes, className }) {
           </>
         )}
       </CardContent>
+    </Card>
+  )
+}
+
+const DIAS_SEMANA = ['lun', 'mar', 'mié', 'jue', 'vie', 'sáb', 'dom']
+const MESES_CORTOS = [
+  'ene',
+  'feb',
+  'mar',
+  'abr',
+  'may',
+  'jun',
+  'jul',
+  'ago',
+  'sep',
+  'oct',
+  'nov',
+  'dic',
+]
+
+// De menos a más envíos: el tono de la marca se vuelve más intenso.
+const NIVELES_ENVIO = [
+  'rgba(255, 255, 255, 0.05)',
+  'rgba(227, 189, 99, 0.24)',
+  'rgba(227, 189, 99, 0.46)',
+  'rgba(227, 189, 99, 0.72)',
+  '#e3bd63',
+]
+
+const fechaLargaFormatter = new Intl.DateTimeFormat('es-ES', {
+  weekday: 'short',
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+})
+
+function fechaLocal(iso) {
+  const [anio, mes, dia] = iso.split('-').map(Number)
+  return new Date(anio, mes - 1, dia)
+}
+
+function nivelEnvio(cantidad, maximo) {
+  if (!cantidad) return 0
+  if (!maximo || maximo <= 1) return 4
+  const proporcion = cantidad / maximo
+  if (proporcion <= 0.25) return 1
+  if (proporcion <= 0.5) return 2
+  if (proporcion <= 0.75) return 3
+  return 4
+}
+
+function agruparSemanas(dias) {
+  const semanas = []
+  let semana = []
+
+  for (const dia of dias) {
+    const fecha = fechaLocal(dia.fecha)
+    const indice = (fecha.getDay() + 6) % 7 // lunes = 0
+    if (indice === 0 && semana.length) {
+      semanas.push(semana)
+      semana = []
+    }
+    semana.push({ ...dia, fechaObj: fecha })
+  }
+  if (semana.length) semanas.push(semana)
+  return semanas
+}
+
+export function ShipmentActivityHeatmap({ actividad, className }) {
+  const [resaltado, setResaltado] = useState(null)
+
+  const semanas = agruparSemanas(actividad?.dias || [])
+  const maximo = actividad?.maximo || 0
+  const total = actividad?.total || 0
+  const cantidadSemanas = actividad?.semanas || 52
+
+  const resaltar = (evento, dia) => {
+    const etiqueta = fechaLargaFormatter.format(dia.fechaObj)
+    setResaltado({
+      x: Math.min(
+        Math.max(evento.clientX, 90),
+        (window.innerWidth || 0) - 90,
+      ),
+      y: evento.clientY,
+      abajo: evento.clientY < 90,
+      texto: dia.cantidad
+        ? `${dia.cantidad} ${dia.cantidad === 1 ? 'envío' : 'envíos'} · ${etiqueta}`
+        : `Sin envíos · ${etiqueta}`,
+    })
+  }
+
+  return (
+    <Card className={cn('gap-0 overflow-hidden py-0', className)}>
+      <CardHeader className="border-b border-border/70 px-4 py-3">
+        <div className="flex flex-wrap items-end justify-between gap-2">
+          <div>
+            <CardTitle className="text-sm">Actividad de envíos</CardTitle>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
+              Envíos no cancelados por día en las últimas {cantidadSemanas}{' '}
+              semanas
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+              Total
+            </p>
+            <p className="text-base font-semibold leading-tight tabular-nums">
+              {total} {total === 1 ? 'envío' : 'envíos'}
+            </p>
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardContent className="px-4 py-3">
+        <div className="overflow-x-auto pb-1">
+          <div className="flex w-max gap-1.5">
+            <div className="flex flex-col gap-[3px] pt-[15px] text-[9px] leading-none text-muted-foreground">
+              {DIAS_SEMANA.map((dia, indice) => (
+                <span key={dia} className="flex h-3 items-center">
+                  {indice % 2 === 0 ? dia : ''}
+                </span>
+              ))}
+            </div>
+
+            <div className="flex gap-[3px]">
+              {semanas.map((semana, indiceSemana) => {
+                const anterior = semanas[indiceSemana - 1]
+                const mes = semana[0].fechaObj.getMonth()
+                const etiquetaMes =
+                  !anterior || anterior[0].fechaObj.getMonth() !== mes
+                    ? MESES_CORTOS[mes]
+                    : ''
+
+                return (
+                  <div
+                    key={semana[0].fecha}
+                    className="flex flex-col gap-[3px]"
+                  >
+                    <span className="h-3 whitespace-nowrap text-[9px] leading-none text-muted-foreground">
+                      {etiquetaMes}
+                    </span>
+                    {Array.from({ length: 7 }).map((_, indiceDia) => {
+                      const dia = semana[indiceDia]
+                      if (!dia) {
+                        return (
+                          <span
+                            key={indiceDia}
+                            aria-hidden="true"
+                            className="size-3 rounded-[2px]"
+                          />
+                        )
+                      }
+
+                      const nivel = nivelEnvio(dia.cantidad, maximo)
+                      const etiqueta = fechaLargaFormatter.format(dia.fechaObj)
+
+                      return (
+                        <span
+                          key={dia.fecha}
+                          role="img"
+                          aria-label={
+                            dia.cantidad
+                              ? `${dia.cantidad} ${
+                                  dia.cantidad === 1 ? 'envío' : 'envíos'
+                                } el ${etiqueta}`
+                              : `Sin envíos el ${etiqueta}`
+                          }
+                          className="size-3 cursor-default rounded-[2px] transition-transform hover:scale-125"
+                          style={{ backgroundColor: NIVELES_ENVIO[nivel] }}
+                          onMouseEnter={(evento) => resaltar(evento, dia)}
+                          onMouseLeave={() => setResaltado(null)}
+                        />
+                      )
+                    })}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[10px] text-muted-foreground">
+          <p>Cada columna es una semana. Los envíos cancelados no cuentan.</p>
+          <div className="flex items-center gap-1">
+            <span>Menos</span>
+            {NIVELES_ENVIO.map((color) => (
+              <span
+                key={color}
+                aria-hidden="true"
+                className="size-2.5 rounded-[2px]"
+                style={{ backgroundColor: color }}
+              />
+            ))}
+            <span>Más</span>
+          </div>
+        </div>
+      </CardContent>
+
+      {resaltado && (
+        <div
+          className="pointer-events-none fixed z-50 whitespace-nowrap rounded-md border border-border bg-popover px-2 py-1 text-[10px] text-popover-foreground shadow-lg"
+          style={{
+            left: resaltado.x,
+            top: resaltado.y,
+            transform: resaltado.abajo
+              ? 'translate(-50%, 10px)'
+              : 'translate(-50%, calc(-100% - 8px))',
+          }}
+        >
+          {resaltado.texto}
+        </div>
+      )}
     </Card>
   )
 }
